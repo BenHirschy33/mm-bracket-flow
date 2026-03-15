@@ -17,9 +17,14 @@ def optimize():
     best_avg = 0
     best_weights = SimulationWeights()
     
+    # Final Deep Sweep Parameters
+    iterations = 500
+    mc_iters = 25
+    decay_rate = 0.07  # Emphasize modern era
+    
     years = [2025, 2024, 2023, 2022, 2021, 2019, 2018, 2017, 2016, 2015, 2010, 2005, 2000]
     
-    for i in range(200):
+    for i in range(iterations):
         test_weights = SimulationWeights()
         test_weights.trb_weight = random.uniform(1.0, 5.0)
         test_weights.to_weight = random.uniform(0.5, 3.0)
@@ -31,8 +36,8 @@ def optimize():
         total_decay_weight = 0
         
         for y in years:
-            score, _ = evaluate_bracket(y, test_weights, iterations=10)
-            decay = get_decay_weight(y)
+            score, _ = evaluate_bracket(y, test_weights, iterations=mc_iters)
+            decay = get_decay_weight(y, k=decay_rate)
             weighted_total_score += (score * decay)
             total_decay_weight += decay
             
