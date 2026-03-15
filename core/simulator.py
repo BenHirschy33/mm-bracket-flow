@@ -1,4 +1,5 @@
 import logging
+import random
 from .team_model import Team
 from .config import SimulationWeights, DEFAULT_WEIGHTS
 
@@ -78,7 +79,36 @@ class SimulatorEngine:
             final_probability += momentum_advantage * self.weights.momentum_weight
         
         # Step 3: Apply human intuition modifier
-        net_intuition = team_a.intuition_score - team_b.intuition_score
+        def get_situational_intuition(team_eval: Team, opponent: Team) -> float:
+            score = team_eval.intuition_score
+            data = team_eval.intuition_data
+            if not data:
+                return score
+                
+            score = float(data.get("base", score))
+            score += float(data.get("injuries_penalty", 0.0))
+            score += float(data.get("conf_tourney_boost", 0.0))
+            score += float(data.get("motivation_factor", 0.0))
+            
+            for vuln in data.get("vulnerabilities", []):
+                metric = vuln.get("metric")
+                thresh = float(vuln.get("threshold", 0.0))
+                penalty = float(vuln.get("penalty", 0.0))
+                
+                opp_val = None
+                if metric == "3PAr": opp_val = opponent.three_par
+                elif metric == "Pace": opp_val = opponent.pace
+                elif metric == "TO%_Def": opp_val = opponent.def_to_pct # Press vulnerability
+                
+                if opp_val is not None and opp_val >= thresh:
+                    score += penalty
+                    
+            return score
+
+        a_situational = get_situational_intuition(team_a, team_b)
+        b_situational = get_situational_intuition(team_b, team_a)
+        
+        net_intuition = a_situational - b_situational
         intuition_modifier = net_intuition * self.weights.intuition_weight
         
         final_probability += intuition_modifier
@@ -96,15 +126,18 @@ class SimulatorEngine:
         
         return final_probability
 
-    def simulate_game(self, team_a: Team, team_b: Team) -> Team:
+    def simulate_game(self, team_a: Team, team_b: Team, mode: str = "deterministic") -> Team:
         """
         Simulates a single game between two teams using the calculated probability.
-        Note: This is deterministic for testing purposes right now (highest prob wins).
-        In the future, we will use random.random() for Monte Carlo simulations.
+        If mode="probabilistic", it rolls a random number against the win probability.
         """
         prob_a = self.calculate_win_probability(team_a, team_b)
         
-        if prob_a >= 0.5:
-            return team_a
+        if mode == "probabilistic":
+            if random.random() < prob_a:
+                return team_a
+            return team_b
         else:
+            if prob_a >= 0.5:
+                return team_a
             return team_b

@@ -64,7 +64,7 @@ def sync_data(year: int):
         
     print(f"Processing and injecting data to {engine_csv}...")
     engine_rows = []
-    engine_headers = ["Team", "Seed", "AdjO", "AdjD", "Off_PPG", "Def_PPG", "Pace", "eFG_Off", "eFG_Def", "TO_Off", "TO_Def", "TRB", "SOS", "Momentum", "Intuition"]
+    engine_headers = ["Team", "Seed", "AdjO", "AdjD", "Off_PPG", "Def_PPG", "Pace", "eFG_Off", "eFG_Def", "TO_Off", "TO_Def", "TRB", "3PAr", "SOS", "Momentum", "Intuition"]
     
     for _, row in df.iterrows():
         team_name = str(row.get('School', '')).replace('NCAA', '').strip()
@@ -80,6 +80,7 @@ def sync_data(year: int):
         efg_off = safe_float(row.get('eFG%'))
         tov_off = safe_float(row.get('TOV%'))
         trb = safe_float(row.get('TRB%'))
+        threepar = safe_float(row.get('3PAr'))
         sos = safe_float(row.get('SOS'))
         
         engine_rows.append({
@@ -95,6 +96,7 @@ def sync_data(year: int):
             "TO_Off": tov_off,
             "TO_Def": "",
             "TRB": trb,
+            "3PAr": threepar,
             "SOS": sos, 
             "Momentum": "", 
             "Intuition": "0.0" 

@@ -15,7 +15,7 @@ class SimulationWeights:
     rebounding_matchup_weight: float = 2.748 # Rebounding proved highly predictive of success.
     sos_weight: float = 0.994
     momentum_weight: float = 1.161
-    intuition_weight: float = 0.015  # Default: 1.5% probability shift per Hirschy point
+    intuition_weight: float = 0.01  # Exact 1.0% probability shift per Hirschy point
 
     # General modifiers
     # Multiplier to value defense slightly more in March (since defense travels)

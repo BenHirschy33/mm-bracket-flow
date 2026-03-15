@@ -1,20 +1,33 @@
 # MM-Bracket-Flow: The "Hirschy Factor" Intuition Engine
 #
-# Provide a "Human Intuition Score" between -10 and +10 for any team.
-# This score serves as a weighted multiplier alongside KenPom and NET stats
-# during the simulation.
+# Provide a "Human Intuition Score" for any team.
+# 1 point = 1.0% shift in win probability.
 #
-# Examples:
-#   Duke: 5 (Strong feeling they'll overperform)
-#   Arizona: -3 (Suspect they might choke)
+# Advanced Usage:
+# Add `vulnerabilities` based on opponent metrics (3PAr, Pace, TO%_Def).
+# Add `injuries_penalty` to globally deflate a team regardless of opponent.
+# Add `conf_tourney_boost` to reward/penalize based on recent tournament momentum.
+# Add `motivation_factor` for the "Due/Revenge" factor (e.g. chip on shoulder).
 
-2026_season:
-  Duke: 0
-  Michigan: 0
-  Arizona: 0
-  Florida: 0
-  Houston: 0
-  UConn: 0
-  Purdue: 0
-  Tennessee: 0
-  # Add other teams below as intuition dictates.
+2026:
+  Purdue:
+    base: 0.0
+    conf_tourney_boost: 5.0 # Massive boost for a dominant Big Ten Tournament run
+    motivation_factor: 3.5  # Fired up
+    injuries_penalty: 0.0
+    vulnerabilities:
+      - metric: "3PAr"
+        threshold: 0.40 # If opponent shoots > 40% of their shots as 3s
+        penalty: -5.0   # Purdue struggles against good 3-point shooting teams (e.g. Wisconsin)
+  Michigan:
+    base: 0.0 
+    conf_tourney_boost: 0.0
+    motivation_factor: 2.5 # Boosted: Conference championship loss lit a fire under them
+    injuries_penalty: 0.0
+    vulnerabilities: []
+  Duke: 0.0
+  Arizona: 0.0
+  Florida: 0.0
+  Houston: 0.0
+  UConn: 0.0
+  Tennessee: 0.0

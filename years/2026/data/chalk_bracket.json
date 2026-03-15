@@ -1,26 +1,29 @@
 {
-  "name": "MM-Bracket-Flow 2026 - Chalk Prediction",
+  "name": "2026 Selection Sunday - Projected Chalk",
   "regions": {
     "East": {
-      "1": "Duke",
-      "2": "Connecticut",
-      "3": "Tennessee"
+      "1": "Duke", "16": "Grambling", "8": "Kentucky", "9": "Villanova",
+      "5": "UConn", "12": "McNeese St.", "4": "Tennessee", "13": "Vermont",
+      "6": "Kansas", "11": "Indiana", "3": "Auburn", "14": "Colgate",
+      "7": "Wisconsin", "10": "Texas", "2": "North Carolina", "15": "Oakland"
     },
     "West": {
-      "1": "Michigan",
-      "2": "Purdue",
-      "3": "Iowa St."
+      "1": "Michigan", "16": "Norfolk St.", "8": "Florida", "9": "St. John's",
+      "5": "Iowa St.", "12": "Grand Canyon", "4": "Purdue", "13": "Morehead St.",
+      "6": "Creighton", "11": "Providence", "3": "Gonzaga", "14": "Samford",
+      "7": "San Diego St.", "10": "Michigan St.", "2": "Marquette", "15": "Montana"
     },
     "South": {
-      "1": "Arizona",
-      "2": "Houston",
-      "3": "Baylor"
+      "1": "Arizona", "16": "Howard", "8": "Illinois", "9": "Oklahoma",
+      "5": "Houston", "12": "Drake", "4": "Baylor", "13": "Appalachian St.",
+      "6": "Clemson", "11": "Northwestern", "3": "Alabama", "14": "UC Irvine",
+      "7": "South Carolina", "10": "Nebraska", "2": "Iowa", "15": "Yale"
     },
     "Midwest": {
-      "1": "Florida",
-      "2": "North Carolina",
-      "3": "Marquette"
+      "1": "Kansas St.", "16": "St. Peter's", "8": "Virginia", "9": "Seton Hall",
+      "5": "BYU", "12": "Princeton", "4": "Texas A&M", "13": "Louisiana Tech",
+      "6": "Dayton", "11": "Utah", "3": "Florida Atlantic", "14": "High Point",
+      "7": "Utah St.", "10": "New Mexico", "2": "Oregon", "15": "Lipscomb"
     }
-  },
-  "notes": "Standard engine simulation."
+  }
 }

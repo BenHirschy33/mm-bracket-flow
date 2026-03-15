@@ -1,0 +1,319 @@
+:root {
+    --bg-dark: #0a0b10;
+    --card-bg: rgba(255, 255, 255, 0.05);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --accent-gold: #ceb888; /* Purdue Gold */
+    --accent-glow: rgba(206, 184, 136, 0.3);
+    --text-primary: #ffffff;
+    --text-secondary: #a0a0b0;
+    --success: #00ff88;
+    --danger: #ff4757;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-dark);
+    color: var(--text-primary);
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+h1, h2, .premium-btn {
+    font-family: 'Outfit', sans-serif;
+}
+
+.dark-theme {
+    background: radial-gradient(circle at 50% 50%, #151825 0%, #0a0b10 100%);
+}
+
+.glass-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url('https://images.unsplash.com/photo-1504450758481-7338eba7524a?auto=format&fit=crop&q=80&w=2000') center/cover no-repeat;
+    opacity: 0.05;
+    z-index: -1;
+    filter: blur(20px);
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2rem 5%;
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.glow-text {
+    font-size: 2.5rem;
+    font-weight: 800;
+    letter-spacing: 2px;
+    background: linear-gradient(90deg, #ffffff, var(--accent-gold));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 0 20px var(--accent-glow);
+}
+
+.subtitle {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-top: 0.2rem;
+}
+
+main {
+    padding: 2rem 5%;
+    display: grid;
+    grid-template-columns: 350px 1fr;
+    gap: 2rem;
+}
+
+.glass-card {
+    background: var(--card-bg);
+    backdrop-filter: blur(15px);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    padding: 1.5rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.card-header h2 {
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.badge {
+    background: var(--accent-gold);
+    color: #000;
+    font-size: 0.7rem;
+    font-weight: 800;
+    padding: 0.2rem 0.6rem;
+    border-radius: 5px;
+}
+
+/* Premium Buttons & Selects */
+.premium-btn {
+    padding: 0.8rem 1.5rem;
+    border-radius: 12px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.primary {
+    background: var(--accent-gold);
+    color: #000;
+}
+
+.primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px var(--accent-glow);
+}
+
+.premium-select {
+    background: var(--card-bg);
+    color: #fff;
+    border: 1px solid var(--glass-border);
+    padding: 0.8rem 1rem;
+    border-radius: 12px;
+    margin-right: 1rem;
+    outline: none;
+}
+
+/* Team Grid */
+.team-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+.team-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.8rem;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid transparent;
+    transition: all 0.2s ease;
+}
+
+.team-item:hover {
+    border-color: var(--accent-gold);
+    background: rgba(206, 184, 136, 0.05);
+}
+
+.team-info {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+.seed-num {
+    font-size: 0.7rem;
+    color: var(--accent-gold);
+    font-weight: 800;
+    border: 1px solid var(--accent-gold);
+    width: 20px;
+    height: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 4px;
+}
+
+.stat-tag {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.intuition-bubble {
+    font-size: 0.7rem;
+    background: rgba(0, 255, 136, 0.1);
+    color: var(--success);
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+}
+
+/* Bracket Container */
+.bracket-stage {
+    min-height: 500px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.empty-state {
+    color: var(--text-secondary);
+    text-align: center;
+    font-style: italic;
+}
+
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(255,255,255,0.1);
+    border-radius: 50%;
+    border-top-color: var(--accent-gold);
+    animation: spin 1s linear infinite;
+    margin: 2rem auto;
+}
+
+/* Round Columnar Layout */
+.bracket-view {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+}
+
+.region-nav {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.region-btn {
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--glass-border);
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.region-btn:hover, .region-btn.active {
+    border-color: var(--accent-gold);
+    color: var(--accent-gold);
+}
+
+.rounds-flex {
+    display: flex;
+    overflow-x: auto;
+    gap: 2rem;
+    padding: 1rem 0;
+}
+
+.round-column {
+    min-width: 220px;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.round-column h4 {
+    text-align: center;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    color: var(--accent-gold);
+    margin-bottom: 1rem;
+}
+
+.matchup-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--glass-border);
+    border-radius: 10px;
+    padding: 0.8rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    position: relative;
+}
+
+.team-line {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    padding: 0.4rem;
+    border-radius: 4px;
+}
+
+.team-line.winner {
+    background: rgba(0, 255, 136, 0.05);
+    color: var(--success);
+    font-weight: 600;
+}
+
+.prob-tag {
+    font-size: 0.65rem;
+    background: var(--accent-gold);
+    color: #000;
+    padding: 1px 4px;
+    border-radius: 3px;
+    cursor: help;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+footer {
+    padding: 2rem;
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    border-top: 1px solid var(--glass-border);
+    margin-top: 2rem;
+}
+

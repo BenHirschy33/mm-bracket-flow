@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, Dict, Any
 
 @dataclass
 class Team:
@@ -23,8 +23,10 @@ class Team:
     sos: Optional[float] = None            # Strength of Schedule (e.g., KenPom SOS rating)
     momentum: Optional[float] = None       # Win % over the last 10 games
     trb_pct: Optional[float] = None        # Total Rebound Percentage
+    three_par: Optional[float] = None      # 3-Point Attempt Rate
     
     intuition_score: float = 0.0  # The 'Hirschy Factor' (-10 to +10)
+    intuition_data: Optional[Dict[str, Any]] = None # Dynamic YAML mapping for injuries/matchups
     
     @property
     def pythagorean_expectation(self) -> float:

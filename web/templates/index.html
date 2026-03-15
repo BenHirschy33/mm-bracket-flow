@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MM-Bracket-Flow | Prediction Engine</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body class="dark-theme">
+    <div class="glass-background"></div>
+    
+    <header>
+        <div class="logo-container">
+            <h1 class="glow-text">MM-BRACKET-FLOW</h1>
+            <p class="subtitle">The Hirschy Factor Simulation Engine</p>
+        </div>
+        <div class="header-controls">
+            <select id="year-select" class="premium-select">
+                <option value="2026">2026 Tournament</option>
+                <option value="2025">2025 (Historical)</option>
+                <option value="2024">2024 (Historical)</option>
+            </select>
+            <button id="run-sim-btn" class="premium-btn primary">Run Hyper-Simulation</button>
+        </div>
+    </header>
+
+    <main>
+        <section id="stats-overview" class="glass-card">
+            <div class="card-header">
+                <h2>Field Overview</h2>
+                <div class="badge">Live 2026 Odds</div>
+            </div>
+            <div class="team-grid" id="team-list">
+                <!-- Teams injected here -->
+                <div class="loading-spinner"></div>
+            </div>
+        </section>
+
+        <section id="bracket-visualization" class="glass-card">
+            <div class="card-header">
+                <h2>Interactive Bracket</h2>
+                <div class="view-controls">
+                    <button class="tab-btn active" data-view="deterministic">Chalk View</button>
+                    <button class="tab-btn" data-view="monte-carlo">Monte Carlo (Chaos)</button>
+                </div>
+            </div>
+            <div id="bracket-container" class="bracket-stage">
+                <div class="empty-state">
+                    <p>Select "Run Hyper-Simulation" to initialize the 2026 bracket flow.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 MM-Bracket-Flow. Built for Purdue Dominance.</p>
+    </footer>
+
+    <script src="/static/js/main.js" type="module"></script>
+</body>
+</html>

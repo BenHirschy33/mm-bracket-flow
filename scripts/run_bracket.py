@@ -78,7 +78,7 @@ def run_tournament(year: int):
     base_dir = Path(f"years/{year}/data")
     
     try:
-        teams_data = load_teams(base_dir / "team_stats.csv")
+        teams_data = load_teams(base_dir / "team_stats.csv", year=year)
         bracket_data = load_bracket(base_dir / "chalk_bracket.json")
     except FileNotFoundError as e:
         print(f"Error loading data: {e}")

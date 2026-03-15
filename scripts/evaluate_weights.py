@@ -20,7 +20,7 @@ def evaluate_bracket(year: int, weights: SimulationWeights):
     base_dir = Path(f"years/{year}/data")
     
     try:
-        teams_data = load_teams(base_dir / "team_stats.csv")
+        teams_data = load_teams(base_dir / "team_stats.csv", year=year)
         bracket_data = load_bracket(base_dir / "chalk_bracket.json") # Base structure definition
         with open(base_dir / "actual_results.json", 'r') as f:
             actual_results = json.load(f)
