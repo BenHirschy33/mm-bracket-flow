@@ -5,9 +5,9 @@ This script allows dynamic input of actual game winners during the tournament,
 triggering a re-simulation of "Second Chance" brackets in real-time.
 """
 
-import json
-import os
 import logging
+import os
+
 
 class LiveUpdateHandler:
     def __init__(self, year: str):

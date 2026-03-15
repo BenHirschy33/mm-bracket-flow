@@ -34,7 +34,9 @@ def test_simulator_intuition_modifier():
     team_a = Team("A", 4, 115.0, 95.0, 75.0, 65.0)
     team_b = Team("B", 5, 115.0, 95.0, 75.0, 65.0)
     
-    engine = SimulatorEngine(intuition_weight=0.015)  # 1.5% per point
+    from core.config import SimulationWeights
+    weights = SimulationWeights(intuition_weight=0.015)
+    engine = SimulatorEngine(weights=weights)
     
     # Base probability should be exactly 50%
     base_prob = engine.calculate_win_probability(team_a, team_b)
@@ -43,9 +45,51 @@ def test_simulator_intuition_modifier():
     # If we add +10 Intuition to Team A, their probability should rise by 15% (to 65%)
     team_a.intuition_score = 10.0
     mod_prob = engine.calculate_win_probability(team_a, team_b)
-    assert mod_prob == 0.65
+    assert round(mod_prob, 2) == 0.65
     
     # If we add +10 to both, it cancels out back to 50%
     team_b.intuition_score = 10.0
     cancel_prob = engine.calculate_win_probability(team_a, team_b)
-    assert cancel_prob == 0.50
+    assert round(cancel_prob, 2) == 0.50
+
+def test_advanced_metrics_toggle():
+    """Verify we can completely disable advanced metrics returning to Pythagorean baseline."""
+    from core.config import SimulationWeights
+    # Create two heavily mismatched teams on advanced metrics, but identical pythagorean
+    team_a = Team("A", 4, 115.0, 95.0, 75.0, 65.0, pace=75.0, off_efg_pct=60.0, def_efg_pct=50.0, off_to_pct=15.0, def_to_pct=15.0, sos=0.0, momentum=0.5)
+    team_b = Team("B", 5, 115.0, 95.0, 75.0, 65.0, pace=60.0, off_efg_pct=40.0, def_efg_pct=50.0, off_to_pct=15.0, def_to_pct=15.0, sos=0.0, momentum=0.5)
+    
+    # With default weights, 'A' should have a massive advantage due to eFG% alone
+    engine_default = SimulatorEngine()
+    prob_a_default = engine_default.calculate_win_probability(team_a, team_b)
+    
+    # Now build an engine with everything zeroed out except pythagorean
+    zero_weights = SimulationWeights(
+        pythagorean_weight=1.0,
+        pace_variance_weight=0.0,
+        efg_matchup_weight=0.0,
+        turnover_matchup_weight=0.0,
+        sos_weight=0.0,
+        momentum_weight=0.0,
+        intuition_weight=0.0,
+        defense_premium=0.0
+    )
+    engine_zeroed = SimulatorEngine(weights=zero_weights)
+    prob_a_zeroed = engine_zeroed.calculate_win_probability(team_a, team_b)
+    
+    assert prob_a_default > 0.50
+    assert round(prob_a_zeroed, 2) == 0.50
+
+def test_simulator_null_handling():
+    """Verify that if a stat is missing (None), the simulator gracefully skips it rather than crashing."""
+    team_a = Team("A", 4, 115.0, 95.0, 75.0, 65.0, pace=75.0) # None for efg, to, sos
+    team_b = Team("B", 5, 115.0, 95.0, 75.0, 65.0, pace=60.0) # None for efg, to, sos
+    
+    engine = SimulatorEngine()
+    prob = engine.calculate_win_probability(team_a, team_b)
+    
+    # Base is 0.50. Defense is identical.
+    # Pace logic: avg pace is 67.5. This is faster than 65.0.
+    # pace_factor = (65.0 - 67.5) * 0.005 = -0.0125
+    # A is underdog (or rather, not > 0.5 favorite), so it adds -0.0125 -> 0.4875.
+    assert round(prob, 4) == 0.4875

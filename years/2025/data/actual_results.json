@@ -1,0 +1,36 @@
+{
+  "champion": "Connecticut",
+  "final_four": [
+    "Connecticut",
+    "Alabama",
+    "Purdue",
+    "NC State"
+  ],
+  "elite_eight": [
+    "Connecticut",
+    "Illinois",
+    "Clemson",
+    "Alabama",
+    "Purdue",
+    "Tennessee",
+    "Duke",
+    "NC State"
+  ],
+  "sweet_sixteen": [
+    "Connecticut", "San Diego St.", "Illinois", "Iowa St.",
+    "North Carolina", "Alabama", "Clemson", "Arizona",
+    "Houston", "Duke", "NC State", "Marquette",
+    "Purdue", "Gonzaga", "Creighton", "Tennessee"
+  ],
+  "round_of_32": [
+    "Connecticut", "Northwestern", "San Diego St.", "Yale", 
+    "Duquesne", "Illinois", "Washington St.", "Iowa St.", 
+    "North Carolina", "Michigan St.", "Grand Canyon", "Alabama", 
+    "Clemson", "Baylor", "Dayton", "Arizona", 
+    "Houston", "Texas A&M", "James Madison", "Duke", 
+    "NC State", "Oakland", "Colorado", "Marquette", 
+    "Purdue", "Utah St.", "Gonzaga", "Kansas", 
+    "Oregon", "Creighton", "Texas", "Tennessee"
+  ],
+  "round_of_64": []
+}
