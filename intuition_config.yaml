@@ -1,0 +1,14 @@
+# HoopsOracle: Intuition Engine Config (Hirschy Factors)
+# Add manual overrides for the 2026 Bracket here.
+# A positive score gives a significant bump to a team's probability, a negative score hurts them.
+
+2026:
+  Duke: 0.0
+  Michigan: 0.0
+  Arizona: 0.0
+  Florida: 0.0
+  Connecticut: 0.0
+  Purdue: 0.0
+  Houston: 0.0
+  North Carolina: 0.0
+  Tennessee: 0.0

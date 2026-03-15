@@ -1,5 +1,5 @@
 {
-  "name": "HoopsOracle 2026 - Chalk Prediction",
+  "name": "HoopsOracle 2026 - Chaos Prediction",
   "seeds": {
     "Duke": 1,
     "Michigan": 1,
@@ -14,5 +14,5 @@
     "Baylor": 3,
     "Marquette": 3
   },
-  "notes": "Standard engine simulation."
+  "notes": "Injecting maximum Hirschy Factor overrides and up-weighting Pace variance to simulate a heavy upset year."
 }
