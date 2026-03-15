@@ -5,32 +5,40 @@ import cloudscraper
 import pandas as pd
 from io import StringIO
 from pathlib import Path
+import time
 
 def fetch_sports_reference_data(year: int) -> pd.DataFrame:
     """
-    Fetches the raw advanced stats table from Sports Reference for a given year.
-    Returns a Pandas DataFrame.
+    Fetches the raw stats table from Sports Reference.
+    >= 2011: Uses Advanced School Stats.
+    < 2011: Uses Basic School Stats.
     """
-    url = f"https://www.sports-reference.com/cbb/seasons/men/{year}-advanced-school-stats.html"
-    print(f"Fetching raw data natively via Cloudscraper API from {url}...")
+    mode = "advanced-school-stats" if year >= 2011 else "school-stats"
+    urls = [
+        f"https://www.sports-reference.com/cbb/seasons/men/{year}-{mode}.html",
+        f"https://www.sports-reference.com/cbb/seasons/{year}-{mode}.html"
+    ]
     
-    try:
-        scraper = cloudscraper.create_scraper()
-        response = scraper.get(url)
-        if response.status_code == 200:
-            # Sports reference has multi-index headers, we grab the first table
-            dfs = pd.read_html(StringIO(response.text))
-            if dfs:
-                df = dfs[0]
-                # Flatten the MultiIndex columns
-                df.columns = [col[1] if isinstance(col, tuple) else col for col in df.columns]
-                # Filter out header rows that repeat in the middle of the table
-                df = df[df['School'] != 'School']
-                return df
-        print(f"Error fetching data: HTTP {response.status_code}")
-    except Exception as e:
-        print(f"Error fetching data: {e}")
-        
+    scraper = cloudscraper.create_scraper()
+    for url in urls:
+        print(f"Trying {url}...")
+        try:
+            response = scraper.get(url)
+            if response.status_code == 200:
+                dfs = pd.read_html(StringIO(response.text))
+                if dfs:
+                    df = dfs[0]
+                    # Flatten MultiIndex if present
+                    if isinstance(df.columns, pd.MultiIndex):
+                        df.columns = [col[1] if "Unnamed" not in col[0] else col[1] for col in df.columns]
+                    
+                    df = df[df['School'].notna()]
+                    df = df[df['School'] != 'School']
+                    return df
+            print(f"Failed {url}: HTTP {response.status_code}")
+        except Exception as e:
+            print(f"Error for {url}: {e}")
+            
     return pd.DataFrame()
 
 def safe_float(val):
@@ -42,63 +50,50 @@ def safe_float(val):
         return None
 
 def sync_data(year: int):
-    """
-    The main pipeline.
-    1. Fetches raw data from Sports Reference.
-    2. Saves it as raw_team_stats.csv.
-    3. Processes it into our engine's team_stats.csv format.
-    """
     base_dir = Path(f"years/{year}/data")
     base_dir.mkdir(parents=True, exist_ok=True)
     
-    raw_csv = base_dir / "raw_team_stats.csv"
-    engine_csv = base_dir / "team_stats.csv"
-    
     df = fetch_sports_reference_data(year)
     if df.empty:
-        print("Failed to fetch data. Exiting.")
         return
         
-    print(f"Saving raw data to {raw_csv}...")
-    df.to_csv(raw_csv, index=False)
-        
-    print(f"Processing and injecting data to {engine_csv}...")
-    engine_rows = []
+    engine_csv = base_dir / "team_stats.csv"
     engine_headers = ["Team", "Seed", "AdjO", "AdjD", "Off_PPG", "Def_PPG", "Pace", "eFG_Off", "eFG_Def", "TO_Off", "TO_Def", "TRB", "3PAr", "SOS", "Momentum", "Intuition"]
     
+    engine_rows = []
     for _, row in df.iterrows():
         team_name = str(row.get('School', '')).replace('NCAA', '').strip()
-        if not team_name:
-            continue
+        if not team_name: continue
             
-        # Sports Reference column mapping
-        # ORtg is closely correlated to AdjO
+        # Common Basic Stats (available in all eras)
+        off_ppg = safe_float(row.get('PS/G'))
+        def_ppg = safe_float(row.get('PA/G'))
+        sos = safe_float(row.get('SOS'))
+        
+        # Advanced Stats (mostly 2011+)
         adjo = safe_float(row.get('ORtg'))
-        # They don't provide DRtg on the simple advanced page, so we will estimate or leave blank to fallback on base stats.
-        adjd = None  
         pace = safe_float(row.get('Pace'))
         efg_off = safe_float(row.get('eFG%'))
         tov_off = safe_float(row.get('TOV%'))
         trb = safe_float(row.get('TRB%'))
         threepar = safe_float(row.get('3PAr'))
-        sos = safe_float(row.get('SOS'))
         
         engine_rows.append({
             "Team": team_name,
-            "Seed": "", # Seed is injected during brackets
+            "Seed": "",
             "AdjO": adjo,
-            "AdjD": adjd,
-            "Off_PPG": "", 
-            "Def_PPG": "",
+            "AdjD": None, 
+            "Off_PPG": off_ppg, 
+            "Def_PPG": def_ppg,
             "Pace": pace,
             "eFG_Off": efg_off,
-            "eFG_Def": "", # SR doesn't have defensive advanced splits on this table
+            "eFG_Def": None,
             "TO_Off": tov_off,
-            "TO_Def": "",
+            "TO_Def": None,
             "TRB": trb,
             "3PAr": threepar,
             "SOS": sos, 
-            "Momentum": "", 
+            "Momentum": "0.0", 
             "Intuition": "0.0" 
         })
             
@@ -107,11 +102,18 @@ def sync_data(year: int):
         writer.writeheader()
         writer.writerows(engine_rows)
         
-    print(f"✅ Successfully processed {len(engine_rows)} teams for the {year} season!")
+    print(f"✅ Sync complete for {year}: {len(engine_rows)} teams.")
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Sync live API data to local engine CSVs")
-    parser.add_argument("--year", type=int, default=2025, help="Year of the tournament to fetch")
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--year", type=int, default=2025)
+    parser.add_argument("--start", type=int)
+    parser.add_argument("--end", type=int)
     args = parser.parse_args()
     
-    sync_data(args.year)
+    if args.start and args.end:
+        for y in range(args.start, args.end + 1):
+            sync_data(y)
+            time.sleep(1) # Be nice to SR
+    else:
+        sync_data(args.year)

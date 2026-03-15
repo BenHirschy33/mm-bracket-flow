@@ -7,12 +7,12 @@ class SimulationWeights:
     Set a weight to 0.0 to completely disable that metric's impact.
     Increase past 1.0 to over-index on a metric.
     """
-    # Multi-year optimized defaults (2021-2025)
-    trb_weight: float = 2.195
-    to_weight: float = 1.976
-    sos_weight: float = 5.530
-    momentum_weight: float = 0.084
-    efficiency_weight: float = 0.018
+    # Era-Agnostic Optimized Defaults (2000-2025)
+    trb_weight: float = 4.895
+    to_weight: float = 2.846
+    sos_weight: float = 7.635
+    momentum_weight: float = 0.073
+    efficiency_weight: float = 0.022
     
     # Intuition weight: 1 point = 1% probability shift
     intuition_weight: float = 0.01

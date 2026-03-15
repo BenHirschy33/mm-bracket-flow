@@ -1,53 +1,12 @@
 {
-  "round_of_32": [
-    "Gonzaga",
-    "Creighton",
-    "USC",
-    "Oregon",
-    "Iowa",
-    "Oregon St.",
-    "Loyola Chicago",
-    "Villanova",
-    "Baylor",
-    "Wisconsin",
-    "Villanova",
-    "Arkansas",
-    "Oral Roberts",
-    "Texas Tech",
-    "Alabama",
-    "UCLA"
-  ],
-  "sweet_sixteen": [
-    "Gonzaga",
-    "Creighton",
-    "USC",
-    "Oregon",
-    "Michigan",
-    "Florida St.",
-    "Alabama",
-    "UCLA",
-    "Baylor",
-    "Villanova",
-    "Arkansas",
-    "Oral Roberts",
-    "Oregon St.",
-    "Loyola Chicago"
-  ],
-  "elite_eight": [
-    "Gonzaga",
-    "USC",
-    "Michigan",
-    "UCLA",
-    "Baylor",
-    "Arkansas",
-    "Oregon St.",
-    "Houston"
-  ],
+  "round_of_32": [],
+  "sweet_sixteen": [],
+  "elite_eight": [],
   "final_four": [
-    "Gonzaga",
-    "UCLA",
     "Baylor",
-    "Houston"
+    "Gonzaga",
+    "Houston",
+    "UCLA"
   ],
   "champion": "Baylor"
 }

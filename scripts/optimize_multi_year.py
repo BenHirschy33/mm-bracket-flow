@@ -5,16 +5,21 @@ from core.config import SimulationWeights
 from scripts.mass_backtest import run_mass_backtest
 from scripts.evaluate_weights import evaluate_bracket
 
+import math
+
+def get_decay_weight(year, current_year=2026, k=0.05):
+    # Exponential decay: e^(-k * delta_t)
+    return math.exp(-k * (current_year - year))
+
 def optimize():
-    print("--- Starting Multi-Year Parameter Optimization ---")
+    print("--- Starting Multi-Year Parameter Optimization with Decay Weights ---")
     
     best_avg = 0
     best_weights = SimulationWeights()
     
-    # Range of metrics to perturb
-    # TRB, TO, SOS, Momentum, etc.
+    years = [2025, 2024, 2023, 2022, 2021, 2019, 2018, 2017, 2016, 2015, 2010, 2005, 2000]
     
-    for i in range(50): # 50 iterations of improvement
+    for i in range(200):
         test_weights = SimulationWeights()
         test_weights.trb_weight = random.uniform(1.0, 5.0)
         test_weights.to_weight = random.uniform(0.5, 3.0)
@@ -22,14 +27,16 @@ def optimize():
         test_weights.momentum_weight = random.uniform(0.01, 0.1)
         test_weights.efficiency_weight = random.uniform(0.01, 0.05)
         
-        # Evaluate across the 5 years
-        total_score = 0
-        years = [2021, 2022, 2023, 2024, 2025]
+        weighted_total_score = 0
+        total_decay_weight = 0
+        
         for y in years:
-            score, _ = evaluate_bracket(y, test_weights, iterations=5)
-            total_score += score
+            score, _ = evaluate_bracket(y, test_weights, iterations=10)
+            decay = get_decay_weight(y)
+            weighted_total_score += (score * decay)
+            total_decay_weight += decay
             
-        avg = total_score / len(years)
+        avg = weighted_total_score / total_decay_weight
         
         if avg > best_avg:
             best_avg = avg

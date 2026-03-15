@@ -1,42 +1,11 @@
 {
-  "round_of_32": [
-    "UConn",
-    "San Diego St.",
-    "Illinois",
-    "Iowa St.",
-    "North Carolina",
-    "Alabama",
-    "Clemson",
-    "Arizona",
-    "Houston",
-    "Duke",
-    "North Carolina St.",
-    "Marquette",
-    "Purdue",
-    "Gonzaga",
-    "Creighton",
-    "Tennessee"
-  ],
-  "sweet_sixteen": [
-    "UConn",
-    "Illinois",
-    "Alabama",
-    "Clemson",
-    "Duke",
-    "North Carolina St.",
-    "Purdue",
-    "Tennessee"
-  ],
-  "elite_eight": [
-    "UConn",
-    "Alabama",
-    "North Carolina St.",
-    "Purdue"
-  ],
+  "round_of_32": [],
+  "sweet_sixteen": [],
+  "elite_eight": [],
   "final_four": [
     "UConn",
     "Alabama",
-    "North Carolina St.",
+    "NC State",
     "Purdue"
   ],
   "champion": "UConn"
