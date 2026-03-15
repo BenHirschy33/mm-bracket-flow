@@ -1,0 +1,21 @@
+[project]
+name = "mm-bracket-flow"
+version = "1.0.0"
+description = "A perpetual March Madness prediction engine with human intuition."
+requires-python = ">=3.10"
+
+[tool.ruff]
+# Set the maximum line length to 120.
+line-length = 120
+
+[tool.ruff.lint]
+# Enable rules.
+select = ["E", "F", "I"]
+# Ignore some overly strict rules out of the box.
+ignore = []
+
+[tool.ruff.format]
+# Like Black, use double quotes for strings.
+quote-style = "double"
+# Like Black, indent with spaces, rather than tabs.
+indent-style = "space"
