@@ -30,10 +30,25 @@ async function fetchTeams(year) {
 async function runSimulation() {
     const year = document.getElementById('year-select').value;
     const bracketContainer = document.getElementById('bracket-container');
+    
+    // Get weights from sliders
+    const weightSos = document.getElementById('weight-sos').value;
+    const weightTrb = document.getElementById('weight-trb').value;
+    const weightTo = document.getElementById('weight-to').value;
+    const weightEff = document.getElementById('weight-eff').value;
+    
     bracketContainer.innerHTML = '<div class="loading-spinner"></div>';
     
     try {
-        const response = await fetch(`/api/simulation/full?year=${year}`);
+        const queryParams = new URLSearchParams({
+            year: year,
+            sos: weightSos,
+            trb: weightTrb,
+            to: weightTo,
+            efficiency: weightEff
+        });
+        
+        const response = await fetch(`/api/simulation/full?${queryParams.toString()}`);
         const data = await response.json();
         
         if (data.error) {
@@ -123,4 +138,20 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     document.getElementById('run-sim-btn').addEventListener('click', runSimulation);
+
+    // Slider Label Updates
+    const sliders = [
+        {id: 'weight-sos', val: 'val-sos'},
+        {id: 'weight-trb', val: 'val-trb'},
+        {id: 'weight-to', val: 'val-to'},
+        {id: 'weight-eff', val: 'val-eff'}
+    ];
+
+    sliders.forEach(s => {
+        const slider = document.getElementById(s.id);
+        const label = document.getElementById(s.val);
+        slider.addEventListener('input', (e) => {
+            label.textContent = e.target.value;
+        });
+    });
 });

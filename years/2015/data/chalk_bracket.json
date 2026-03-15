@@ -1,0 +1,29 @@
+{
+  "name": "2015 NCAA Tournament - Chalk",
+  "regions": {
+    "East": {
+      "1": "Duke",
+      "16": "Grambling",
+      "8": "Kentucky",
+      "9": "Villanova"
+    },
+    "West": {
+      "1": "Purdue",
+      "16": "Norfolk St.",
+      "8": "Florida",
+      "9": "St. John's"
+    },
+    "South": {
+      "1": "Arizona",
+      "16": "Howard",
+      "8": "Illinois",
+      "9": "Oklahoma"
+    },
+    "Midwest": {
+      "1": "Houston",
+      "16": "St. Peter's",
+      "8": "Virginia",
+      "9": "Seton Hall"
+    }
+  }
+}

@@ -45,6 +45,7 @@ def simulate_matchup():
     year = data.get('year', 2026)
     team_a_name = data.get('team_a')
     team_b_name = data.get('team_b')
+    weights_data = data.get('weights', {})
     
     try:
         base_dir = Path(f"years/{year}/data")
@@ -55,7 +56,14 @@ def simulate_matchup():
         if not team_a or not team_b:
             return jsonify({"error": "Team not found"}), 404
             
-        engine = SimulatorEngine()
+        custom_weights = SimulationWeights(
+            trb_weight=float(weights_data.get('trb', 4.895)),
+            to_weight=float(weights_data.get('to', 2.846)),
+            sos_weight=float(weights_data.get('sos', 7.635)),
+            momentum_weight=float(weights_data.get('momentum', 0.073)),
+            efficiency_weight=float(weights_data.get('efficiency', 0.022))
+        )
+        engine = SimulatorEngine(weights=custom_weights)
         prob_a = engine.calculate_win_probability(team_a, team_b)
         winner = team_a if prob_a >= 0.5 else team_b
         
@@ -63,7 +71,7 @@ def simulate_matchup():
             "winner": winner.name,
             "probability": prob_a,
             "team_a": team_a_name,
-            "team_b": team_b_name
+            "team_b": team_b_name 
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -73,13 +81,22 @@ def run_full_sim():
     year = request.args.get('year', default=2026, type=int)
     mode = request.args.get('mode', default='deterministic')
     
+    # Parse weights from query params (e.g., ?sos=7.5&trb=4.2)
+    custom_weights = SimulationWeights(
+        trb_weight=request.args.get('trb', default=4.895, type=float),
+        to_weight=request.args.get('to', default=2.846, type=float),
+        sos_weight=request.args.get('sos', default=7.635, type=float),
+        momentum_weight=request.args.get('momentum', default=0.073, type=float),
+        efficiency_weight=request.args.get('efficiency', default=0.022, type=float)
+    )
+    
     SEED_MATCHUPS = [(1, 16), (8, 9), (5, 12), (4, 13), (6, 11), (3, 14), (7, 10), (2, 15)]
     
     try:
         base_dir = Path(f"years/{year}/data")
         teams_data = load_teams(base_dir / "team_stats.csv", year=year)
         bracket_data = load_bracket(base_dir / "chalk_bracket.json")
-        engine = SimulatorEngine()
+        engine = SimulatorEngine(weights=custom_weights)
         
         sim_trace = {
             "regions": {},

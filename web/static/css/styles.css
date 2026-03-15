@@ -317,3 +317,48 @@ footer {
     margin-top: 2rem;
 }
 
+/* Settings Bar */
+.settings-bar {
+    display: flex;
+    justify-content: space-around;
+    padding: 1.5rem;
+    margin: 1rem 0;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.setting-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    flex: 1;
+    min-width: 150px;
+}
+
+.setting-item label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.7);
+}
+
+.setting-item input[type="range"] {
+    cursor: pointer;
+    accent-color: var(--primary);
+}
+
+.setting-item span {
+    font-weight: 800;
+    font-family: 'Outfit', sans-serif;
+    color: var(--primary);
+}
+
+.error-card {
+    padding: 2rem;
+    text-align: center;
+    border: 1px solid rgba(255, 100, 100, 0.3);
+}
+
+.error-card h3 { color: #ff6e6e; margin-top: 0; }
+.hint { font-size: 0.9rem; color: rgba(255,255,255,0.5); }
+

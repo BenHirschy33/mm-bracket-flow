@@ -22,11 +22,16 @@ def create_mock_chalk(year):
     return bracket
 
 def populate_historical():
-    years = [2021, 2022, 2023, 2024, 2025]
+    years_dir = Path("years")
+    years = [d.name for d in years_dir.iterdir() if d.is_dir() and d.name.isdigit()]
     for year in years:
         d = Path(f"years/{year}/data")
         os.makedirs(d, exist_ok=True)
         
+        # Only populate if team_stats.csv exists (i.e., we synced it)
+        if not (d / "team_stats.csv").exists():
+            continue
+
         # Ensure actual_results.json exists with at least a skeleton
         actual_path = d / "actual_results.json"
         if not actual_path.exists():
