@@ -1,0 +1,26 @@
+{
+  "year": 2026,
+  "teams": {
+    "Duke": {
+      "seed": 1,
+      "off_efficiency": 121.5,
+      "def_efficiency": 92.1,
+      "off_ppg": 84.5,
+      "def_ppg": 65.2
+    },
+    "Arizona": {
+      "seed": 1,
+      "off_efficiency": 119.8,
+      "def_efficiency": 93.5,
+      "off_ppg": 86.1,
+      "def_ppg": 68.0
+    },
+    "Fairleigh Dickinson": {
+      "seed": 16,
+      "off_efficiency": 105.2,
+      "def_efficiency": 112.4,
+      "off_ppg": 72.5,
+      "def_ppg": 75.1
+    }
+  }
+}
