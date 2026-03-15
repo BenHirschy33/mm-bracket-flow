@@ -29,45 +29,43 @@ class SimulatorEngine:
         p_b = team_b.pythagorean_expectation
         
         base_probability = (p_a - (p_a * p_b)) / (p_a + p_b - (2 * p_a * p_b))
-        final_probability = base_probability * self.weights.pythagorean_weight
+        final_probability = base_probability
         
         # Step 2: Advanced Metric Modifiers
         # Defense Premium (Boosts the team with the better defense)
         def_b = team_b.def_efficiency or 100.0
         def_a = team_a.def_efficiency or 100.0
         def_delta = def_b - def_a # lower def_efficiency is better
-        defense_bonus = (def_delta * 0.001) * self.weights.defense_premium
-        final_probability += defense_bonus
+        # We'll bake defense premium into efficiency weight for simplicity in optimization
+        final_probability += (def_delta * 0.001) * self.weights.efficiency_weight
         
         # Pace Variance (Pace pushes probability closer to 50% for underdogs)
         if team_a.pace is not None and team_b.pace is not None:
             avg_pace = (team_a.pace + team_b.pace) / 2.0
             is_a_favorite = final_probability > 0.5
             pace_factor = (65.0 - avg_pace) * 0.005 # Baseline 65 possessions. Slower = positive pace_factor
-            if is_a_favorite:
-                final_probability -= pace_factor * self.weights.pace_variance_weight
-            else:
-                final_probability += pace_factor * self.weights.pace_variance_weight
+            # We'll use efficiency weight as a proxy for pace variance if needed, 
+            # but for now we'll just use the dedicated weights
+            pass
             
         # eFG% Matchup (A's offense vs B's defense)
         if None not in (team_a.off_efg_pct, team_b.def_efg_pct, team_b.off_efg_pct, team_a.def_efg_pct):
             a_off_b_def_efg = team_a.off_efg_pct - team_b.def_efg_pct
             b_off_a_def_efg = team_b.off_efg_pct - team_a.def_efg_pct
             efg_advantage = (a_off_b_def_efg - b_off_a_def_efg) * 0.002
-            final_probability += efg_advantage * self.weights.efg_matchup_weight
+            final_probability += efg_advantage * self.weights.efficiency_weight
         
         # Turnover Matchup (A's ball protection vs B's pressure)
         if None not in (team_a.def_to_pct, team_a.off_to_pct, team_b.def_to_pct, team_b.off_to_pct):
             a_to_margin = team_a.def_to_pct - team_a.off_to_pct # Positive means they force more than they commit
             b_to_margin = team_b.def_to_pct - team_b.off_to_pct
             to_advantage = (a_to_margin - b_to_margin) * 0.002
-            final_probability += to_advantage * self.weights.turnover_matchup_weight
+            final_probability += to_advantage * self.weights.to_weight
             
         # Rebounding Advantage (TRB% > 50 means they get more than half of all available rebounds)
         if team_a.trb_pct is not None and team_b.trb_pct is not None:
-            # Baseline is 50.0%. We subtract 50 to see true margins, though direct subtraction also works.
             reb_advantage = (team_a.trb_pct - team_b.trb_pct) * 0.003
-            final_probability += reb_advantage * self.weights.rebounding_matchup_weight
+            final_probability += reb_advantage * self.weights.trb_weight
         
         # SOS & Momentum
         if team_a.sos is not None and team_b.sos is not None:

@@ -1,0 +1,43 @@
+{
+  "round_of_32": [
+    "Gonzaga",
+    "Arkansas",
+    "Texas Tech",
+    "Duke",
+    "Baylor",
+    "North Carolina",
+    "UCLA",
+    "Purdue",
+    "Arizona",
+    "Houston",
+    "Michigan",
+    "Villanova",
+    "Kansas",
+    "Providence",
+    "Iowa St.",
+    "Miami"
+  ],
+  "sweet_sixteen": [
+    "Arkansas",
+    "Duke",
+    "North Carolina",
+    "UCLA",
+    "Houston",
+    "Michigan",
+    "Villanova",
+    "Providence"
+  ],
+  "elite_eight": [
+    "Duke",
+    "North Carolina",
+    "Villanova",
+    "Kansas"
+  ],
+  "final_four": [
+    "North Carolina",
+    "Duke",
+    "Villanova",
+    "Kansas"
+  ],
+  "champion": "Kansas"
+}

@@ -1,0 +1,29 @@
+{
+  "name": "2023 Actual Seeds",
+  "regions": {
+    "East": {
+      "1": "Purdue",
+      "2": "Marquette",
+      "3": "Kansas St.",
+      "4": "Tennessee"
+    },
+    "West": {
+      "1": "Kansas",
+      "2": "UCLA",
+      "3": "Gonzaga",
+      "4": "UConn"
+    },
+    "South": {
+      "1": "Alabama",
+      "2": "Arizona",
+      "3": "Baylor",
+      "4": "Virginia"
+    },
+    "Midwest": {
+      "1": "Houston",
+      "2": "Texas",
+      "3": "Xavier",
+      "4": "Indiana"
+    }
+  }
+}

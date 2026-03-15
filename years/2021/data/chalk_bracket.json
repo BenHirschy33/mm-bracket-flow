@@ -1,0 +1,29 @@
+{
+  "name": "2021 Actual Seeds",
+  "regions": {
+    "West": {
+      "1": "Gonzaga",
+      "2": "Iowa",
+      "3": "Kansas",
+      "4": "Virginia"
+    },
+    "East": {
+      "1": "Michigan",
+      "2": "Alabama",
+      "3": "Texas",
+      "4": "Florida St."
+    },
+    "South": {
+      "1": "Baylor",
+      "2": "Ohio St.",
+      "3": "Arkansas",
+      "4": "Purdue"
+    },
+    "Midwest": {
+      "1": "Illinois",
+      "2": "Houston",
+      "3": "West Virginia",
+      "4": "Oklahoma St."
+    }
+  }
+}

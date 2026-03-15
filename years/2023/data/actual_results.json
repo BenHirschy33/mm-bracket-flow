@@ -1,0 +1,43 @@
+{
+  "round_of_32": [
+    "Alabama",
+    "San Diego St.",
+    "Creighton",
+    "Princeton",
+    "Purdue",
+    "Florida Atlantic",
+    "Kansas St.",
+    "Michigan St.",
+    "Houston",
+    "Miami",
+    "Xavier",
+    "Texas",
+    "Kansas",
+    "Arkansas",
+    "UConn",
+    "Gonzaga"
+  ],
+  "sweet_sixteen": [
+    "San Diego St.",
+    "Creighton",
+    "Florida Atlantic",
+    "Kansas St.",
+    "Miami",
+    "Texas",
+    "Arkansas",
+    "UConn"
+  ],
+  "elite_eight": [
+    "San Diego St.",
+    "Florida Atlantic",
+    "Miami",
+    "UConn"
+  ],
+  "final_four": [
+    "San Diego St.",
+    "Florida Atlantic",
+    "Miami",
+    "UConn"
+  ],
+  "champion": "UConn"
+}

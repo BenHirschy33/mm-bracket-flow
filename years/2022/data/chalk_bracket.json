@@ -1,0 +1,29 @@
+{
+  "name": "2022 Actual Seeds",
+  "regions": {
+    "West": {
+      "1": "Gonzaga",
+      "2": "Duke",
+      "3": "Texas Tech",
+      "4": "Arkansas"
+    },
+    "East": {
+      "1": "Baylor",
+      "2": "Kentucky",
+      "3": "Purdue",
+      "4": "UCLA"
+    },
+    "South": {
+      "1": "Arizona",
+      "2": "Villanova",
+      "3": "Tennessee",
+      "4": "Illinois"
+    },
+    "Midwest": {
+      "1": "Kansas",
+      "2": "Auburn",
+      "3": "Wisconsin",
+      "4": "Providence"
+    }
+  }
+}

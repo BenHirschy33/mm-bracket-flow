@@ -36,6 +36,15 @@ async function runSimulation() {
         const response = await fetch(`/api/simulation/full?year=${year}`);
         const data = await response.json();
         
+        if (data.error) {
+            bracketContainer.innerHTML = `<div class="error-card">
+                <h3>Simulation Error</h3>
+                <p>${data.error}</p>
+                <p class="hint">Ensure that the chalk_bracket.json exists for ${year}.</p>
+            </div>`;
+            return;
+        }
+        
         renderBracket(data);
     } catch (err) {
         bracketContainer.innerHTML = `<div class="error">Simulation failed: ${err.message}</div>`;

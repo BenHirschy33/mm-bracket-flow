@@ -1,0 +1,31 @@
+{
+  "round_of_32": [
+    "Florida",
+    "Duke",
+    "Houston",
+    "Auburn",
+    "UConn",
+    "Kansas",
+    "Arizona",
+    "Purdue"
+  ],
+  "sweet_sixteen": [
+    "Florida",
+    "Duke",
+    "Houston",
+    "Auburn"
+  ],
+  "elite_eight": [
+    "Florida",
+    "Duke",
+    "Houston",
+    "Auburn"
+  ],
+  "final_four": [
+    "Florida",
+    "Duke",
+    "Houston",
+    "Auburn"
+  ],
+  "champion": "Florida"
+}
