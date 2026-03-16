@@ -35,3 +35,5 @@ Thumbs.db
 # Antigravity artifacts
 .agent/scratch/
 .agent/logs/
+local_lib/
+test_venv/
