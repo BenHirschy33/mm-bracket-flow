@@ -287,6 +287,29 @@ main {
     font-size: 0.85rem;
     padding: 0.4rem;
     border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+}
+
+.team-line:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.team-line.locked {
+    box-shadow: 0 0 8px var(--accent-gold);
+    border: 1px solid var(--accent-gold);
+}
+
+.lock-icon {
+    display: none;
+    font-size: 0.8rem;
+    margin-left: 0.3rem;
+    filter: drop-shadow(0 0 2px var(--accent-gold));
+}
+
+.team-line.locked .lock-icon {
+    display: inline-block;
 }
 
 .team-line.winner {
