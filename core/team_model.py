@@ -38,6 +38,7 @@ class Team:
     def_ft_rate: Optional[float] = None    # FTr Allowed (Phase 5+)
     total_games: Optional[int] = None      # Experience proxy (Phase 4)
     star_reliance: Optional[float] = None # Pricing index for usage concentration (Phase 9)
+    total_win_pct: Optional[float] = None # Cumulative Win % (Phase 2 refined SOS)
     
     # Career/Venue Performance
     home_w: Optional[int] = None
@@ -62,11 +63,20 @@ class Team:
 
     @property
     def neutral_win_pct(self) -> float:
-        """Neutral site win percentage."""
+        """
+        Neutral site win percentage.
+        USER Feedback: Neutral sites are not 50/50; they shift more towards 'Away' 
+        for the higher seed/favorite. We weight existing neutral record, 
+        but default to a slightly away-leaning baseline (0.45) if no data.
+        """
         total = (self.neutral_w or 0) + (self.neutral_l or 0)
         if total == 0:
-            return 0.5  # Neutral default
-        return self.neutral_w / total
+            # USER: Neutral is 0.25 on a [0=Away, 1=Home] scale.
+            return 0.25 
+        
+        # Factor in true road dominance: if a team is great away, they likely handle neutral better
+        road_perf = self.road_dominance # (Win% Away - Win% Home)
+        return (self.neutral_w / total) + (road_perf * 0.1) # Subtle adjustment
 
     @property
     def non_conf_win_pct(self) -> float:

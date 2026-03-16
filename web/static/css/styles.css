@@ -6,13 +6,13 @@
     --accent-gold-glow: rgba(255, 184, 0, 0.4);
     --accent-orange: #ff6b00;
     --accent-orange-glow: rgba(255, 107, 0, 0.3);
-    --glass-bg: rgba(20, 25, 35, 0.65);
-    --glass-border: rgba(255, 255, 255, 0.08);
-    --text-primary: #f0f2f5;
-    --text-secondary: #9ea7b3;
-    --card-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+    --glass-bg: rgba(20, 25, 35, 0.75);
+    --glass-border: rgba(255, 255, 255, 0.12);
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --card-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
     --spacing-lg: 2rem;
-    --radius-lg: 16px;
+    --radius-lg: 20px;
     --sidebar-width: 320px;
 }
 
@@ -44,10 +44,11 @@ body {
     position: fixed;
     inset: 0;
     background: 
-        radial-gradient(at 10% 20%, rgba(255, 107, 0, 0.05) 0px, transparent 50%),
-        radial-gradient(at 90% 80%, rgba(255, 184, 0, 0.05) 0px, transparent 50%);
-    filter: blur(80px);
-    opacity: 0.6;
+        radial-gradient(at 0% 0%, rgba(255, 107, 0, 0.08) 0px, transparent 50%),
+        radial-gradient(at 100% 0%, rgba(255, 184, 0, 0.08) 0px, transparent 50%),
+        radial-gradient(at 50% 100%, rgba(255, 107, 0, 0.05) 0px, transparent 50%);
+    filter: blur(100px);
+    opacity: 0.8;
     z-index: -2;
     animation: meshPulse 15s ease-in-out infinite alternate;
 }
@@ -166,7 +167,7 @@ main {
 
 .sidebar-card {
     background: var(--glass-bg);
-    backdrop-filter: blur(15px);
+    backdrop-filter: blur(20px);
     border: 1px solid var(--glass-border);
     border-radius: var(--radius-lg);
     padding: 2rem;
@@ -262,11 +263,11 @@ input[type="range"] {
 }
 
 .region-block {
-    background: rgba(15, 18, 24, 0.4);
+    background: rgba(15, 18, 24, 0.5);
     border: 1px solid var(--glass-border);
     border-radius: 28px;
     padding: 4rem;
-    backdrop-filter: blur(15px);
+    backdrop-filter: blur(20px);
 }
 
 .matchup-card {
@@ -478,6 +479,57 @@ input[type="range"] {
 
 ::-webkit-scrollbar-thumb:hover {
     background: var(--accent-gold);
+}
+
+/* Comparison Charts */
+.comparison-charts {
+    margin-top: 4rem;
+}
+
+.stat-bar-row {
+    margin-bottom: 2.5rem;
+}
+
+.stat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 0.85rem;
+}
+
+.stat-label {
+    color: var(--text-secondary);
+}
+
+.val-a { color: var(--accent-gold); }
+.val-b { color: var(--accent-orange); }
+
+.bar-wrapper {
+    height: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    display: flex;
+    overflow: hidden;
+    border: 1px solid var(--glass-border);
+}
+
+.bar-fill {
+    height: 100%;
+    transition: width 1s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.bar-fill.team-a {
+    background: linear-gradient(90deg, var(--accent-gold), var(--accent-orange));
+    border-radius: 0 5px 5px 0;
+}
+
+.bar-fill.team-b {
+    background: rgba(255, 255, 255, 0.1);
+    margin-left: auto;
 }
 
 @keyframes winnerPulse {

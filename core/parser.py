@@ -144,6 +144,7 @@ def load_teams(csv_filepath: str | Path, year: int = None) -> Dict[str, Team]:
                         if wl_pct is not None and matched_team.off_efficiency and matched_team.def_efficiency:
                             pyth = (matched_team.off_efficiency**11.5) / (matched_team.off_efficiency**11.5 + matched_team.def_efficiency**11.5)
                             matched_team.luck = wl_pct - pyth
+                            matched_team.total_win_pct = wl_pct
                         
                         # Star Reliance Proxy: Slashers (FTR) + Independent Scorers (Low AST%)
                         if matched_team.off_ft_rate is not None and matched_team.off_ast_pct is not None:

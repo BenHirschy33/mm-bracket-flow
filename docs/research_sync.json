@@ -1,0 +1,21 @@
+{
+  "last_research_sync": "2026-03-16T17:55:00",
+  "key_findings": {
+    "volatility_indicators": [
+      "Turnover Percentage (Primary Upset Predictor)",
+      "Offensive Rebounding Percentage (Under-weighted in standard models)",
+      "Three-Point Field Goal Defense"
+    ],
+    "foul_drawing": {
+      "metric": "Free Throw Rate (FTA/FGA)",
+      "impact": "Decisive in late-game situational scoring (+PPG)",
+      "bias_note": "Referee 'Evening Out' effect (Referees favor the team with fewer fouls as differential grows)"
+    },
+    "rebounding_impact": {
+      "r32_prob_boost": 2.62,
+      "s16_prob_boost": 1.99,
+      "note": "Impact diminishes in later rounds (E8+)"
+    },
+    "arch_note": "A champion must be Top 25 in KenPom, Top 25 AdjO, and Top 40 AdjD."
+  }
+}

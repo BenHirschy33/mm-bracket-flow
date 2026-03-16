@@ -13,7 +13,9 @@ const appState = {
         momentum: 0.021,
         efficiency: 0.039,
         ft: 0.881,
-        def_premium: 6.479
+        def_premium: 6.479,
+        orb_density: 1.42,
+        luck_regression: 0.125
     },
     teams: {},
     currentData: null,
@@ -380,6 +382,7 @@ function renderModalData(data) {
                 <div class="stat-bubble">Off: ${team.off_eff.toFixed(1)}</div>
                 <div class="stat-bubble">Def: ${team.def_eff.toFixed(1)}</div>
                 <div class="stat-bubble">SOS: ${team.sos.toFixed(1)}</div>
+                <div class="stat-bubble" title="Luck Metric">L: ${(team.luck || 0).toFixed(2)}</div>
             </div>
         `;
     };
@@ -401,23 +404,21 @@ function renderModalData(data) {
         { label: 'Off. Efficiency', key: 'off_eff', max: 130 },
         { label: 'Def. Efficiency', key: 'def_eff', max: 120, inverse: true },
         { label: 'SOS Rating', key: 'sos', max: 15 },
-        { label: 'Rebounding', key: 'trb', max: 60 }
+        { label: 'ORB Density', key: 'orb_pct', max: 45 },
+        { label: 'Star Reliance', key: 'star_reliance', max: 1.0 }
     ];
     
     const barContainer = document.getElementById('comparison-bars');
     barContainer.innerHTML = metrics.map(m => {
-        let valA = data.team_a[m.key];
-        let valB = data.team_b[m.key];
-        
-        const pctA = (valA / m.max) * 100;
-        const pctB = (valB / m.max) * 100;
+        let valA = data.team_a[m.key] || 0;
+        let valB = data.team_b[m.key] || 0;
         
         return `
             <div class="stat-bar-row">
                 <div class="stat-header">
-                    <span class="val-a">${valA.toFixed(1)}</span>
+                    <span class="val-a">${valA.toFixed(m.key === 'star_reliance' ? 2 : 1)}</span>
                     <span class="stat-label">${m.label}</span>
-                    <span class="val-b">${valB.toFixed(1)}</span>
+                    <span class="val-b">${valB.toFixed(m.key === 'star_reliance' ? 2 : 1)}</span>
                 </div>
                 <div class="bar-wrapper">
                     <div class="bar-fill team-a" style="width: 0%"></div>
@@ -432,8 +433,11 @@ function renderModalData(data) {
         const barsA = document.querySelectorAll('.bar-fill.team-a');
         const barsB = document.querySelectorAll('.bar-fill.team-b');
         metrics.forEach((m, i) => {
-            const pctA = (data.team_a[m.key] / m.max) * 100;
-            const pctB = (data.team_b[m.key] / m.max) * 100;
+            let valA = data.team_a[m.key] || 0;
+            let valB = data.team_b[m.key] || 0;
+            
+            const pctA = (valA / m.max) * 100;
+            const pctB = (valB / m.max) * 100;
             barsA[i].style.width = `${pctA}%`;
             barsB[i].style.width = `${pctB}%`;
         });
@@ -472,7 +476,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Real-time Slider & Number updates (bidirectional sync)
-    const factorIds = ['sos', 'trb', 'to', 'eff', 'momentum', 'ft', 'def-premium'];
+    const factorIds = ['sos', 'trb', 'to', 'eff', 'momentum', 'ft', 'def-premium', 'orb-density', 'luck-regression'];
     factorIds.forEach(id => {
         const slider = document.getElementById(`weight-${id}`);
         const numInput = document.getElementById(`num-${id}`);

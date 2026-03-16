@@ -1,0 +1,36 @@
+{
+  "year": 2025,
+  "volatility_markers": {
+    "continuation_rule": {
+      "impact": "High",
+      "description": "Allows offensive players to finish steps/pivots after contact if dribble is gathered.",
+      "logic_adjustment": "Increases expected field goal percentage for driving teams; slight boost to offensive efficiency in high-contact matchups."
+    },
+    "orb_density": {
+      "impact": "Medium-High",
+      "description": "High offensive rebounding rates as a volatility buffer.",
+      "logic_adjustment": "Teams with ORB% > 35% receive a 'Second Chance' multiplier in simulation loops."
+    }
+  },
+  "luck_regression": {
+    "metric": "KenPom Luck",
+    "logic": "Teams with extreme positive luck (> 0.05) are penalized in early rounds; teams with negative luck (< -0.05) receive a 'Grit' boost if defensive efficiency is top 30."
+  },
+  "formulas": {
+    "grit": "0.4 * (100 - AdjDE) + 0.3 * ORB_pct + 0.3 * (Math.abs(Luck) if Luck < 0 else 0)",
+    "aggression": "0.3 * AdjT + 0.4 * FT_Rate + 0.3 * TO_pct_def",
+    "portal_stability": "0.5 * Minutes_Returning_pct + 0.3 * Scoring_Returning_pct - 0.2 * Transfer_Usage_pct",
+    "moxie": "Coach_PASE * 0.5 + Tournament_Wins * 0.2 + Final_Four_Appearances * 0.3",
+    "chaos_potential": "3PA_FGA_Ratio * 0.6 + TO_pct_def * 0.4"
+  },
+  "upset_markers": {
+    "underseed_vulnerability": {
+      "trigger": "High Seed AdjD > 50",
+      "impact": "Increases upset probability by 15% if opponent is high-Moxie."
+    },
+    "three_point_variance": {
+      "trigger": "Low Seed 3PA/FGA > 0.45",
+      "impact": "Increases variance coefficient by 25%."
+    }
+  }
+}

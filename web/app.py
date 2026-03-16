@@ -1,11 +1,12 @@
 import sys
 import os
-from pathlib import Path
+# Ensure local dependencies are prioritised
+sys.path.insert(0, os.path.join(os.getcwd(), 'local_lib'))
+sys.path.append(os.getcwd())
+
 from flask import Flask, render_template, jsonify, request
 from flask_cors import CORS
-
-# Ensure core and years modules are importable
-sys.path.append(os.getcwd())
+from pathlib import Path
 
 from core.parser import load_teams, load_bracket
 from core.simulator import SimulatorEngine
@@ -103,7 +104,7 @@ def simulate_matchup():
             ft_weight=float(weights_data.get('ft', 0.881)),
             defense_premium=float(weights_data.get('def_premium', 6.479))
         )
-        engine = SimulatorEngine(weights=custom_weights)
+        engine = SimulatorEngine(teams=teams, weights=custom_weights)
         prob_a = engine.calculate_win_probability(team_a, team_b)
         winner = team_a if prob_a >= 0.5 else team_b
         
@@ -158,9 +159,8 @@ def get_matchup_detail():
             ft_weight=float(weights_data.get('ft') or 0.881),
             defense_premium=float(weights_data.get('def_premium') or 6.479)
         )
-        engine = SimulatorEngine(weights=custom_weights)
+        engine = SimulatorEngine(teams=teams, weights=custom_weights)
         prob_a = engine.calculate_win_probability(t_a, t_b)
-        
         # Generate dynamic "Why" analysis
         analysis = []
         
@@ -185,9 +185,9 @@ def get_matchup_detail():
             })
 
         # Free Throw Factor
-        ft_a = (t_a.off_ft_pct or 70) - (t_b.def_ft_pct or 70)
-        ft_b = (t_b.off_ft_pct or 70) - (t_a.def_ft_pct or 70)
-        ft_diff = ft_a - ft_b
+        ft_a_val = (t_a.off_ft_pct or 70) - (t_b.def_ft_pct or 70)
+        ft_b_val = (t_b.off_ft_pct or 70) - (t_a.def_ft_pct or 70)
+        ft_diff = ft_a_val - ft_b_val
         if abs(ft_diff) > 4.0:
             analysis.append({
                 "factor": "Free Throw Advantage",
@@ -195,16 +195,60 @@ def get_matchup_detail():
                 "description": f"{t_a.name if ft_diff > 0 else t_b.name} is significantly more effective at the charity stripe."
             })
 
+        # 2025 Specific Indicators
+        # Luck
+        luck_a = getattr(t_a, 'luck', 0.0) or 0.0
+        luck_b = getattr(t_b, 'luck', 0.0) or 0.0
+        if abs(luck_a) > 0.05 or abs(luck_b) > 0.05:
+            luck_diff = luck_b - luck_a
+            analysis.append({
+                "factor": "Luck Regression",
+                "importance": "Medium",
+                "description": f"{t_a.name if luck_diff > 0 else t_b.name} has consistently overachieved their analytical profile; they are statistically 'due' for regression."
+            })
+
+        # Aggressiveness (Continuation Rule Proxy)
+        ftr_a = t_a.off_ft_rate or 0.0
+        ftr_b = t_b.off_ft_rate or 0.0
+        if ftr_a > 0.38 or ftr_b > 0.38:
+            analysis.append({
+                "factor": "Aggression Index",
+                "importance": "High",
+                "description": f"{t_a.name if ftr_a > ftr_b else t_b.name}'s ability to draw fouls aligns perfectly with the 2025 'Continuation' emphasis."
+            })
+
+        # Star Reliance
+        star_a = getattr(t_a, 'star_reliance', 0.5)
+        star_b = getattr(t_b, 'star_reliance', 0.5)
+        if abs(star_a - star_b) > 0.15:
+            analysis.append({
+                "factor": "Roster Depth",
+                "importance": "Medium",
+                "description": f"{t_a.name if star_a < star_b else t_b.name} has a more balanced scoring attack, making them harder to scout and shut down than the star-dependent {t_b.name if star_a < star_b else t_a.name}."
+            })
+
+        # ORB Density
+        orb_a = t_a.off_orb_pct or 25.0
+        orb_b = t_b.off_orb_pct or 25.0
+        if orb_a > 33.0 or orb_b > 33.0:
+            analysis.append({
+                "factor": "ORB Density",
+                "importance": "High",
+                "description": f"{t_a.name if orb_a > orb_b else t_b.name} is a glass-crashing juggernaut, generating critical second-chance opportunities."
+            })
+
         return jsonify({
             "team_a": {
                 "name": t_a.name, "seed": t_a.seed,
                 "off_eff": t_a.off_efficiency, "def_eff": t_a.def_efficiency,
-                "sos": t_a.sos, "trb": t_a.trb_pct, "mom": t_a.momentum, "ft": t_a.off_ft_pct
+                "sos": t_a.sos, "trb": t_a.trb_pct, "mom": t_a.momentum, "ft": t_a.off_ft_pct,
+                "luck": luck_a, "star_reliance": star_a, "orb_pct": orb_a, "ft_rate": ftr_a
             },
             "team_b": {
                 "name": t_b.name, "seed": t_b.seed,
                 "off_eff": t_b.off_efficiency, "def_eff": t_b.def_efficiency,
-                "sos": t_b.sos, "trb": t_b.trb_pct, "mom": t_b.momentum, "ft": t_b.off_ft_pct
+                "sos": t_b.sos, "trb": t_b.trb_pct, "mom": t_b.momentum, "ft": t_b.off_ft_pct,
+                "luck": luck_b, "star_reliance": star_b, "orb_pct": orb_b, "ft_rate": ftr_b
             },
             "probability": prob_a,
             "analysis": analysis
@@ -251,7 +295,7 @@ def run_full_sim():
         base_dir = Path(f"years/{year}/data")
         teams_data = load_teams(base_dir / "team_stats.csv", year=year)
         bracket_data = load_bracket(base_dir / "chalk_bracket.json")
-        engine = SimulatorEngine(weights=custom_weights)
+        engine = SimulatorEngine(teams=teams_data, weights=custom_weights)
         
         sim_trace = {
             "regions": {},

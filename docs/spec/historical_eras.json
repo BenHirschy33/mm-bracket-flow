@@ -1,0 +1,34 @@
+{
+  "eras": [
+    {
+      "name": "Early & NIT Era",
+      "range": "1939-1955",
+      "weight_modifier": 0.5,
+      "description": "High regional variance, NIT competition, low standardization."
+    },
+    {
+      "name": "Wooden Dynasty Era",
+      "range": "1956-1975",
+      "weight_modifier": 1.2,
+      "description": "UCLA dominance, integration of college basketball, established prestige."
+    },
+    {
+      "name": "Pre-Modern Transition",
+      "range": "1976-1984",
+      "weight_modifier": 0.8,
+      "description": "Expansion of the field, end of UCLA dynasty, parity begins."
+    },
+    {
+      "name": "Modern Blue Blood Era",
+      "range": "1985-2015",
+      "weight_modifier": 1.0,
+      "description": "64-team field, media explosion, consistent elite programs (Duke, UK, UNC)."
+    },
+    {
+      "name": "Portal & NIL Volatility Era",
+      "range": "2016-Present",
+      "weight_modifier": 1.5,
+      "description": "High roster turnover, immediate eligibility, 1-and-done evolution, extreme volatility."
+    }
+  ]
+}

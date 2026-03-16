@@ -1,45 +1,17 @@
+import sys
+import os
+import time
+from io import StringIO
+from pathlib import Path
+
+# Ensure local dependencies are prioritised
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "local_lib"))
+
 import argparse
 import csv
 import json
 import cloudscraper
 import pandas as pd
-from io import StringIO
-from pathlib import Path
-import time
-
-def fetch_sports_reference_data(year: int) -> pd.DataFrame:
-    """
-    Fetches the raw stats table from Sports Reference.
-    >= 2011: Uses Advanced School Stats.
-    < 2011: Uses Basic School Stats.
-    """
-    mode = "advanced-school-stats" if year >= 2011 else "school-stats"
-    urls = [
-        f"https://www.sports-reference.com/cbb/seasons/men/{year}-{mode}.html",
-        f"https://www.sports-reference.com/cbb/seasons/{year}-{mode}.html"
-    ]
-    
-    scraper = cloudscraper.create_scraper()
-    for url in urls:
-        print(f"Trying {url}...")
-        try:
-            response = scraper.get(url)
-            if response.status_code == 200:
-                dfs = pd.read_html(StringIO(response.text))
-                if dfs:
-                    df = dfs[0]
-                    # Flatten MultiIndex if present
-                    if isinstance(df.columns, pd.MultiIndex):
-                        df.columns = [col[1] if "Unnamed" not in col[0] else col[1] for col in df.columns]
-                    
-                    df = df[df['School'].notna()]
-                    df = df[df['School'] != 'School']
-                    return df
-            print(f"Failed {url}: HTTP {response.status_code}")
-        except Exception as e:
-            print(f"Error for {url}: {e}")
-            
-    return pd.DataFrame()
 
 def safe_float(val):
     try:
@@ -49,60 +21,144 @@ def safe_float(val):
     except (ValueError, TypeError):
         return None
 
+def fetch_table(year: int, mode: str) -> pd.DataFrame:
+    urls = [
+        f"https://www.sports-reference.com/cbb/seasons/men/{year}-{mode}.html",
+        f"https://www.sports-reference.com/cbb/seasons/{year}-{mode}.html"
+    ]
+    scraper = cloudscraper.create_scraper()
+    for url in urls:
+        try:
+            response = scraper.get(url)
+            if response.status_code == 200:
+                dfs = pd.read_html(StringIO(response.text))
+                if dfs:
+                    df = dfs[0]
+                    if isinstance(df.columns, pd.MultiIndex):
+                        df.columns = [col[1] if "Unnamed" not in col[0] else col[1] for col in df.columns]
+                    df = df[df['School'].notna()]
+                    df = df[df['School'] != 'School']
+                    return df
+        except Exception: pass
+    return pd.DataFrame()
+
+def parse_record(record_str):
+    if pd.isna(record_str) or "-" not in str(record_str):
+        return 0, 0
+    parts = str(record_str).split("-")
+    try:
+        return int(parts[0]), int(parts[1])
+    except: return 0, 0
+
 def sync_data(year: int):
     base_dir = Path(f"years/{year}/data")
     base_dir.mkdir(parents=True, exist_ok=True)
     
-    df = fetch_sports_reference_data(year)
-    if df.empty:
+    # Fetch multiple tables for full coverage
+    df_adv = fetch_table(year, "advanced-school-stats")
+    df_basic = fetch_table(year, "school-stats")
+    
+    if df_adv.empty and df_basic.empty:
+        print(f"❌ No data found for {year}")
         return
         
-    engine_csv = base_dir / "team_stats.csv"
-    engine_headers = ["Team", "Seed", "AdjO", "AdjD", "Off_PPG", "Def_PPG", "Pace", "eFG_Off", "eFG_Def", "TO_Off", "TO_Def", "TRB", "3PAr", "SOS", "Momentum", "Intuition"]
+    team_data = {}
     
-    engine_rows = []
-    for _, row in df.iterrows():
-        team_name = str(row.get('School', '')).replace('NCAA', '').strip()
-        if not team_name: continue
+    # Process Basic (Records, PPG, SOS)
+    for _, row in df_basic.iterrows():
+        name = str(row.get('School', '')).replace('NCAA', '').strip()
+        if not name: continue
+        w, l = parse_record(row.get('W-L'))
+        hw, hl = parse_record(row.get('Home'))
+        aw, al = parse_record(row.get('Away'))
+        
+        team_data[name] = {
+            "Team": name,
+            "Wins": w, "Losses": l,
+            "HomeW": hw, "HomeL": hl,
+            "AwayW": aw, "AwayL": al,
+            "Off_PPG": safe_float(row.get('PS/G')),
+            "Def_PPG": safe_float(row.get('PA/G')),
+            "SOS": safe_float(row.get('SOS'))
+        }
+    
+    # Process Advanced (Efficiency, Pace, Factors)
+    for _, row in df_adv.iterrows():
+        name = str(row.get('School', '')).replace('NCAA', '').strip()
+        if name not in team_data: team_data[name] = {"Team": name}
+        
+        team_data[name].update({
+            "AdjO": safe_float(row.get('ORtg')),
+            "Pace": safe_float(row.get('Pace')),
+            "eFG_Off": safe_float(row.get('eFG%')),
+            "TO_Off": safe_float(row.get('TOV%')),
+            "TRB": safe_float(row.get('TRB%')),
+            "ORB": safe_float(row.get('ORB%')),
+            "3PAr": safe_float(row.get('3PAr')),
+            "FTr": safe_float(row.get('FTr'))
+        })
+
+    # Derive missing stats from basic totals
+    for name, data in team_data.items():
+        # Find raw row in df_basic
+        basic_rows = df_basic[df_basic['School'].str.contains(name, na=False)]
+        if not basic_rows.empty:
+            brow = basic_rows.iloc[0]
+            fg = safe_float(brow.get('FG'))
+            fga = safe_float(brow.get('FGA'))
+            tp = safe_float(brow.get('3P'))
+            tpa = safe_float(brow.get('3PA'))
+            fta = safe_float(brow.get('FTA'))
             
-        # Common Basic Stats (available in all eras)
-        off_ppg = safe_float(row.get('PS/G'))
-        def_ppg = safe_float(row.get('PA/G'))
-        sos = safe_float(row.get('SOS'))
-        
-        # Advanced Stats (mostly 2011+)
-        adjo = safe_float(row.get('ORtg'))
-        pace = safe_float(row.get('Pace'))
-        efg_off = safe_float(row.get('eFG%'))
-        tov_off = safe_float(row.get('TOV%'))
-        trb = safe_float(row.get('TRB%'))
-        threepar = safe_float(row.get('3PAr'))
-        
-        engine_rows.append({
-            "Team": team_name,
+            if data.get("eFG_Off") is None and fg is not None and fga and fga > 0:
+                data["eFG_Off"] = (fg + 0.5 * (tp or 0)) / fga
+            if data.get("3PAr") is None and tpa is not None and fga and fga > 0:
+                data["3PAr"] = tpa / fga
+            if data.get("FTr") is None and fta is not None and fga and fga > 0:
+                data["FTr"] = fta / fga
+            if data.get("ORB") is None:
+                # Use raw ORB/G if % is missing
+                orb = safe_float(brow.get('ORB'))
+                data["ORB"] = (orb / 10.0) if orb else None # Scale to roughly match % range
+            
+    engine_csv = base_dir / "team_stats.csv"
+    engine_headers = ["Team", "Seed", "AdjO", "AdjD", "Off_PPG", "Def_PPG", "Pace", "eFG_Off", "eFG_Def", "TO_Off", "TO_Def", "TRB", "ORB", "3PAr", "FTr", "SOS", "Wins", "Losses", "HomeW", "HomeL", "AwayW", "AwayL", "Momentum", "Intuition"]
+    
+    rows = []
+    for team, data in team_data.items():
+        rows.append({
+            "Team": data.get("Team"),
             "Seed": "",
-            "AdjO": adjo,
-            "AdjD": None, 
-            "Off_PPG": off_ppg, 
-            "Def_PPG": def_ppg,
-            "Pace": pace,
-            "eFG_Off": efg_off,
+            "AdjO": data.get("AdjO"),
+            "AdjD": None,
+            "Off_PPG": data.get("Off_PPG"),
+            "Def_PPG": data.get("Def_PPG"),
+            "Pace": data.get("Pace"),
+            "eFG_Off": data.get("eFG_Off"),
             "eFG_Def": None,
-            "TO_Off": tov_off,
+            "TO_Off": data.get("TO_Off"),
             "TO_Def": None,
-            "TRB": trb,
-            "3PAr": threepar,
-            "SOS": sos, 
-            "Momentum": "0.0", 
-            "Intuition": "0.0" 
+            "TRB": data.get("TRB"),
+            "ORB": data.get("ORB"),
+            "3PAr": data.get("3PAr"),
+            "FTr": data.get("FTr"),
+            "SOS": data.get("SOS"),
+            "Wins": data.get("Wins"),
+            "Losses": data.get("Losses"),
+            "HomeW": data.get("HomeW"),
+            "HomeL": data.get("HomeL"),
+            "AwayW": data.get("AwayW"),
+            "AwayL": data.get("AwayL"),
+            "Momentum": 0.0,
+            "Intuition": 0.0
         })
             
     with open(engine_csv, 'w', newline='', encoding='utf-8') as f:
         writer = csv.DictWriter(f, fieldnames=engine_headers)
         writer.writeheader()
-        writer.writerows(engine_rows)
+        writer.writerows(rows)
         
-    print(f"✅ Sync complete for {year}: {len(engine_rows)} teams.")
+    print(f"✅ Enhanced sync complete for {year}: {len(rows)} teams.")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

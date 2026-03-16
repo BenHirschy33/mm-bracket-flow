@@ -17,8 +17,8 @@ class SimulationWeights:
     three_par_weight: float = 0.0  # New research metric
     pace_variance_weight: float = 0.0  # Upset probability multiplier
     
-    # Phase 4: Grit & Chaos Metrics
-    ft_rate_weight: float = 0.0
+    # Phase 4: Foul Drawing & Chaos Metrics
+    foul_drawing_weight: float = 0.0
     stl_weight: float = 0.0
     blk_weight: float = 0.0
     orb_weight: float = 0.0
@@ -44,6 +44,10 @@ class SimulationWeights:
     cinderella_factor: float = 0.0        # Multiplier for high-variance underdog bias
     luck_regression_weight: float = 0.0   # Penalty for over-performing Win% (Phase 9)
     star_reliance_weight: float = 0.0     # Penalty for dependency on star scorers (Phase 9)
+    
+    # Phase 2: 2025 Indicators (Research Hub)
+    orb_density_weight: float = 0.0      # Multiplier for historic OR% (>34%)
+    continuation_rule_bias: float = 0.0  # Volatility shift for aggressive slashers
 
     # Intuition weight: Disabled
     intuition_weight: float = 0.0
@@ -60,14 +64,14 @@ DEFAULT_WEIGHTS = SimulationWeights(
     efficiency_weight=0.229,
     to_weight=6.034,
     ft_weight=1.071,
-    three_par_weight=0.792,
+    three_par_weight=2.0, # Increased: Huge factor
     pace_variance_weight=0.047,
     momentum_weight=0.425,
     sos_weight=7.109,
-    ft_rate_weight=0.597,
+    foul_drawing_weight=0.597,
     stl_weight=0,
     blk_weight=0,
-    orb_weight=1.153,
+    orb_weight=2.5, # Increased: Huge factor
     luck_weight=-0.642,
     due_factor_sensitivity=0.015, # Optimized value
     momentum_regression_weight=0.368,
@@ -103,7 +107,7 @@ CHAOS_WEIGHTS = SimulationWeights(
     pace_variance_weight=2.720,
     defense_premium=17.004,
     chaos_mode=True,
-    ft_rate_weight=2.0,  # Chaos teams draw fouls
+    foul_drawing_weight=2.0,  # Chaos teams draw fouls
     stl_weight=1.5,      # Chaos teams disrupt
     blk_weight=0.0,
     orb_weight=1.0
