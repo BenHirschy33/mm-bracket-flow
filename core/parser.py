@@ -50,6 +50,8 @@ def load_teams(csv_filepath: str | Path, year: int = None) -> Dict[str, Team]:
                 def_to_pct=safe_float(row.get("TO_Def")),
                 trb_pct=safe_float(row.get("TRB")),
                 three_par=safe_float(row.get("3PAr")),
+                off_ft_pct=safe_float(row.get("FT_Off")),
+                def_ft_pct=safe_float(row.get("FT_Def")),
                 sos=safe_float(row.get("SOS")),
                 momentum=safe_float(row.get("Momentum")),
                 

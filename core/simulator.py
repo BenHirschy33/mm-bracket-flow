@@ -75,6 +75,12 @@ class SimulatorEngine:
         if team_a.momentum is not None and team_b.momentum is not None:
             momentum_advantage = (team_a.momentum - team_b.momentum) * 0.05
             final_probability += momentum_advantage * self.weights.momentum_weight
+            
+        # Free Throw Advantage (proxy for efficiency and drawing fouls)
+        if team_a.off_ft_pct is not None and team_b.def_ft_pct is not None and \
+           team_b.off_ft_pct is not None and team_a.def_ft_pct is not None:
+            ft_advantage = (team_a.off_ft_pct - team_b.def_ft_pct) - (team_b.off_ft_pct - team_a.def_ft_pct)
+            final_probability += ft_advantage * 0.01 * self.weights.ft_weight
         
         # Step 3: Apply human intuition modifier
         def get_situational_intuition(team_eval: Team, opponent: Team) -> float:

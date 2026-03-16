@@ -29,15 +29,30 @@ def get_teams(year):
             teams_list.append({
                 "name": name,
                 "seed": t.seed,
+                "momentum": t.momentum,
+                "sos": getattr(t, 'sos', 0),
+                "to_pct": getattr(t, 'to_pct', 0),
                 "off_efficiency": t.off_efficiency,
                 "def_efficiency": t.def_efficiency,
                 "trb_pct": t.trb_pct,
-                "intuition_score": t.intuition_score,
-                "momentum": t.momentum
+                "off_ft_pct": getattr(t, 'off_ft_pct', 0),
+                "def_ft_pct": getattr(t, 'def_ft_pct', 0),
+                "intuition_score": t.intuition_score
             })
         return jsonify(teams_list)
     except Exception as e:
         return jsonify({"error": str(e)}), 400
+
+@app.route('/api/weights/optimal')
+def get_optimal_weights():
+    return jsonify({
+        "trb": DEFAULT_WEIGHTS.trb_weight,
+        "to": DEFAULT_WEIGHTS.to_weight,
+        "sos": DEFAULT_WEIGHTS.sos_weight,
+        "momentum": DEFAULT_WEIGHTS.momentum_weight,
+        "efficiency": DEFAULT_WEIGHTS.efficiency_weight,
+        "ft": DEFAULT_WEIGHTS.ft_weight
+    })
 
 @app.route('/api/bracket/<int:year>', methods=['GET'])
 def get_bracket(year):
@@ -122,11 +137,12 @@ def run_full_sim():
         
         # Parse weights from query params (e.g., ?sos=7.5&trb=4.2)
         custom_weights = SimulationWeights(
-            trb_weight=request.args.get('trb', default=4.895, type=float),
-            to_weight=request.args.get('to', default=2.846, type=float),
-            sos_weight=request.args.get('sos', default=7.635, type=float),
-            momentum_weight=request.args.get('momentum', default=0.073, type=float),
-            efficiency_weight=request.args.get('efficiency', default=0.022, type=float)
+            trb_weight=request.args.get('trb', default=DEFAULT_WEIGHTS.trb_weight, type=float),
+            to_weight=request.args.get('to', default=DEFAULT_WEIGHTS.to_weight, type=float),
+            sos_weight=request.args.get('sos', default=DEFAULT_WEIGHTS.sos_weight, type=float),
+            momentum_weight=request.args.get('momentum', default=DEFAULT_WEIGHTS.momentum_weight, type=float),
+            efficiency_weight=request.args.get('efficiency', default=DEFAULT_WEIGHTS.efficiency_weight, type=float),
+            ft_weight=request.args.get('ft', default=DEFAULT_WEIGHTS.ft_weight, type=float)
         )
     
     SEED_MATCHUPS = [(1, 16), (8, 9), (5, 12), (4, 13), (6, 11), (3, 14), (7, 10), (2, 15)]

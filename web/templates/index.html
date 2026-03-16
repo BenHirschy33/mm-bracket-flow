@@ -35,52 +35,64 @@
         </div>
     </header>
 
-    <div class="settings-bar glass-card">
-        <div class="setting-item">
-            <label>SOS Weight</label>
-            <input type="range" id="weight-sos" min="1" max="10" step="0.1" value="7.6">
-            <span id="val-sos">7.6</span>
-        </div>
-        <div class="setting-item">
-            <label>TRB Weight</label>
-            <input type="range" id="weight-trb" min="1" max="10" step="0.1" value="4.9">
-            <span id="val-trb">4.9</span>
-        </div>
-        <div class="setting-item">
-            <label>TO Weight</label>
-            <input type="range" id="weight-to" min="0.5" max="5.0" step="0.1" value="2.8">
-            <span id="val-to">2.8</span>
-        </div>
-        <div class="setting-item">
-            <label>Eff. Weight</label>
-            <input type="range" id="weight-eff" min="0.01" max="0.1" step="0.005" value="0.02">
-            <span id="val-eff">0.02</span>
-        </div>
-    </div>
-
     <main>
-        <section id="stats-overview" class="glass-card">
-            <div class="card-header">
-                <h2>Field Overview</h2>
-                <div class="badge">Live 2026 Odds</div>
-            </div>
-            <div class="team-grid" id="team-list">
-                <!-- Teams injected here -->
-                <div class="loading-spinner"></div>
-            </div>
-        </section>
+        <aside class="sidebar">
+            <section id="simulation-controls" class="glass-card">
+                <div class="card-header">
+                    <h2>Simulation Settings</h2>
+                    <button id="reset-optimal" class="icon-btn" title="Reset to Optimal Factors">🔄</button>
+                </div>
+                <div class="controls-grid">
+                    <div class="setting-item">
+                        <label>SOS Factor</label>
+                        <input type="range" id="weight-sos" min="0" max="15" step="0.1" value="7.6">
+                        <span id="val-sos">7.6</span>
+                    </div>
+                    <div class="setting-item">
+                        <label>TRB Factor</label>
+                        <input type="range" id="weight-trb" min="0" max="15" step="0.1" value="4.9">
+                        <span id="val-trb">4.9</span>
+                    </div>
+                    <div class="setting-item">
+                        <label>TO Factor</label>
+                        <input type="range" id="weight-to" min="0" max="10" step="0.1" value="2.8">
+                        <span id="val-to">2.8</span>
+                    </div>
+                    <div class="setting-item">
+                        <label>Efficiency</label>
+                        <input type="range" id="weight-eff" min="0" max="0.2" step="0.001" value="0.022">
+                        <span id="val-eff">0.022</span>
+                    </div>
+                    <div class="setting-item">
+                        <label>Momentum</label>
+                        <input type="range" id="weight-momentum" min="0" max="0.5" step="0.01" value="0.07">
+                        <span id="val-momentum">0.07</span>
+                    </div>
+                </div>
+            </section>
+
+            <section id="stats-overview" class="glass-card">
+                <div class="card-header">
+                    <h2>Field Stats</h2>
+                    <div class="badge">Live 2026</div>
+                </div>
+                <div class="team-grid" id="team-list">
+                    <div class="loading-spinner"></div>
+                </div>
+            </section>
+        </aside>
 
         <section id="bracket-visualization" class="glass-card">
             <div class="card-header">
-                <h2>Interactive Bracket</h2>
+                <h2 id="view-title">Tournament Flow</h2>
                 <div class="view-controls">
-                    <button class="tab-btn active" data-view="deterministic">Chalk View</button>
-                    <button class="tab-btn" data-view="monte-carlo">Monte Carlo (Chaos)</button>
+                    <button class="tab-btn active" data-mode="deterministic">Chalk</button>
+                    <button class="tab-btn" data-mode="monte-carlo">Simulated Chaos</button>
                 </div>
             </div>
             <div id="bracket-container" class="bracket-stage">
                 <div class="empty-state">
-                    <p>Select "Run Hyper-Simulation" to initialize the 2026 bracket flow.</p>
+                    <p>Initialize the 2026 bracket flow to begin simulation.</p>
                 </div>
             </div>
         </section>
