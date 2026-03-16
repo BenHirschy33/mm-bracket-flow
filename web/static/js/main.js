@@ -11,7 +11,9 @@ const appState = {
         to: 0.639,
         sos: 7.365,
         momentum: 0.021,
-        efficiency: 0.039
+        efficiency: 0.039,
+        ft: 0.881,
+        def_premium: 6.479
     },
     teams: {},
     currentData: null,
@@ -32,7 +34,9 @@ function resetToOptimal() {
         'weight-trb': weights.trb,
         'weight-to': weights.to,
         'weight-eff': weights.efficiency,
-        'weight-momentum': weights.momentum
+        'weight-momentum': weights.momentum,
+        'weight-ft': weights.ft,
+        'weight-def-premium': weights.def_premium
     };
 
     for (const [id, val] of Object.entries(mapping)) {
@@ -81,6 +85,17 @@ function isLocked(region, round, teamName) {
 
 // --- API Calls ---
 
+async function initWeights() {
+    try {
+        const response = await fetch('/api/weights/optimal');
+        const weights = await response.json();
+        appState.optimalWeights = weights;
+        resetToOptimal(); // Apply fetched weights immediately
+    } catch (err) {
+        console.error("Failed to fetch optimal weights", err);
+    }
+}
+
 async function fetchTeams(year) {
     const teamList = document.getElementById('team-list');
     teamList.innerHTML = '<div class="loading-spinner"></div>';
@@ -120,7 +135,9 @@ async function runSimulation() {
         trb: parseFloat(document.getElementById('weight-trb').value),
         to: parseFloat(document.getElementById('weight-to').value),
         efficiency: parseFloat(document.getElementById('weight-eff').value),
-        momentum: parseFloat(document.getElementById('weight-momentum').value)
+        momentum: parseFloat(document.getElementById('weight-momentum').value),
+        ft: parseFloat(document.getElementById('weight-ft').value),
+        def_premium: parseFloat(document.getElementById('weight-def-premium').value)
     };
     
     try {
@@ -142,7 +159,9 @@ async function runSimulation() {
         }
         
         appState.currentData = data;
-        renderBracket(data);
+        
+        // Waterfall Rendering: Reveal rounds with a slight delay for "Discovery" feel
+        renderBracketWaterfall(data);
     } catch (err) {
         console.error("Simulation failed", err);
     }
@@ -150,22 +169,28 @@ async function runSimulation() {
 
 // --- Rendering ---
 
-function renderBracket(data) {
+async function renderBracketWaterfall(data) {
     const container = document.getElementById('bracket-container');
     container.innerHTML = '';
     container.className = 'bracket-view';
 
-    const regions = Object.keys(data.regions);
-    
     // Header for Global View
     const header = document.createElement('div');
     header.className = 'view-header';
-    header.innerHTML = `<h3>Full Tournament Flow</h3>`;
+    header.style.opacity = '0';
+    header.style.transition = 'opacity 0.8s ease';
+    header.innerHTML = `<h3 class="glow-text">Tournament Intelligence Matrix</h3>`;
     container.appendChild(header);
+    setTimeout(() => header.style.opacity = '1', 50);
 
-    regions.forEach(regionName => {
+    const regions = Object.keys(data.regions);
+    
+    for (const regionName of regions) {
         const regionBlock = document.createElement('div');
         regionBlock.className = 'region-block';
+        regionBlock.style.opacity = '0';
+        regionBlock.style.transform = 'translateY(20px)';
+        regionBlock.style.transition = 'all 0.6s cubic-bezier(0.19, 1, 0.22, 1)';
         regionBlock.innerHTML = `<h3>${regionName} Region</h3>`;
         
         const displayArea = document.createElement('div');
@@ -175,21 +200,21 @@ function renderBracket(data) {
         const roundsContainer = document.createElement('div');
         roundsContainer.className = 'rounds-flex';
         
-        rounds.forEach((r, roundIdx) => {
+        for (const [roundIdx, r] of rounds.entries()) {
             const roundDiv = document.createElement('div');
             roundDiv.className = `round-column round-${r.round}`;
+            roundDiv.style.opacity = '0';
+            roundDiv.style.transition = `opacity 0.5s ease ${roundIdx * 0.2}s`;
             
             r.matchups.forEach((m, matchIdx) => {
                 const matchupWrapper = document.createElement('div');
                 matchupWrapper.className = 'matchup-wrapper';
                 
                 const mCard = document.createElement('div');
-                // Determine CSS classes for connectors
                 const isUpper = matchIdx % 2 === 0;
                 const hasNext = roundIdx < rounds.length - 1;
                 mCard.className = `matchup-card ${isUpper ? 'upper' : 'lower'} ${hasNext ? 'has-next' : ''}`;
                 
-                // Add progressive spacing variable for lines
                 if (hasNext) {
                     const spacing = calculateLineSpacing(r.round);
                     mCard.style.setProperty('--spacing', `${spacing}px`);
@@ -202,16 +227,30 @@ function renderBracket(data) {
                 matchupWrapper.appendChild(mCard);
                 roundDiv.appendChild(matchupWrapper);
             });
+            
             roundsContainer.appendChild(roundDiv);
-        });
+            setTimeout(() => roundDiv.style.opacity = '1', 100);
+        }
         
         displayArea.appendChild(roundsContainer);
         regionBlock.appendChild(displayArea);
         container.appendChild(regionBlock);
-    });
+        
+        setTimeout(() => {
+            regionBlock.style.opacity = '1';
+            regionBlock.style.transform = 'translateY(0)';
+        }, 300);
+    }
 
     // Final Four Section
-    renderFinalFourBlock(data.final_four, data.championship, container);
+    setTimeout(() => {
+        renderFinalFourBlock(data.final_four, data.championship, container);
+    }, 1200);
+}
+
+function renderBracket(data) {
+    // Basic fallback or initial render
+    renderBracketWaterfall(data);
 }
 
 function calculateLineSpacing(round) {
@@ -273,15 +312,136 @@ function createTeamLine(region, round, teamName, seed, isWinner, prob) {
     const team = appState.teams[teamName];
     let tooltip = '';
     if (team) {
-        tooltip = `Eff: ${team.off_efficiency} | SOS: ${team.sos?.toFixed(1) || 'N/A'} | Mom: ${team.momentum?.toFixed(2)}`;
+        tooltip = `Eff: ${team.off_efficiency} | SOS: ${team.sos?.toFixed(1) || 'N/A'} | Mom: ${team.momentum?.toFixed(2)} | FT: ${team.off_ft_pct}%`;
     }
 
     line.innerHTML = `
-        <span>(${seed}) ${teamName} <span class="lock-icon">🔒</span></span>
+        <span>(${seed}) ${teamName} <span class="lock-icon" onclick="event.stopPropagation()">🔒</span></span>
         ${isWinner && prob ? `<span class="prob-tag" title="${tooltip}">${prob}%</span>` : ''}
     `;
-    line.onclick = () => toggleLock(region, round, teamName);
+    line.onclick = (e) => {
+        if (e.target.classList.contains('lock-icon')) {
+            toggleLock(region, round, teamName);
+        } else {
+            // Find the opponent
+            let opponent = "TBD";
+            const currentRound = appState.currentData?.regions[region]?.[round-1];
+            if (currentRound) {
+                const matchup = currentRound.matchups.find(m => m.team_a === teamName || m.team_b === teamName);
+                if (matchup) {
+                    opponent = matchup.team_a === teamName ? matchup.team_b : matchup.team_a;
+                }
+            }
+            openMatchupModal(teamName, opponent);
+        }
+    };
     return line;
+}
+
+// --- Modal Logic ---
+async function openMatchupModal(teamA, teamB) {
+    if (teamA === "TBD" || teamB === "TBD") return;
+    
+    const modal = document.getElementById('matchup-modal');
+    modal.classList.add('active');
+    
+    // Set loading state
+    document.getElementById('why-list').innerHTML = '<div class="loading-spinner"></div>';
+    
+    const weights = {
+        sos: parseFloat(document.getElementById('weight-sos').value),
+        trb: parseFloat(document.getElementById('weight-trb').value),
+        to: parseFloat(document.getElementById('weight-to').value),
+        eff: parseFloat(document.getElementById('weight-eff').value),
+        momentum: parseFloat(document.getElementById('weight-momentum').value),
+        ft: parseFloat(document.getElementById('weight-ft').value),
+        def_premium: parseFloat(document.getElementById('weight-def-premium').value)
+    };
+
+    try {
+        const response = await fetch(`/api/matchup/detail?team_a=${teamA}&team_b=${teamB}&year=${appState.year}&sos=${weights.sos}&trb=${weights.trb}&to=${weights.to}&eff=${weights.eff}&momentum=${weights.momentum}&ft=${weights.ft}&def_premium=${weights.def_premium}`);
+        const data = await response.json();
+        
+        renderModalData(data);
+    } catch (err) {
+        console.error("Matchup detail fetch failed", err);
+    }
+}
+
+function renderModalData(data) {
+    document.getElementById('modal-prob').textContent = `${(data.probability * 100).toFixed(0)}% Win Prob`;
+    
+    const renderTeam = (id, team) => {
+        const div = document.getElementById(id);
+        div.className = 'team-card-modal';
+        div.innerHTML = `
+            <div class="name">(${team.seed}) ${team.name}</div>
+            <div class="stat-bubbles">
+                <div class="stat-bubble">Off: ${team.off_eff.toFixed(1)}</div>
+                <div class="stat-bubble">Def: ${team.def_eff.toFixed(1)}</div>
+                <div class="stat-bubble">SOS: ${team.sos.toFixed(1)}</div>
+            </div>
+        `;
+    };
+    
+    renderTeam('modal-team-a', data.team_a);
+    renderTeam('modal-team-b', data.team_b);
+    
+    // Render "The Why"
+    const whyList = document.getElementById('why-list');
+    whyList.innerHTML = data.analysis.map(item => `
+        <div class="why-item">
+            <strong>${item.factor} (${item.importance})</strong>
+            <p>${item.description}</p>
+        </div>
+    `).join('') || '<p>No significant analytical outliers found for this matchup.</p>';
+    
+    // Render Bars
+    const metrics = [
+        { label: 'Off. Efficiency', key: 'off_eff', max: 130 },
+        { label: 'Def. Efficiency', key: 'def_eff', max: 120, inverse: true },
+        { label: 'SOS Rating', key: 'sos', max: 15 },
+        { label: 'Rebounding', key: 'trb', max: 60 }
+    ];
+    
+    const barContainer = document.getElementById('comparison-bars');
+    barContainer.innerHTML = metrics.map(m => {
+        let valA = data.team_a[m.key];
+        let valB = data.team_b[m.key];
+        
+        const pctA = (valA / m.max) * 100;
+        const pctB = (valB / m.max) * 100;
+        
+        return `
+            <div class="stat-bar-row">
+                <div class="stat-header">
+                    <span class="val-a">${valA.toFixed(1)}</span>
+                    <span class="stat-label">${m.label}</span>
+                    <span class="val-b">${valB.toFixed(1)}</span>
+                </div>
+                <div class="bar-wrapper">
+                    <div class="bar-fill team-a" style="width: 0%"></div>
+                    <div class="bar-fill team-b" style="width: 0%"></div>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    // Animate bars after render
+    setTimeout(() => {
+        const barsA = document.querySelectorAll('.bar-fill.team-a');
+        const barsB = document.querySelectorAll('.bar-fill.team-b');
+        metrics.forEach((m, i) => {
+            const pctA = (data.team_a[m.key] / m.max) * 100;
+            const pctB = (data.team_b[m.key] / m.max) * 100;
+            barsA[i].style.width = `${pctA}%`;
+            barsB[i].style.width = `${pctB}%`;
+        });
+    }, 100);
+}
+
+function closeMatchupModal() {
+    document.getElementById('matchup-modal').classList.remove('active');
 }
 
 // --- Initialization ---
@@ -312,7 +472,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Real-time Slider & Number updates (bidirectional sync)
-    const factorIds = ['sos', 'trb', 'to', 'eff', 'momentum'];
+    const factorIds = ['sos', 'trb', 'to', 'eff', 'momentum', 'ft', 'def-premium'];
     factorIds.forEach(id => {
         const slider = document.getElementById(`weight-${id}`);
         const numInput = document.getElementById(`num-${id}`);
@@ -330,6 +490,26 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    document.getElementById('close-modal').addEventListener('click', closeMatchupModal);
+    window.addEventListener('click', (e) => {
+        if (e.target.classList.contains('modal-overlay')) closeMatchupModal();
+    });
+
+    initWeights(); // Load optimal weights from API
+
+    // System Dark Mode sync (subtle bridge)
+    const darkModeQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleTheme = (e) => {
+        document.body.classList.toggle('system-dark', e.matches);
+    };
+    darkModeQuery.addListener(handleTheme);
+    handleTheme(darkModeQuery);
+
     // Initial run
     setTimeout(runSimulation, 500);
 });
+
+// Expose for debugging/subagents
+window.appState = appState;
+window.runSimulation = runSimulation;
+window.renderBracket = renderBracket;

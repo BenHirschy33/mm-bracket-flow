@@ -37,7 +37,7 @@ class SimulatorEngine:
         def_a = team_a.def_efficiency or 100.0
         def_delta = def_b - def_a # lower def_efficiency is better
         # We'll bake defense premium into efficiency weight for simplicity in optimization
-        final_probability += (def_delta * 0.001) * self.weights.efficiency_weight
+        final_probability += (def_delta * 0.001) * self.weights.defense_premium
         
         # Pace Variance (Pace pushes probability closer to 50% for underdogs)
         if team_a.pace is not None and team_b.pace is not None:
