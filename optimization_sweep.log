@@ -1,28 +1,381 @@
---- Starting Multi-Year Parameter Optimization with Decay Weights ---
-Iteration 0: New Best Avg = 46.91
-  TRB: 3.846 | SOS: 7.261
-Iteration 1: New Best Avg = 51.38
-  TRB: 2.283 | SOS: 6.656
-Iteration 21: New Best Avg = 51.89
-  TRB: 3.946 | SOS: 5.926
-Iteration 65: New Best Avg = 52.68
-  TRB: 3.574 | SOS: 2.321
-Iteration 73: New Best Avg = 55.7
-  TRB: 2.58 | SOS: 7.997
-Iteration 75: New Best Avg = 56.05
-  TRB: 2.191 | SOS: 3.32
-Iteration 158: New Best Avg = 58.26
-  TRB: 2.281 | SOS: 5.361
-Iteration 440: New Best Avg = 60.88
-  TRB: 1.763 | SOS: 7.365
-
-==========================================
-      OPTIMAL MULTI-YEAR WEIGHTS          
-==========================================
-TRB Weight: 1.7631929186553252
-TO Weight: 0.6393623840001712
-SOS Weight: 7.36450793552582
-Momentum Weight: 0.021012682624894433
-Efficiency Weight: 0.039332551874330664
-Final Average Cross-Year Score: 60.88
-==========================================
+Starting Phase 5 optimization with 10000 iterations...
+Starting Phase 5: Definitive Truth Sweep...
+Initial CV Fitness: 128.0 | Avg Score: 168.85
+Iter 0/10000 | Best Fitness: 128.0
+[6] New Global Best! Fitness: 128.35 | Avg: 160.81 | Temp: 9994
+[18] New Global Best! Fitness: 124.73 | Avg: 156.15 | Temp: 9982
+[21] New Global Best! Fitness: 110.51 | Avg: 138.35 | Temp: 9979
+[22] New Global Best! Fitness: 125.89 | Avg: 152.46 | Temp: 9978
+[28] New Global Best! Fitness: 130.57 | Avg: 156.38 | Temp: 9972
+[30] New Global Best! Fitness: 136.83 | Avg: 167.65 | Temp: 9970
+[43] New Global Best! Fitness: 138.34 | Avg: 170.65 | Temp: 9957
+[46] New Global Best! Fitness: 111.21 | Avg: 139.46 | Temp: 9954
+[48] New Global Best! Fitness: 138.65 | Avg: 167.73 | Temp: 9952
+[53] New Global Best! Fitness: 142.69 | Avg: 173.08 | Temp: 9947
+[69] New Global Best! Fitness: 127.39 | Avg: 160.58 | Temp: 9931
+[71] New Global Best! Fitness: 131.42 | Avg: 160.5 | Temp: 9929
+[74] New Global Best! Fitness: 131.38 | Avg: 156.19 | Temp: 9926
+[79] New Global Best! Fitness: 123.48 | Avg: 151.19 | Temp: 9921
+[80] New Global Best! Fitness: 136.75 | Avg: 165.81 | Temp: 9920
+[85] New Global Best! Fitness: 145.23 | Avg: 173.04 | Temp: 9915
+Iter 100/10000 | Best Fitness: 145.23
+[102] New Global Best! Fitness: 115.06 | Avg: 146.5 | Temp: 9898
+[103] New Global Best! Fitness: 127.43 | Avg: 158.31 | Temp: 9897
+[108] New Global Best! Fitness: 120.19 | Avg: 144.69 | Temp: 9892
+[110] New Global Best! Fitness: 115.82 | Avg: 144.5 | Temp: 9890
+[112] New Global Best! Fitness: 122.0 | Avg: 153.96 | Temp: 9888
+[118] New Global Best! Fitness: 114.11 | Avg: 140.42 | Temp: 9882
+[123] New Global Best! Fitness: 135.16 | Avg: 163.88 | Temp: 9877
+[134] New Global Best! Fitness: 124.47 | Avg: 154.73 | Temp: 9866
+[141] New Global Best! Fitness: 115.64 | Avg: 146.23 | Temp: 9859
+[143] New Global Best! Fitness: 124.26 | Avg: 153.65 | Temp: 9857
+[147] New Global Best! Fitness: 122.9 | Avg: 152.12 | Temp: 9853
+[153] New Global Best! Fitness: 120.27 | Avg: 150.0 | Temp: 9847
+[159] New Global Best! Fitness: 115.34 | Avg: 143.77 | Temp: 9841
+[161] New Global Best! Fitness: 148.93 | Avg: 183.12 | Temp: 9839
+[191] New Global Best! Fitness: 108.27 | Avg: 131.04 | Temp: 9809
+[193] New Global Best! Fitness: 106.65 | Avg: 132.69 | Temp: 9807
+[197] New Global Best! Fitness: 123.9 | Avg: 145.19 | Temp: 9803
+[200] New Global Best! Fitness: 124.29 | Avg: 154.62 | Temp: 9800
+Iter 200/10000 | Best Fitness: 124.29
+[204] New Global Best! Fitness: 108.9 | Avg: 137.77 | Temp: 9796
+[206] New Global Best! Fitness: 118.96 | Avg: 141.92 | Temp: 9794
+[207] New Global Best! Fitness: 119.88 | Avg: 144.69 | Temp: 9793
+[210] New Global Best! Fitness: 120.22 | Avg: 146.31 | Temp: 9790
+[219] New Global Best! Fitness: 107.31 | Avg: 127.62 | Temp: 9781
+[220] New Global Best! Fitness: 126.67 | Avg: 158.54 | Temp: 9780
+[224] New Global Best! Fitness: 119.94 | Avg: 144.04 | Temp: 9776
+[233] New Global Best! Fitness: 114.75 | Avg: 138.35 | Temp: 9767
+[234] New Global Best! Fitness: 118.83 | Avg: 142.23 | Temp: 9766
+[243] New Global Best! Fitness: 107.77 | Avg: 128.38 | Temp: 9757
+[246] New Global Best! Fitness: 111.48 | Avg: 136.69 | Temp: 9754
+[250] New Global Best! Fitness: 132.78 | Avg: 162.38 | Temp: 9750
+[252] New Global Best! Fitness: 140.18 | Avg: 171.69 | Temp: 9748
+[277] New Global Best! Fitness: 143.82 | Avg: 172.81 | Temp: 9723
+[280] New Global Best! Fitness: 134.77 | Avg: 162.5 | Temp: 9720
+[282] New Global Best! Fitness: 143.64 | Avg: 172.77 | Temp: 9718
+Iter 300/10000 | Best Fitness: 143.64
+[317] New Global Best! Fitness: 131.06 | Avg: 162.27 | Temp: 9683
+[320] New Global Best! Fitness: 132.74 | Avg: 159.77 | Temp: 9680
+[326] New Global Best! Fitness: 114.64 | Avg: 138.96 | Temp: 9674
+[327] New Global Best! Fitness: 120.74 | Avg: 150.23 | Temp: 9673
+[329] New Global Best! Fitness: 124.96 | Avg: 154.46 | Temp: 9671
+[330] New Global Best! Fitness: 125.01 | Avg: 156.35 | Temp: 9670
+[332] New Global Best! Fitness: 121.0 | Avg: 152.58 | Temp: 9668
+[334] New Global Best! Fitness: 115.47 | Avg: 146.54 | Temp: 9666
+[336] New Global Best! Fitness: 127.78 | Avg: 158.65 | Temp: 9664
+[337] New Global Best! Fitness: 133.8 | Avg: 163.62 | Temp: 9663
+[343] New Global Best! Fitness: 135.61 | Avg: 164.88 | Temp: 9657
+[348] New Global Best! Fitness: 138.61 | Avg: 168.04 | Temp: 9652
+[358] New Global Best! Fitness: 129.86 | Avg: 161.38 | Temp: 9642
+[361] New Global Best! Fitness: 126.91 | Avg: 157.31 | Temp: 9639
+[363] New Global Best! Fitness: 129.85 | Avg: 161.04 | Temp: 9637
+[371] New Global Best! Fitness: 130.62 | Avg: 162.23 | Temp: 9629
+[374] New Global Best! Fitness: 122.82 | Avg: 154.19 | Temp: 9626
+[375] New Global Best! Fitness: 136.74 | Avg: 168.65 | Temp: 9625
+[377] New Global Best! Fitness: 132.0 | Avg: 161.96 | Temp: 9623
+[382] New Global Best! Fitness: 142.08 | Avg: 172.5 | Temp: 9618
+[388] New Global Best! Fitness: 137.38 | Avg: 169.15 | Temp: 9612
+[397] New Global Best! Fitness: 126.06 | Avg: 157.77 | Temp: 9603
+[398] New Global Best! Fitness: 126.68 | Avg: 158.54 | Temp: 9602
+Iter 400/10000 | Best Fitness: 126.68
+[402] New Global Best! Fitness: 129.62 | Avg: 161.12 | Temp: 9598
+[403] New Global Best! Fitness: 136.88 | Avg: 170.92 | Temp: 9597
+[408] New Global Best! Fitness: 129.28 | Avg: 161.19 | Temp: 9592
+[413] New Global Best! Fitness: 137.89 | Avg: 169.15 | Temp: 9587
+[418] New Global Best! Fitness: 129.24 | Avg: 160.5 | Temp: 9582
+[419] New Global Best! Fitness: 134.89 | Avg: 167.77 | Temp: 9581
+[425] New Global Best! Fitness: 127.59 | Avg: 157.31 | Temp: 9575
+[432] New Global Best! Fitness: 126.21 | Avg: 156.88 | Temp: 9568
+[436] New Global Best! Fitness: 115.37 | Avg: 142.27 | Temp: 9564
+[437] New Global Best! Fitness: 124.77 | Avg: 155.73 | Temp: 9563
+[443] New Global Best! Fitness: 129.42 | Avg: 157.73 | Temp: 9557
+[446] New Global Best! Fitness: 133.61 | Avg: 164.04 | Temp: 9554
+[450] New Global Best! Fitness: 124.79 | Avg: 152.31 | Temp: 9550
+[455] New Global Best! Fitness: 119.17 | Avg: 146.69 | Temp: 9545
+[460] New Global Best! Fitness: 114.87 | Avg: 141.35 | Temp: 9540
+[463] New Global Best! Fitness: 131.57 | Avg: 162.96 | Temp: 9537
+[469] New Global Best! Fitness: 134.07 | Avg: 165.04 | Temp: 9531
+[472] New Global Best! Fitness: 124.03 | Avg: 154.38 | Temp: 9528
+[478] New Global Best! Fitness: 116.11 | Avg: 141.5 | Temp: 9522
+[479] New Global Best! Fitness: 118.34 | Avg: 144.85 | Temp: 9521
+[480] New Global Best! Fitness: 129.15 | Avg: 160.65 | Temp: 9520
+[482] New Global Best! Fitness: 121.54 | Avg: 153.27 | Temp: 9518
+[483] New Global Best! Fitness: 129.38 | Avg: 159.19 | Temp: 9517
+[487] New Global Best! Fitness: 133.89 | Avg: 164.12 | Temp: 9513
+[500] New Global Best! Fitness: 142.86 | Avg: 175.23 | Temp: 9500
+Iter 500/10000 | Best Fitness: 142.86
+[507] New Global Best! Fitness: 132.83 | Avg: 165.08 | Temp: 9493
+[510] New Global Best! Fitness: 136.39 | Avg: 168.27 | Temp: 9490
+[515] New Global Best! Fitness: 131.38 | Avg: 162.08 | Temp: 9485
+[519] New Global Best! Fitness: 128.11 | Avg: 159.42 | Temp: 9481
+[520] New Global Best! Fitness: 134.33 | Avg: 163.58 | Temp: 9480
+[525] New Global Best! Fitness: 129.41 | Avg: 161.69 | Temp: 9475
+[527] New Global Best! Fitness: 129.54 | Avg: 160.23 | Temp: 9473
+[528] New Global Best! Fitness: 139.35 | Avg: 169.96 | Temp: 9472
+[534] New Global Best! Fitness: 139.39 | Avg: 172.42 | Temp: 9466
+[537] New Global Best! Fitness: 125.65 | Avg: 156.96 | Temp: 9463
+[538] New Global Best! Fitness: 133.76 | Avg: 163.19 | Temp: 9462
+[544] New Global Best! Fitness: 130.79 | Avg: 162.0 | Temp: 9456
+[552] New Global Best! Fitness: 136.82 | Avg: 168.12 | Temp: 9448
+[559] New Global Best! Fitness: 119.2 | Avg: 150.92 | Temp: 9441
+[561] New Global Best! Fitness: 112.47 | Avg: 142.62 | Temp: 9439
+[563] New Global Best! Fitness: 115.79 | Avg: 146.65 | Temp: 9437
+[564] New Global Best! Fitness: 124.96 | Avg: 155.77 | Temp: 9436
+[567] New Global Best! Fitness: 126.17 | Avg: 156.65 | Temp: 9433
+[569] New Global Best! Fitness: 129.7 | Avg: 158.81 | Temp: 9431
+[572] New Global Best! Fitness: 128.35 | Avg: 160.35 | Temp: 9428
+[576] New Global Best! Fitness: 118.69 | Avg: 150.23 | Temp: 9424
+[577] New Global Best! Fitness: 127.87 | Avg: 158.81 | Temp: 9423
+[579] New Global Best! Fitness: 127.03 | Avg: 155.15 | Temp: 9421
+[580] New Global Best! Fitness: 135.24 | Avg: 166.54 | Temp: 9420
+[597] New Global Best! Fitness: 126.7 | Avg: 157.96 | Temp: 9403
+Iter 600/10000 | Best Fitness: 126.7
+[601] New Global Best! Fitness: 133.31 | Avg: 164.88 | Temp: 9399
+[603] New Global Best! Fitness: 136.24 | Avg: 165.77 | Temp: 9397
+[606] New Global Best! Fitness: 129.34 | Avg: 160.42 | Temp: 9394
+[610] New Global Best! Fitness: 114.83 | Avg: 141.31 | Temp: 9390
+[611] New Global Best! Fitness: 127.39 | Avg: 158.77 | Temp: 9389
+[612] New Global Best! Fitness: 132.79 | Avg: 164.54 | Temp: 9388
+[616] New Global Best! Fitness: 125.95 | Avg: 157.85 | Temp: 9384
+[618] New Global Best! Fitness: 128.25 | Avg: 158.54 | Temp: 9382
+[627] New Global Best! Fitness: 125.24 | Avg: 156.04 | Temp: 9373
+[629] New Global Best! Fitness: 135.34 | Avg: 165.96 | Temp: 9371
+[634] New Global Best! Fitness: 134.2 | Avg: 165.54 | Temp: 9366
+[637] New Global Best! Fitness: 136.74 | Avg: 168.54 | Temp: 9363
+[639] New Global Best! Fitness: 133.5 | Avg: 162.46 | Temp: 9361
+[643] New Global Best! Fitness: 138.92 | Avg: 170.12 | Temp: 9357
+[647] New Global Best! Fitness: 133.26 | Avg: 163.19 | Temp: 9353
+[652] New Global Best! Fitness: 139.71 | Avg: 171.27 | Temp: 9348
+[661] New Global Best! Fitness: 133.56 | Avg: 163.62 | Temp: 9339
+[663] New Global Best! Fitness: 136.79 | Avg: 168.65 | Temp: 9337
+[667] New Global Best! Fitness: 136.8 | Avg: 167.77 | Temp: 9333
+[673] New Global Best! Fitness: 135.39 | Avg: 166.42 | Temp: 9327
+[678] New Global Best! Fitness: 123.23 | Avg: 154.65 | Temp: 9322
+[680] New Global Best! Fitness: 123.36 | Avg: 149.65 | Temp: 9320
+[682] New Global Best! Fitness: 121.2 | Avg: 151.27 | Temp: 9318
+[683] New Global Best! Fitness: 132.73 | Avg: 160.77 | Temp: 9317
+[690] New Global Best! Fitness: 136.94 | Avg: 167.58 | Temp: 9310
+[692] New Global Best! Fitness: 138.25 | Avg: 168.38 | Temp: 9308
+[695] New Global Best! Fitness: 131.1 | Avg: 160.38 | Temp: 9305
+[696] New Global Best! Fitness: 131.31 | Avg: 161.46 | Temp: 9304
+[699] New Global Best! Fitness: 134.03 | Avg: 164.04 | Temp: 9301
+Iter 700/10000 | Best Fitness: 134.03
+[711] New Global Best! Fitness: 129.34 | Avg: 160.12 | Temp: 9289
+[714] New Global Best! Fitness: 120.16 | Avg: 151.5 | Temp: 9286
+[715] New Global Best! Fitness: 122.47 | Avg: 154.27 | Temp: 9285
+[717] New Global Best! Fitness: 124.71 | Avg: 156.35 | Temp: 9283
+[718] New Global Best! Fitness: 133.68 | Avg: 165.85 | Temp: 9282
+[719] New Global Best! Fitness: 138.84 | Avg: 170.08 | Temp: 9281
+[734] New Global Best! Fitness: 142.92 | Avg: 175.88 | Temp: 9266
+[737] New Global Best! Fitness: 142.37 | Avg: 174.35 | Temp: 9263
+[747] New Global Best! Fitness: 127.47 | Avg: 157.92 | Temp: 9253
+[749] New Global Best! Fitness: 142.89 | Avg: 175.35 | Temp: 9251
+[753] New Global Best! Fitness: 138.64 | Avg: 168.81 | Temp: 9247
+[755] New Global Best! Fitness: 146.16 | Avg: 178.38 | Temp: 9245
+[767] New Global Best! Fitness: 121.97 | Avg: 154.0 | Temp: 9233
+[768] New Global Best! Fitness: 127.11 | Avg: 157.77 | Temp: 9232
+[772] New Global Best! Fitness: 127.24 | Avg: 159.27 | Temp: 9228
+[773] New Global Best! Fitness: 143.94 | Avg: 175.65 | Temp: 9227
+[777] New Global Best! Fitness: 128.97 | Avg: 157.19 | Temp: 9223
+[782] New Global Best! Fitness: 138.12 | Avg: 169.04 | Temp: 9218
+[783] New Global Best! Fitness: 139.22 | Avg: 169.85 | Temp: 9217
+[786] New Global Best! Fitness: 140.85 | Avg: 172.5 | Temp: 9214
+[789] New Global Best! Fitness: 124.35 | Avg: 155.81 | Temp: 9211
+[792] New Global Best! Fitness: 127.41 | Avg: 158.92 | Temp: 9208
+[793] New Global Best! Fitness: 132.42 | Avg: 163.27 | Temp: 9207
+[796] New Global Best! Fitness: 147.35 | Avg: 179.08 | Temp: 9204
+[800] New Global Best! Fitness: 128.49 | Avg: 160.27 | Temp: 9200
+Iter 800/10000 | Best Fitness: 128.49
+[801] New Global Best! Fitness: 137.3 | Avg: 172.23 | Temp: 9199
+[808] New Global Best! Fitness: 138.76 | Avg: 171.65 | Temp: 9192
+[813] New Global Best! Fitness: 143.05 | Avg: 178.0 | Temp: 9187
+[816] New Global Best! Fitness: 139.88 | Avg: 173.12 | Temp: 9184
+[820] New Global Best! Fitness: 141.28 | Avg: 174.04 | Temp: 9180
+[826] New Global Best! Fitness: 134.75 | Avg: 167.38 | Temp: 9174
+[828] New Global Best! Fitness: 134.59 | Avg: 165.65 | Temp: 9172
+[840] New Global Best! Fitness: 138.32 | Avg: 171.04 | Temp: 9160
+[850] New Global Best! Fitness: 126.0 | Avg: 158.62 | Temp: 9150
+[852] New Global Best! Fitness: 150.58 | Avg: 183.54 | Temp: 9148
+[855] New Global Best! Fitness: 130.58 | Avg: 164.46 | Temp: 9145
+[859] New Global Best! Fitness: 122.26 | Avg: 154.19 | Temp: 9141
+[860] New Global Best! Fitness: 122.73 | Avg: 153.58 | Temp: 9140
+[862] New Global Best! Fitness: 147.72 | Avg: 179.23 | Temp: 9138
+[878] New Global Best! Fitness: 139.52 | Avg: 172.19 | Temp: 9122
+[885] New Global Best! Fitness: 123.5 | Avg: 156.08 | Temp: 9115
+[886] New Global Best! Fitness: 134.33 | Avg: 167.35 | Temp: 9114
+[890] New Global Best! Fitness: 154.69 | Avg: 186.62 | Temp: 9110
+[899] New Global Best! Fitness: 129.54 | Avg: 160.38 | Temp: 9101
+Iter 900/10000 | Best Fitness: 129.54
+[901] New Global Best! Fitness: 132.28 | Avg: 166.96 | Temp: 9099
+[905] New Global Best! Fitness: 135.3 | Avg: 167.65 | Temp: 9095
+[917] New Global Best! Fitness: 134.84 | Avg: 165.92 | Temp: 9083
+[922] New Global Best! Fitness: 127.07 | Avg: 159.96 | Temp: 9078
+[923] New Global Best! Fitness: 131.55 | Avg: 162.23 | Temp: 9077
+[924] New Global Best! Fitness: 136.82 | Avg: 174.08 | Temp: 9076
+[925] New Global Best! Fitness: 138.39 | Avg: 171.38 | Temp: 9075
+[927] New Global Best! Fitness: 129.1 | Avg: 162.54 | Temp: 9073
+[930] New Global Best! Fitness: 128.25 | Avg: 158.27 | Temp: 9070
+[932] New Global Best! Fitness: 124.99 | Avg: 156.42 | Temp: 9068
+[934] New Global Best! Fitness: 134.52 | Avg: 166.5 | Temp: 9066
+[935] New Global Best! Fitness: 141.86 | Avg: 172.42 | Temp: 9065
+[941] New Global Best! Fitness: 133.94 | Avg: 166.19 | Temp: 9059
+[944] New Global Best! Fitness: 132.09 | Avg: 163.54 | Temp: 9056
+[949] New Global Best! Fitness: 129.86 | Avg: 161.77 | Temp: 9051
+[951] New Global Best! Fitness: 143.41 | Avg: 175.54 | Temp: 9049
+[952] New Global Best! Fitness: 145.37 | Avg: 179.46 | Temp: 9048
+[960] New Global Best! Fitness: 133.18 | Avg: 164.23 | Temp: 9040
+[963] New Global Best! Fitness: 129.21 | Avg: 161.88 | Temp: 9037
+[964] New Global Best! Fitness: 160.66 | Avg: 193.54 | Temp: 9036
+[986] New Global Best! Fitness: 128.52 | Avg: 154.85 | Temp: 9014
+[990] New Global Best! Fitness: 127.13 | Avg: 159.27 | Temp: 9010
+[991] New Global Best! Fitness: 134.47 | Avg: 166.19 | Temp: 9009
+[993] New Global Best! Fitness: 129.4 | Avg: 162.58 | Temp: 9007
+[995] New Global Best! Fitness: 134.62 | Avg: 166.38 | Temp: 9005
+[997] New Global Best! Fitness: 151.62 | Avg: 184.5 | Temp: 9003
+Iter 1000/10000 | Best Fitness: 151.62
+[1005] New Global Best! Fitness: 138.52 | Avg: 169.15 | Temp: 8995
+[1009] New Global Best! Fitness: 151.08 | Avg: 181.62 | Temp: 8991
+[1017] New Global Best! Fitness: 141.05 | Avg: 174.15 | Temp: 8983
+[1024] New Global Best! Fitness: 145.57 | Avg: 176.77 | Temp: 8976
+[1037] New Global Best! Fitness: 134.76 | Avg: 165.5 | Temp: 8963
+[1045] New Global Best! Fitness: 142.25 | Avg: 174.12 | Temp: 8955
+[1047] New Global Best! Fitness: 140.43 | Avg: 170.42 | Temp: 8953
+[1050] New Global Best! Fitness: 123.86 | Avg: 152.77 | Temp: 8950
+[1051] New Global Best! Fitness: 136.41 | Avg: 168.77 | Temp: 8949
+[1054] New Global Best! Fitness: 161.4 | Avg: 191.69 | Temp: 8946
+[1070] New Global Best! Fitness: 118.99 | Avg: 153.38 | Temp: 8930
+[1072] New Global Best! Fitness: 129.78 | Avg: 160.5 | Temp: 8928
+[1076] New Global Best! Fitness: 132.4 | Avg: 164.38 | Temp: 8924
+[1078] New Global Best! Fitness: 144.12 | Avg: 175.62 | Temp: 8922
+[1090] New Global Best! Fitness: 145.23 | Avg: 180.5 | Temp: 8910
+[1094] New Global Best! Fitness: 146.41 | Avg: 178.88 | Temp: 8906
+Iter 1100/10000 | Best Fitness: 146.41
+[1108] New Global Best! Fitness: 137.9 | Avg: 168.15 | Temp: 8892
+[1111] New Global Best! Fitness: 123.56 | Avg: 156.23 | Temp: 8889
+[1114] New Global Best! Fitness: 132.75 | Avg: 163.88 | Temp: 8886
+[1119] New Global Best! Fitness: 133.89 | Avg: 165.88 | Temp: 8881
+[1125] New Global Best! Fitness: 128.88 | Avg: 160.31 | Temp: 8875
+[1128] New Global Best! Fitness: 135.22 | Avg: 165.38 | Temp: 8872
+[1129] New Global Best! Fitness: 135.91 | Avg: 166.58 | Temp: 8871
+[1130] New Global Best! Fitness: 141.04 | Avg: 172.15 | Temp: 8870
+[1136] New Global Best! Fitness: 126.08 | Avg: 157.23 | Temp: 8864
+[1138] New Global Best! Fitness: 136.76 | Avg: 169.54 | Temp: 8862
+[1153] New Global Best! Fitness: 149.45 | Avg: 180.08 | Temp: 8847
+[1171] New Global Best! Fitness: 153.38 | Avg: 184.96 | Temp: 8829
+[1182] New Global Best! Fitness: 124.66 | Avg: 154.54 | Temp: 8818
+[1184] New Global Best! Fitness: 117.24 | Avg: 148.46 | Temp: 8816
+[1186] New Global Best! Fitness: 141.33 | Avg: 171.15 | Temp: 8814
+[1189] New Global Best! Fitness: 141.94 | Avg: 172.62 | Temp: 8811
+[1195] New Global Best! Fitness: 133.19 | Avg: 164.62 | Temp: 8805
+Iter 1200/10000 | Best Fitness: 133.19
+[1201] New Global Best! Fitness: 138.31 | Avg: 172.15 | Temp: 8799
+[1204] New Global Best! Fitness: 140.37 | Avg: 171.27 | Temp: 8796
+[1216] New Global Best! Fitness: 135.07 | Avg: 165.35 | Temp: 8784
+[1222] New Global Best! Fitness: 138.01 | Avg: 166.27 | Temp: 8778
+[1226] New Global Best! Fitness: 140.43 | Avg: 173.0 | Temp: 8774
+[1239] New Global Best! Fitness: 132.69 | Avg: 165.54 | Temp: 8761
+[1242] New Global Best! Fitness: 148.74 | Avg: 179.12 | Temp: 8758
+[1268] New Global Best! Fitness: 129.04 | Avg: 160.46 | Temp: 8732
+[1271] New Global Best! Fitness: 128.93 | Avg: 161.27 | Temp: 8729
+[1274] New Global Best! Fitness: 132.67 | Avg: 164.58 | Temp: 8726
+[1277] New Global Best! Fitness: 134.65 | Avg: 168.04 | Temp: 8723
+[1279] New Global Best! Fitness: 143.49 | Avg: 177.62 | Temp: 8721
+[1282] New Global Best! Fitness: 122.94 | Avg: 155.04 | Temp: 8718
+[1284] New Global Best! Fitness: 124.64 | Avg: 156.12 | Temp: 8716
+[1286] New Global Best! Fitness: 133.24 | Avg: 165.85 | Temp: 8714
+[1299] New Global Best! Fitness: 139.61 | Avg: 171.73 | Temp: 8701
+Iter 1300/10000 | Best Fitness: 139.61
+[1302] New Global Best! Fitness: 130.08 | Avg: 161.38 | Temp: 8698
+[1303] New Global Best! Fitness: 139.45 | Avg: 170.04 | Temp: 8697
+[1311] New Global Best! Fitness: 146.22 | Avg: 177.08 | Temp: 8689
+[1331] New Global Best! Fitness: 138.41 | Avg: 169.85 | Temp: 8669
+[1334] New Global Best! Fitness: 143.18 | Avg: 173.88 | Temp: 8666
+[1336] New Global Best! Fitness: 138.75 | Avg: 169.92 | Temp: 8664
+[1340] New Global Best! Fitness: 142.06 | Avg: 173.65 | Temp: 8660
+[1347] New Global Best! Fitness: 135.22 | Avg: 167.15 | Temp: 8653
+[1349] New Global Best! Fitness: 144.19 | Avg: 175.54 | Temp: 8651
+[1352] New Global Best! Fitness: 120.0 | Avg: 151.54 | Temp: 8648
+[1353] New Global Best! Fitness: 145.29 | Avg: 176.19 | Temp: 8647
+[1361] New Global Best! Fitness: 146.95 | Avg: 180.23 | Temp: 8639
+[1375] New Global Best! Fitness: 132.36 | Avg: 163.27 | Temp: 8625
+[1381] New Global Best! Fitness: 126.54 | Avg: 158.69 | Temp: 8619
+[1382] New Global Best! Fitness: 138.79 | Avg: 171.62 | Temp: 8618
+[1394] New Global Best! Fitness: 132.77 | Avg: 163.73 | Temp: 8606
+[1397] New Global Best! Fitness: 134.77 | Avg: 166.69 | Temp: 8603
+[1400] New Global Best! Fitness: 136.03 | Avg: 165.42 | Temp: 8600
+Iter 1400/10000 | Best Fitness: 136.03
+[1404] New Global Best! Fitness: 136.32 | Avg: 167.04 | Temp: 8596
+[1405] New Global Best! Fitness: 136.92 | Avg: 168.12 | Temp: 8595
+[1407] New Global Best! Fitness: 141.28 | Avg: 171.62 | Temp: 8593
+[1414] New Global Best! Fitness: 122.47 | Avg: 153.12 | Temp: 8586
+[1416] New Global Best! Fitness: 144.78 | Avg: 174.04 | Temp: 8584
+[1458] New Global Best! Fitness: 129.97 | Avg: 159.04 | Temp: 8542
+[1460] New Global Best! Fitness: 132.3 | Avg: 161.08 | Temp: 8540
+[1463] New Global Best! Fitness: 129.89 | Avg: 161.12 | Temp: 8537
+[1464] New Global Best! Fitness: 137.88 | Avg: 168.38 | Temp: 8536
+[1471] New Global Best! Fitness: 120.0 | Avg: 148.92 | Temp: 8529
+[1473] New Global Best! Fitness: 125.23 | Avg: 156.77 | Temp: 8527
+[1476] New Global Best! Fitness: 136.34 | Avg: 168.62 | Temp: 8524
+[1488] New Global Best! Fitness: 131.25 | Avg: 161.58 | Temp: 8512
+[1490] New Global Best! Fitness: 123.81 | Avg: 153.54 | Temp: 8510
+[1493] New Global Best! Fitness: 121.28 | Avg: 151.77 | Temp: 8507
+[1494] New Global Best! Fitness: 131.25 | Avg: 160.5 | Temp: 8506
+Iter 1500/10000 | Best Fitness: 131.25
+[1501] New Global Best! Fitness: 131.1 | Avg: 164.69 | Temp: 8499
+[1505] New Global Best! Fitness: 134.92 | Avg: 163.19 | Temp: 8495
+[1517] New Global Best! Fitness: 118.82 | Avg: 151.04 | Temp: 8483
+[1518] New Global Best! Fitness: 122.86 | Avg: 154.38 | Temp: 8482
+[1519] New Global Best! Fitness: 125.81 | Avg: 153.88 | Temp: 8481
+[1522] New Global Best! Fitness: 139.67 | Avg: 167.62 | Temp: 8478
+[1525] New Global Best! Fitness: 139.71 | Avg: 171.31 | Temp: 8475
+[1526] New Global Best! Fitness: 142.7 | Avg: 174.85 | Temp: 8474
+[1548] New Global Best! Fitness: 135.19 | Avg: 165.77 | Temp: 8452
+[1553] New Global Best! Fitness: 150.31 | Avg: 187.65 | Temp: 8447
+[1565] New Global Best! Fitness: 151.77 | Avg: 186.5 | Temp: 8435
+[1581] New Global Best! Fitness: 160.54 | Avg: 196.88 | Temp: 8419
+[1586] New Global Best! Fitness: 157.39 | Avg: 192.77 | Temp: 8414
+Iter 1600/10000 | Best Fitness: 157.39
+[1612] New Global Best! Fitness: 120.29 | Avg: 152.27 | Temp: 8388
+[1614] New Global Best! Fitness: 121.1 | Avg: 151.92 | Temp: 8386
+[1615] New Global Best! Fitness: 122.34 | Avg: 154.85 | Temp: 8385
+[1616] New Global Best! Fitness: 129.85 | Avg: 163.54 | Temp: 8384
+[1617] New Global Best! Fitness: 131.99 | Avg: 165.27 | Temp: 8383
+[1618] New Global Best! Fitness: 139.27 | Avg: 173.08 | Temp: 8382
+[1619] New Global Best! Fitness: 147.97 | Avg: 182.19 | Temp: 8381
+[1626] New Global Best! Fitness: 151.68 | Avg: 185.96 | Temp: 8374
+[1627] New Global Best! Fitness: 161.07 | Avg: 198.96 | Temp: 8373
+[1637] New Global Best! Fitness: 148.39 | Avg: 184.65 | Temp: 8363
+[1639] New Global Best! Fitness: 152.04 | Avg: 190.81 | Temp: 8361
+[1644] New Global Best! Fitness: 147.86 | Avg: 182.77 | Temp: 8356
+[1647] New Global Best! Fitness: 135.37 | Avg: 173.31 | Temp: 8353
+[1648] New Global Best! Fitness: 136.16 | Avg: 167.46 | Temp: 8352
+[1649] New Global Best! Fitness: 159.31 | Avg: 197.15 | Temp: 8351
+[1661] New Global Best! Fitness: 156.67 | Avg: 191.42 | Temp: 8339
+[1668] New Global Best! Fitness: 153.45 | Avg: 190.42 | Temp: 8332
+[1677] New Global Best! Fitness: 131.52 | Avg: 166.38 | Temp: 8323
+[1678] New Global Best! Fitness: 145.89 | Avg: 180.15 | Temp: 8322
+[1690] New Global Best! Fitness: 144.29 | Avg: 180.92 | Temp: 8310
+[1691] New Global Best! Fitness: 162.69 | Avg: 199.5 | Temp: 8309
+[1695] New Global Best! Fitness: 172.84 | Avg: 209.27 | Temp: 8305
+Iter 1700/10000 | Best Fitness: 172.84
+[1706] New Global Best! Fitness: 151.72 | Avg: 183.69 | Temp: 8294
+[1708] New Global Best! Fitness: 154.93 | Avg: 188.42 | Temp: 8292
+[1724] New Global Best! Fitness: 126.66 | Avg: 162.42 | Temp: 8276
+[1725] New Global Best! Fitness: 131.41 | Avg: 165.46 | Temp: 8275
+[1726] New Global Best! Fitness: 145.8 | Avg: 179.35 | Temp: 8274
+[1730] New Global Best! Fitness: 142.13 | Avg: 174.77 | Temp: 8270
+[1731] New Global Best! Fitness: 152.53 | Avg: 189.42 | Temp: 8269
+[1739] New Global Best! Fitness: 144.79 | Avg: 181.19 | Temp: 8261
+[1742] New Global Best! Fitness: 152.61 | Avg: 185.88 | Temp: 8258
+[1745] New Global Best! Fitness: 149.24 | Avg: 183.46 | Temp: 8255
+[1749] New Global Best! Fitness: 165.83 | Avg: 203.88 | Temp: 8251
+[1762] New Global Best! Fitness: 149.36 | Avg: 186.85 | Temp: 8238
+[1766] New Global Best! Fitness: 149.17 | Avg: 182.31 | Temp: 8234
+[1767] New Global Best! Fitness: 149.21 | Avg: 184.96 | Temp: 8233
+[1768] New Global Best! Fitness: 149.75 | Avg: 183.04 | Temp: 8232
+[1770] New Global Best! Fitness: 166.07 | Avg: 205.12 | Temp: 8230
+[1776] New Global Best! Fitness: 170.98 | Avg: 209.0 | Temp: 8224
+[1787] New Global Best! Fitness: 133.51 | Avg: 167.62 | Temp: 8213
+[1789] New Global Best! Fitness: 141.44 | Avg: 178.27 | Temp: 8211
+[1791] New Global Best! Fitness: 144.03 | Avg: 173.19 | Temp: 82099.65 | Temp: 7962

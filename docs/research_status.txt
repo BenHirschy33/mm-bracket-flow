@@ -1,0 +1,18 @@
+RESEARCH STATUS REPORT - 2026-03-16 18:27
+AGENT: RESEARCH_AGENT
+WORKTREE: MM-Research
+
+MISSION STATUS:
+ACTIVE LOOP - Cycle 1: Coach Efficiency & Upset Correlation
+
+HEARTBEAT:
+- 18:30: Cycle 1 COMPLETE. Defined 'Moxie' (Coach PASE) and 'Chaos Potential' (3PA Volatility).
+- 18:30: Initiating Research Cycle 2: Neutral Site Dynamics.
+
+DISCOVERED METRIC:
+- 'Moxie Coefficient': Derived from BartTorvik PASE. Coaches like Izzo and Sampson provide a 'Survival Floor'.
+- 'Chaos Potential': 3PA/FGA > 0.45 correlates with high upset variance in sub-25 AdjEM teams.
+
+NEXT STEPS:
+- Mapping coach performance across multiple tournament appearances to a 'Moxie' coefficient.
+- Analyzing 3PA/FGA ratios for double-digit seeds to define 'Chaos Potential'.

@@ -15,18 +15,27 @@ from scripts.evaluate_weights import evaluate_bracket
 # Setup logging
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 
-# expanded years for better generalization (including earlier years)
-YEARS = [2000, 2005, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2021, 2022, 2023, 2024]
+# Expanded years for better generalization (including earlier years)
+YEARS = [2000, 2005, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2021, 2022, 2023, 2024, 2025]
+
+# USER Feedback: Stronger weighting for past 4 years (2021-2025).
+# 2021-2025: 1.0 | 2011-2020: 0.7 | 2000-2010: 0.3
+def get_era_weight(year):
+    if year >= 2021: return 1.0
+    if year >= 2011: return 0.7
+    return 0.3
+
+ERA_WEIGHTS = {y: get_era_weight(y) for y in YEARS}
 
 def get_multi_year_scores(weights: SimulationWeights, years_list):
-    """Calculates scores across a specific list of years with Monte Carlo evaluation."""
-    scores = []
+    """Calculates weighted scores across a specific list of years."""
+    weighted_scores = []
     for year in years_list:
-        # Using iterations=2 to reduce variance in the fitness function itself
         score, _ = evaluate_bracket(year, weights, iterations=2)
         if score > 0:
-            scores.append(score)
-    return scores
+            era_weight = ERA_WEIGHTS.get(year, 1.0)
+            weighted_scores.append(score * era_weight)
+    return weighted_scores
 
 def cross_validate_weights(weights: SimulationWeights):
     """
@@ -45,11 +54,14 @@ def cross_validate_weights(weights: SimulationWeights):
     fitness = avg_score - (0.2 * std_score)
     return fitness, avg_score
 
-def optimize_simulated_annealing(iterations=5000, temp=2.0, cooling_rate=0.9995):
+def optimize_simulated_annealing(iterations=10000, temp=2.0, cooling_rate=0.9998):
     """
-    Phase 2: Ultra-Deep K-Fold Optimization Sweep.
+    Phase 5: Ultra-Deep K-Fold Optimization Sweep.
     """
+    # Start with baseline but apply requested Venue Bias (neutral_weight)
     current_weights = SimulationWeights()
+    current_weights.neutral_weight = 0.25 
+    
     current_fitness, current_avg = cross_validate_weights(current_weights)
     
     best_weights = current_weights
@@ -75,7 +87,7 @@ def optimize_simulated_annealing(iterations=5000, temp=2.0, cooling_rate=0.9995)
                 "defense_premium": max(0.5, current_weights.defense_premium + random.uniform(-0.5, 0.5)),
                 
                 # Phase 4/5/6 Metrics
-                "ft_rate_weight": max(0, current_weights.ft_rate_weight + random.uniform(-0.5, 0.5)),
+                "foul_drawing_weight": max(0, current_weights.foul_drawing_weight + random.uniform(-0.5, 0.5)),
                 "stl_weight": max(0, current_weights.stl_weight + random.uniform(-0.5, 0.5)),
                 "blk_weight": max(0, current_weights.blk_weight + random.uniform(-0.5, 0.5)),
                 "orb_weight": max(0, current_weights.orb_weight + random.uniform(-0.5, 0.5)),
@@ -98,6 +110,10 @@ def optimize_simulated_annealing(iterations=5000, temp=2.0, cooling_rate=0.9995)
                 "cinderella_factor": max(0, current_weights.cinderella_factor + random.uniform(-0.2, 0.2)),
                 "luck_regression_weight": max(0, current_weights.luck_regression_weight + random.uniform(-0.5, 0.5)),
                 "star_reliance_weight": max(0, current_weights.star_reliance_weight + random.uniform(-0.2, 0.2)),
+                
+                # 2025 Research Indicators
+                "orb_density_weight": max(0, current_weights.orb_density_weight + random.uniform(-0.2, 0.2)),
+                "continuation_rule_bias": max(0, current_weights.continuation_rule_bias + random.uniform(-0.01, 0.01)),
                 
                 "chaos_mode": False
             }
@@ -125,6 +141,10 @@ def optimize_simulated_annealing(iterations=5000, temp=2.0, cooling_rate=0.9995)
 
     except KeyboardInterrupt:
         print("\nOptimization interrupted by user. Saving current best...")
+    except Exception as e:
+        print(f"\nCRITICAL ERROR during optimization: {e}")
+        import traceback
+        traceback.print_exc()
     finally:
         print("\n=======================================================")
         print(f"Final Best CV Fitness: {round(best_fitness, 2)}")

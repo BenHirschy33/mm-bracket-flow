@@ -21,41 +21,41 @@ class SimulatorEngine:
         self.upset_count = 0
         self.total_games = 0
 
+    def simulate_game(self, team_a: Team, team_b: Team, mode: str = "deterministic") -> Team:
+        """Simulates a game and returns the winner."""
+        prob_a = self.calculate_win_probability(team_a, team_b)
+        
+        if mode == "deterministic":
+            return team_a if prob_a >= 0.5 else team_b
+        else:
+            return team_a if random.random() < prob_a else team_b
+
     def calculate_win_probability(self, team_a: Team, team_b: Team, round_num: int = 1) -> float:
-        """
-        Calculates the probability of Team A winning against Team B.
-        Incorporates Chalk vs Chaos logic.
-        """
-        # If chaos_mode is enabled, we use a different probability shift strategy
-        # to favor high-variance underdogs.
+        """Calculates win prob with defensive null checks."""
+        # Ensure base efficiencies have defaults if None
+        eff_a = team_a.pythagorean_expectation if team_a.off_efficiency is not None else 0.5
+        eff_b = team_b.pythagorean_expectation if team_b.off_efficiency is not None else 0.5
         
-        # 1. Calculate Base Probability using current weights
-        # (This is the standard statistical baseline)
-        
-        # Efficiency Delta (AdjO - AdjD)
-        eff_a = team_a.pythagorean_expectation
-        eff_b = team_b.pythagorean_expectation
-        
-        # Basic win probability using Pythagorean expectation
-        base_probability = eff_a / (eff_a + eff_b)
-        
-        # Apply Metrics
+        base_probability = eff_a / (eff_a + eff_b) if (eff_a + eff_b) > 0 else 0.5
         final_probability = base_probability
         
         # Step 2: Advanced Metric Modifiers
         # Defense Premium (Boosts the team with the better defense)
-        def_b = team_b.def_efficiency or 100.0
-        def_a = team_a.def_efficiency or 100.0
-        def_delta = def_b - def_a # lower def_efficiency is better
-        # We'll bake defense premium into efficiency weight for simplicity in optimization
-        final_probability += (def_delta * 0.001) * self.weights.defense_premium
+        # Refined Phase 2: If AdjD is missing (None), we skip this modifier instead of using 100.0
+        if team_a.def_efficiency is not None and team_b.def_efficiency is not None:
+            def_b = team_b.def_efficiency
+            def_a = team_a.def_efficiency
+            def_delta = def_b - def_a # lower def_efficiency is better
+            final_probability += (def_delta * 0.001) * self.weights.defense_premium
         
         # 2. Seed Advantage (The "Chalk" baseline)
         seed_diff = team_b.seed - team_a.seed
         final_probability += seed_diff * self.weights.seed_weight
-        # Strength of Schedule (SOS)
+        # Refined SOS: Weighted by win percentage against that schedule
         if team_a.sos is not None and team_b.sos is not None:
-            sos_delta = team_a.sos - team_b.sos
+            sos_a = team_a.sos * (team_a.total_win_pct or 0.5)
+            sos_b = team_b.sos * (team_b.total_win_pct or 0.5)
+            sos_delta = sos_a - sos_b
             final_probability += (sos_delta * 0.01) * self.weights.sos_weight
             
         # Turnover Margin
@@ -71,17 +71,18 @@ class SimulatorEngine:
             momentum_delta = team_a.momentum - team_b.momentum
             final_probability += momentum_delta * self.weights.momentum_weight
             
-        # Free Throw Advantage
-        if team_a.off_ft_pct is not None and team_b.def_ft_pct is not None and \
-           team_b.off_ft_pct is not None and team_a.def_ft_pct is not None:
-            ft_advantage = (team_a.off_ft_pct - team_b.def_ft_pct) - (team_b.off_ft_pct - team_a.def_ft_pct)
-            final_probability += ft_advantage * 0.01 * self.weights.ft_weight
+        # Free Throw Advantage vs Defensive Fouling Tendency
+        if team_a.off_ft_pct is not None and team_b.def_ft_rate is not None and \
+           team_b.off_ft_pct is not None and team_a.def_ft_rate is not None:
+            # Advantage = (Your shooting quality) * (Opponent fouling quantity)
+            ft_a = (team_a.off_ft_pct / 100.0) * (team_b.def_ft_rate)
+            ft_b = (team_b.off_ft_pct / 100.0) * (team_a.def_ft_rate)
+            ft_advantage = ft_a - ft_b
+            final_probability += ft_advantage * 0.1 * self.weights.ft_weight
             
-        # Phase 4 Metrics (Grit & Chaos)
-        # 1. FT Rate (Aggressiveness / Drawing Fouls)
-        # 2. Grit Advantage (Phase 4)
+        # 2. Foul Drawing Advantage (AGGRESSIVENESS)
         ftr_delta = (team_a.off_ft_rate or 0.0) - (team_b.off_ft_rate or 0.0)
-        final_probability += ftr_delta * self.weights.ft_rate_weight
+        final_probability += ftr_delta * self.weights.foul_drawing_weight
 
         stl_delta = (team_a.off_stl_pct or 0.0) - (team_b.off_stl_pct or 0.0)
         final_probability += (stl_delta * 0.01) * self.weights.stl_weight
@@ -114,10 +115,12 @@ class SimulatorEngine:
         if team_b.momentum and team_b.momentum > 0.9:
             final_probability += (team_b.momentum - 0.9) * self.weights.momentum_regression_weight
 
-        # 7. Road Dominance (Phase 4)
-        # Rewards teams that play well away from home (closer to neutral site reality)
-        road_advantage = (team_a.road_dominance - team_b.road_dominance)
-        final_probability += road_advantage * self.weights.road_dominance_weight
+        # 11. Neutral Venue Shift (Away-Lite Logic)
+        # USER Feedback: Neutral sites are closer to 'Away' than home.
+        neutral_adj = (team_a.neutral_win_pct - team_b.neutral_win_pct)
+        final_probability += neutral_adj * self.weights.neutral_weight
+
+        # 12. Experience Bonus (Phase 4)
 
         # 8. Assist Rate (Phase 4)
         # Rewards unselfish cohesion
@@ -153,6 +156,24 @@ class SimulatorEngine:
 
         # 13. Aggressive Marksman (Phase 4)
         # Bonus for teams that both draw many fouls and convert them at high rates
+        # USER DEFINED 2025 FORMULAS
+        # 1. Grit: 0.4 * (100 - AdjDE) + 0.3 * ORB_pct + 0.3 * (Math.abs(Luck) if Luck < 0 else 0)
+        grit_a = 0.4 * (100 - (team_a.def_efficiency or 100)) + 0.3 * (team_a.off_orb_pct or 0.0) + 0.3 * abs(min(0, (team_a.luck or 0.0)))
+        grit_b = 0.4 * (100 - (team_b.def_efficiency or 100)) + 0.3 * (team_b.off_orb_pct or 0.0) + 0.3 * abs(min(0, (team_b.luck or 0.0)))
+        final_probability += (grit_a - grit_b) * 0.01 * self.weights.defense_premium
+
+        # 2. Aggression: 0.3 * AdjT + 0.4 * FT_Rate + 0.3 * TO_pct_def
+        # Using AdjT (pace) as a proxy if raw AdjT isn't explicit
+        agg_a = 0.3 * (team_a.pace or 70) + 0.4 * (team_a.off_ft_rate or 0.0) + 0.3 * (team_a.def_to_pct or 0.0)
+        agg_b = 0.3 * (team_b.pace or 70) + 0.4 * (team_b.off_ft_rate or 0.0) + 0.3 * (team_b.def_to_pct or 0.0)
+        final_probability += (agg_a - agg_b) * 0.01 * self.weights.foul_drawing_weight
+
+        # 3. Portal Stability: 0.5 * Minutes_Returning_pct + 0.3 * Scoring_Returning_pct - 0.2 * Transfer_Usage_pct
+        # Note: These metrics are mapped to experience_weight and continuity_weight proxies
+        stab_a = 0.5 * getattr(team_a, 'returning_minutes', 50.0) + 0.3 * getattr(team_a, 'returning_scoring', 50.0) - 0.2 * getattr(team_a, 'transfer_pct', 20.0)
+        stab_b = 0.5 * getattr(team_b, 'returning_minutes', 50.0) + 0.3 * getattr(team_b, 'returning_scoring', 50.0) - 0.2 * getattr(team_b, 'transfer_pct', 20.0)
+        final_probability += (stab_a - stab_b) * 0.01 * self.weights.continuity_weight
+
         if (team_a.off_ft_rate or 0.0) > 0.38 and (team_a.off_ft_pct or 0.0) > 78.0:
             final_probability += 0.02
         if (team_b.off_ft_rate or 0.0) > 0.38 and (team_b.off_ft_pct or 0.0) > 78.0:
@@ -266,6 +287,19 @@ class SimulatorEngine:
             final_probability -= (team_a.star_reliance * self.weights.star_reliance_weight)
         if team_b.star_reliance is not None:
             final_probability += (team_b.star_reliance * self.weights.star_reliance_weight)
+
+        # 2025 Research Indicator: Continuation Rule (FTA/FGA Slasher Bonus)
+        # Favors aggressive teams that draw fouls at the rim (NCAA 2025 Rule Change)
+        if (team_a.off_ft_rate or 0.0) > 0.380:
+            final_probability += self.weights.continuation_rule_bias
+        if (team_b.off_ft_rate or 0.0) > 0.380:
+            final_probability -= self.weights.continuation_rule_bias
+
+        # 2025 Research Indicator: ORB Density (Historic Dominance)
+        if (team_a.off_orb_pct or 0.0) > 34.0:
+            final_probability += (team_a.off_orb_pct - 34.0) * 0.01 * self.weights.orb_density_weight
+        if (team_b.off_orb_pct or 0.0) > 34.0:
+            final_probability -= (team_b.off_orb_pct - 34.0) * 0.01 * self.weights.orb_density_weight
 
         # Clamp to valid probability bounds [0.01, 0.99]
         final_probability = max(0.01, min(0.99, final_probability))
