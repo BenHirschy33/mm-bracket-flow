@@ -476,7 +476,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Real-time Slider & Number updates (bidirectional sync)
-    const factorIds = ['sos', 'trb', 'to', 'eff', 'momentum', 'ft', 'def-premium', 'orb-density', 'luck-regression'];
+    const factorIds = ['sos', 'trb', 'to', 'eff', 'momentum', 'ft', 'def-premium', 'orb-density', 'luck-regression', 'coach-moxie', 'tempo-upset'];
     factorIds.forEach(id => {
         const slider = document.getElementById(`weight-${id}`);
         const numInput = document.getElementById(`num-${id}`);

@@ -115,6 +115,10 @@ def optimize_simulated_annealing(iterations=10000, temp=2.0, cooling_rate=0.9998
                 "orb_density_weight": max(0, current_weights.orb_density_weight + random.uniform(-0.2, 0.2)),
                 "continuation_rule_bias": max(0, current_weights.continuation_rule_bias + random.uniform(-0.01, 0.01)),
                 
+                # Research Loop 1: Coach & Tempo
+                "coach_tournament_weight": max(0, current_weights.coach_tournament_weight + random.uniform(-0.1, 0.1)),
+                "tempo_upset_weight": max(0, current_weights.tempo_upset_weight + random.uniform(-0.05, 0.05)),
+                
                 "chaos_mode": False
             }
             
@@ -152,17 +156,18 @@ def optimize_simulated_annealing(iterations=10000, temp=2.0, cooling_rate=0.9998
         print(f"Best Configuration: \n{best_weights}")
         print("=======================================================")
         
-        # Phase 5 Output
+        # Save to agents/optimization/
         try:
-            with open("phase5_optimal_weights.txt", "w") as f:
-                f.write(f"Phase 5 Best CV Fitness: {best_fitness}\n")
+            with open("agents/optimization/best_weights.txt", "w") as f:
+                f.write(f"Best CV Fitness: {best_fitness}\n")
                 f.write(f"Final Average Score: {best_avg}\n")
                 f.write(str(best_weights))
-            print("Successfully saved weights to phase5_optimal_weights.txt")
+            print("Successfully saved weights to agents/optimization/best_weights.txt")
         except Exception as e:
             print(f"Error saving to file: {e}")
             print("BEST WEIGHTS (COPY-PASTE READY):")
             print(best_weights)
+
         
         return best_weights
 

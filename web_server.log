@@ -1,24 +1,4 @@
- * Serving Flask app 'app'
- * Debug mode: on
-INFO: [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
- * Running on http://127.0.0.1:5001
-INFO: [33mPress CTRL+C to quit[0m
-INFO:  * Restarting with stat
-WARNING:  * Debugger is active!
-INFO:  * Debugger PIN: 139-621-205
-INFO: 127.0.0.1 - - [15/Mar/2026 19:06:55] "HEAD / HTTP/1.1" 200 -
-INFO: 127.0.0.1 - - [15/Mar/2026 19:07:07] "GET / HTTP/1.1" 200 -
-INFO: 127.0.0.1 - - [15/Mar/2026 19:07:07] "[36mGET /static/js/main.js HTTP/1.1[0m" 304 -
-INFO: 127.0.0.1 - - [15/Mar/2026 19:07:07] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
-INFO: 127.0.0.1 - - [15/Mar/2026 19:07:07] "GET /api/teams/2026 HTTP/1.1" 200 -
-INFO: 127.0.0.1 - - [15/Mar/2026 19:07:08] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
-INFO: 127.0.0.1 - - [15/Mar/2026 19:07:16] "GET /api/simulation/full?year=2026&sos=7.6&trb=4.9&to=2.8&efficiency=0.02 HTTP/1.1" 200 -
-INFO: 127.0.0.1 - - [15/Mar/2026 19:07:58] "GET / HTTP/1.1" 200 -
-INFO: 127.0.0.1 - - [15/Mar/2026 19:07:58] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
-INFO: 127.0.0.1 - - [15/Mar/2026 19:07:58] "[36mGET /static/js/main.js HTTP/1.1[0m" 304 -
-INFO: 127.0.0.1 - - [15/Mar/2026 19:07:58] "GET /api/teams/2026 HTTP/1.1" 200 -
-INFO: 127.0.0.1 - - [15/Mar/2026 19:08:13] "GET /api/simulation/full?year=2026&sos=7.4&trb=4.9&to=2.8&efficiency=0.02 HTTP/1.1" 200 -
-/opt/homebrew/Cellar/python@3.11/3.11.14_1/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/resource_tracker.py:254: UserWarning: resource_tracker: There appear to be 1 leaked semaphore objects to clean up at shutdown
-  warnings.warn('resource_tracker: There appear to be %d '
-/opt/homebrew/Cellar/python@3.11/3.11.14_1/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/resource_tracker.py:254: UserWarning: resource_tracker: There appear to be 1 leaked semaphore objects to clean up at shutdown
-  warnings.warn('resource_tracker: There appear to be %d '
+Traceback (most recent call last):
+  File "/Users/benhirschy/Desktop/MM-Bracket-Flow/web/app.py", line 7, in <module>
+    from flask import Flask, render_template, jsonify, request
+ModuleNotFoundError: No module named 'flask'

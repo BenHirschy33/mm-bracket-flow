@@ -1,6 +1,5 @@
 import logging
 import random
-from typing import Optional, List
 from typing import Optional, List, Dict
 from .team_model import Team
 from .config import SimulationWeights, DEFAULT_WEIGHTS
@@ -115,10 +114,7 @@ class SimulatorEngine:
         if team_b.momentum and team_b.momentum > 0.9:
             final_probability += (team_b.momentum - 0.9) * self.weights.momentum_regression_weight
 
-        # 11. Neutral Venue Shift (Away-Lite Logic)
-        # USER Feedback: Neutral sites are closer to 'Away' than home.
-        neutral_adj = (team_a.neutral_win_pct - team_b.neutral_win_pct)
-        final_probability += neutral_adj * self.weights.neutral_weight
+        # 11. Neutral Venue Shift is handled below at Neutral Site Mastery (Phase 5)
 
         # 12. Experience Bonus (Phase 4)
 
@@ -198,6 +194,19 @@ class SimulatorEngine:
         continuity_delta = continuity_a - continuity_b
         final_probability += (continuity_delta * 0.001) * self.weights.continuity_weight
 
+        # 18. Coach Tournament Moxie (Research Loop 1)
+        # Coaches with deep tournament experience (Elite Eight+) give their
+        # teams a measurable edge. Research showed this is the strongest
+        # single predictor for Final Four appearances.
+        coach_wins_a = getattr(team_a, 'coach_tourney_wins', 0) or 0
+        coach_wins_b = getattr(team_b, 'coach_tourney_wins', 0) or 0
+        if coach_wins_a > 0 or coach_wins_b > 0:
+            # Normalize: a coach with 20+ tourney wins is elite
+            moxie_a = min(1.0, coach_wins_a / 20.0)
+            moxie_b = min(1.0, coach_wins_b / 20.0)
+            final_probability += (moxie_a - moxie_b) * 0.05 * self.weights.coach_tournament_weight
+
+
         # 18. Pace Control (Phase 7)
         # Teams that successfully impose their tempo (extreme pace + winning)
         pace_a = team_a.pace or 70.0
@@ -218,11 +227,19 @@ class SimulatorEngine:
             final_probability += threepar_advantage * self.weights.three_par_weight
             
         # Pace Variance (Slow games neutralize favorites)
+        # Research: underdogs outside top-100 tempo use slow pace
+        # to compress the talent gap and increase upset probability
         if team_a.pace is not None and team_b.pace is not None:
             avg_pace = (team_a.pace + team_b.pace) / 2.0
             if avg_pace < 65.0:
                 pace_diff = 65.0 - avg_pace
                 neutralization = (pace_diff * 0.02) * self.weights.pace_variance_weight
+                # Tempo upset bonus: if the underdog (higher seed) is slower,
+                # they are deliberately controlling the tempo
+                if team_a.seed > team_b.seed and (team_a.pace or 70) < 65:
+                    neutralization += self.weights.tempo_upset_weight * 0.5
+                elif team_b.seed > team_a.seed and (team_b.pace or 70) < 65:
+                    neutralization += self.weights.tempo_upset_weight * 0.5
                 if final_probability > 0.5:
                     final_probability = max(0.5, final_probability - neutralization)
                 else:

@@ -49,6 +49,10 @@ class SimulationWeights:
     orb_density_weight: float = 0.0      # Multiplier for historic OR% (>34%)
     continuation_rule_bias: float = 0.0  # Volatility shift for aggressive slashers
 
+    # Phase 3: Coach & Tempo (Research Loop 1)
+    coach_tournament_weight: float = 0.0  # Rewards coaches with deep tournament experience
+    tempo_upset_weight: float = 0.0       # Slow-tempo underdogs reduce the talent gap
+
     # Intuition weight: Disabled
     intuition_weight: float = 0.0
 
@@ -59,41 +63,46 @@ class SimulationWeights:
     # Chaos Engine Toggle (Phase 3)
     chaos_mode: bool = False
 
-# Standard instance to use across the app if no custom one is provided
+# Optimizer-tuned defaults (200-iteration SA sweep, CV fitness 156.71)
 DEFAULT_WEIGHTS = SimulationWeights(
-    efficiency_weight=0.229,
-    to_weight=6.034,
-    ft_weight=1.071,
-    three_par_weight=2.0, # Increased: Huge factor
-    pace_variance_weight=0.047,
+    efficiency_weight=0.126,
+    to_weight=6.005,
+    ft_weight=2.541,
+    three_par_weight=1.072,
+    pace_variance_weight=0.095,
     momentum_weight=0.425,
-    sos_weight=7.109,
-    foul_drawing_weight=0.597,
-    stl_weight=0,
-    blk_weight=0,
-    orb_weight=2.5, # Increased: Huge factor
-    luck_weight=-0.642,
-    due_factor_sensitivity=0.015, # Optimized value
-    momentum_regression_weight=0.368,
-    road_dominance_weight=0.275,
-    seed_weight=0.029,
-    ast_weight=0.209,
-    three_par_volatility_weight=0.0,
-    ts_weight=0.043,
-    experience_weight=0.001,
-    late_round_def_premium=0.020,
-    depth_weight=0.001,
-    continuity_weight=0.121,
-    pace_control_weight=0.001,
-    cinderella_factor=0.170,
-    luck_regression_weight=0.0, # Plateaued at 0 for now
-    star_reliance_weight=0.0,     # Plateaued at 0 for now
-    neutral_weight=0.511,
-    non_conf_weight=0.475,
-    def_ft_rate_weight=0.653,
+    sos_weight=6.994,
+    foul_drawing_weight=1.058,
+    stl_weight=0.052,
+    blk_weight=0.364,
+    orb_weight=1.212,
+    luck_weight=0.447,
+    due_factor_sensitivity=0.011,
+    momentum_regression_weight=0.077,
+    road_dominance_weight=0.087,
+    seed_weight=0.014,
+    ast_weight=0.0,
+    three_par_volatility_weight=0.126,
+    ts_weight=0.0,
+    experience_weight=0.0,
+    late_round_def_premium=0.0,
+    depth_weight=0.036,
+    continuity_weight=0.103,
+    pace_control_weight=0.059,
+    cinderella_factor=0.489,
+    luck_regression_weight=0.356,
+    star_reliance_weight=0.001,
+    neutral_weight=0.655,
+    non_conf_weight=0.0,
+    def_ft_rate_weight=0.456,
     intuition_weight=0.0,
-    defense_premium=8.897
+    defense_premium=6.272,
+    orb_density_weight=0.111,
+    continuation_rule_bias=0.0,
+    coach_tournament_weight=0.116,
+    tempo_upset_weight=0.012
 )
+
 
 # Optimized for #11-#15 seed upsets (Derived via optimize_chaos.py)
 CHAOS_WEIGHTS = SimulationWeights(

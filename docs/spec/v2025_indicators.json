@@ -4,23 +4,58 @@
     "continuation_rule": {
       "impact": "High",
       "description": "Allows offensive players to finish steps/pivots after contact if dribble is gathered.",
-      "logic_adjustment": "Increases expected field goal percentage for driving teams; slight boost to offensive efficiency in high-contact matchups."
+      "logic_adjustment": "Increases expected field goal percentage for driving teams; slight boost to offensive efficiency in high-contact matchups.",
+      "config_param": "continuation_rule_bias"
     },
     "orb_density": {
       "impact": "Medium-High",
       "description": "High offensive rebounding rates as a volatility buffer.",
-      "logic_adjustment": "Teams with ORB% > 35% receive a 'Second Chance' multiplier in simulation loops."
+      "logic_adjustment": "Teams with ORB% > 35% receive a 'Second Chance' multiplier in simulation loops.",
+      "config_param": "orb_density_weight"
     }
   },
   "luck_regression": {
     "metric": "KenPom Luck",
-    "logic": "Teams with extreme positive luck (> 0.05) are penalized in early rounds; teams with negative luck (< -0.05) receive a 'Grit' boost if defensive efficiency is top 30."
+    "logic": "Teams with extreme positive luck (> 0.05) are penalized in early rounds; teams with negative luck (< -0.05) receive a 'Grit' boost if defensive efficiency is top 30.",
+    "config_param": "luck_regression_weight"
+  },
+  "research_loop_1": {
+    "coach_tournament_moxie": {
+      "impact": "High",
+      "description": "Coaches with Elite Eight+ experience are the strongest single predictor for Final Four appearances. Mark Few leads at ~83% career tournament win rate.",
+      "threshold": "20+ career tournament wins = elite tier (normalized to 1.0)",
+      "config_param": "coach_tournament_weight",
+      "source": "CBS Sports Sweet 16 Coach Rankings 2025"
+    },
+    "tempo_upset_strategy": {
+      "impact": "Medium-High",
+      "description": "Underdogs who intentionally play slow tempo (outside top 100 KenPom AdjT) compress the talent gap. Successful Cinderellas rank outside the top 100 in tempo.",
+      "threshold": "Avg pace < 65.0 triggers neutralization bonus for the lower seed",
+      "config_param": "tempo_upset_weight",
+      "source": "Reddit: Seven pre-tournament stats correlated with NCAA success"
+    },
+    "roster_continuity": {
+      "impact": "High",
+      "description": "Top-performing 2025 teams average ~60% returning minutes. Teams with <40% returning minutes are high-risk for early exits.",
+      "threshold_success": "Returning minutes > 60%",
+      "threshold_risk": "Transfer minutes > 38% of total",
+      "config_param": "continuity_weight (bumped from 0.121 to 0.250)"
+    },
+    "championship_formula_2025": {
+      "description": "Statistical profile for deep runs in 2025",
+      "criteria": {
+        "adj_offense": "Top 25",
+        "adj_defense": "Top 40",
+        "three_pt_pct": "> 33%",
+        "seed": "4 or better"
+      }
+    }
   },
   "formulas": {
     "grit": "0.4 * (100 - AdjDE) + 0.3 * ORB_pct + 0.3 * (Math.abs(Luck) if Luck < 0 else 0)",
     "aggression": "0.3 * AdjT + 0.4 * FT_Rate + 0.3 * TO_pct_def",
     "portal_stability": "0.5 * Minutes_Returning_pct + 0.3 * Scoring_Returning_pct - 0.2 * Transfer_Usage_pct",
-    "moxie": "Coach_PASE * 0.5 + Tournament_Wins * 0.2 + Final_Four_Appearances * 0.3",
+    "moxie": "min(1.0, coach_tourney_wins / 20.0) * 0.05 * coach_tournament_weight",
     "chaos_potential": "3PA_FGA_Ratio * 0.6 + TO_pct_def * 0.4"
   },
   "upset_markers": {
