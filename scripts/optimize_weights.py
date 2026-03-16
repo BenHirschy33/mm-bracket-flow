@@ -27,33 +27,34 @@ def get_multi_year_score(weights: SimulationWeights):
             count += 1
     return total_score / count if count > 0 else 0
 
-def optimize_simulated_annealing(iterations=2000, temp=2.0, cooling_rate=0.997):
+def optimize_simulated_annealing(iterations=2000, temp=1.0, cooling_rate=0.999):
     """
-    Finds optimal weights using Simulated Annealing.
-    Optimizes across multiple years to prevent overfitting to a single season.
+    Final Deep Optimization Sweep.
+    Focuses on locking in the dominant SOS/Efficiency/Defense pillars.
     """
-    # Start with current defaults
+    # Start with current optimized weights
     current_weights = SimulationWeights()
     current_score = get_multi_year_score(current_weights)
     
     best_weights = current_weights
     best_score = current_score
     
-    print(f"Starting Aggressive Multi-Year Simulated Annealing...")
+    print(f"Starting Final Deep Optimization Sweep...")
     print(f"Initial Multi-Year Score: {round(current_score, 2)}")
     
     for i in range(iterations):
-        # Larger tweaks for global search
+        # Precise tweaks for fine-tuning
         new_params = {
-            "trb_weight": max(0, current_weights.trb_weight + random.uniform(-1.0, 1.0)),
-            "to_weight": max(0, current_weights.to_weight + random.uniform(-0.5, 0.5)),
-            "sos_weight": max(0, current_weights.sos_weight + random.uniform(-2.0, 2.0)),
-            "momentum_weight": max(0, current_weights.momentum_weight + random.uniform(-0.05, 0.05)),
-            "efficiency_weight": max(0, current_weights.efficiency_weight + random.uniform(-0.05, 0.05)),
-            "ft_weight": max(0, current_weights.ft_weight + random.uniform(-0.2, 0.2)),
-            "three_par_weight": max(-1.0, current_weights.three_par_weight + random.uniform(-0.5, 0.5)),
-            "defense_premium": max(0.5, current_weights.defense_premium + random.uniform(-0.5, 0.5)),
-            "intuition_weight": 0.01
+            "trb_weight": 0.0,
+            "to_weight": max(0, current_weights.to_weight + random.uniform(-0.2, 0.2)),
+            "sos_weight": max(0, current_weights.sos_weight + random.uniform(-0.5, 0.5)),
+            "momentum_weight": max(0, current_weights.momentum_weight + random.uniform(-0.01, 0.01)),
+            "efficiency_weight": max(0, current_weights.efficiency_weight + random.uniform(-0.01, 0.01)),
+            "ft_weight": max(0, current_weights.ft_weight + random.uniform(-0.05, 0.05)),
+            "three_par_weight": 0.0,
+            "pace_variance_weight": 0.0,
+            "defense_premium": max(0.5, current_weights.defense_premium + random.uniform(-0.2, 0.2)),
+            "intuition_weight": 0.0
         }
         
         new_weights = SimulationWeights(**new_params)

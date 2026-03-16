@@ -15,6 +15,7 @@ class SimulationWeights:
     efficiency_weight: float = 0.121
     ft_weight: float = 0.881
     three_par_weight: float = 0.0  # New research metric
+    pace_variance_weight: float = 0.0  # Upset probability multiplier
     
     # Intuition weight: Disabled
     intuition_weight: float = 0.0

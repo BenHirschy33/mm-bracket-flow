@@ -39,14 +39,20 @@ class SimulatorEngine:
         # We'll bake defense premium into efficiency weight for simplicity in optimization
         final_probability += (def_delta * 0.001) * self.weights.efficiency_weight
         
-        # Pace Variance (Pace pushes probability closer to 50% for underdogs)
+        # Pace Variance (Slow games increase underdog win probability by reducing possessions)
         if team_a.pace is not None and team_b.pace is not None:
             avg_pace = (team_a.pace + team_b.pace) / 2.0
-            is_a_favorite = final_probability > 0.5
-            pace_factor = (65.0 - avg_pace) * 0.005 # Baseline 65 possessions. Slower = positive pace_factor
-            # We'll use efficiency weight as a proxy for pace variance if needed, 
-            # but for now we'll just use the dedicated weights
-            pass
+            # Standard pace baseline is ~65-68. 
+            # If pace is below 65, we consider it a 'variance-heavy' game.
+            if avg_pace < 65.0:
+                pace_diff = 65.0 - avg_pace
+                # Shift probability towards 0.5 (the middle)
+                # The higher the weight, the more the favorite's edge is neutralized
+                neutralization_factor = (pace_diff * 0.02) * self.weights.pace_variance_weight
+                if final_probability > 0.5:
+                    final_probability = max(0.5, final_probability - neutralization_factor)
+                else:
+                    final_probability = min(0.5, final_probability + neutralization_factor)
             
         # eFG% Matchup (A's offense vs B's defense)
         if None not in (team_a.off_efg_pct, team_b.def_efg_pct, team_b.off_efg_pct, team_a.def_efg_pct):
