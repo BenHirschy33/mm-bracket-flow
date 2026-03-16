@@ -50,28 +50,13 @@ def load_teams(csv_filepath: str | Path, year: int = None) -> Dict[str, Team]:
                 def_to_pct=safe_float(row.get("TO_Def")),
                 trb_pct=safe_float(row.get("TRB")),
                 three_par=safe_float(row.get("3PAr")),
+                off_ft_pct=safe_float(row.get("FT_Off")),
+                def_ft_pct=safe_float(row.get("FT_Def")),
                 sos=safe_float(row.get("SOS")),
-                momentum=safe_float(row.get("Momentum")),
-                
-                intuition_score=safe_float(row.get("Intuition", 0.0)) or 0.0
+                momentum=safe_float(row.get("Momentum"))
             )
             teams[name] = team
             
-    if year and yaml:
-        config_path = Path("core/intuition_config.yaml")
-        if config_path.exists():
-            with open(config_path, "r") as f:
-                intuition_yaml = yaml.safe_load(f) or {}
-                # Match either 2026_season or 2026 pattern
-                season_data = intuition_yaml.get(f"{year}_season", {}) or intuition_yaml.get(year, {})
-                for team_name, stats in season_data.items():
-                    if team_name in teams:
-                        if isinstance(stats, dict):
-                            teams[team_name].intuition_data = stats
-                            teams[team_name].intuition_score = stats.get("base", 0.0)
-                        else:
-                            teams[team_name].intuition_score = float(stats)
-                            
     return teams
 
 def load_bracket(json_filepath: str | Path) -> dict:

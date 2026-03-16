@@ -39,14 +39,20 @@ class SimulatorEngine:
         # We'll bake defense premium into efficiency weight for simplicity in optimization
         final_probability += (def_delta * 0.001) * self.weights.efficiency_weight
         
-        # Pace Variance (Pace pushes probability closer to 50% for underdogs)
+        # Pace Variance (Slow games increase underdog win probability by reducing possessions)
         if team_a.pace is not None and team_b.pace is not None:
             avg_pace = (team_a.pace + team_b.pace) / 2.0
-            is_a_favorite = final_probability > 0.5
-            pace_factor = (65.0 - avg_pace) * 0.005 # Baseline 65 possessions. Slower = positive pace_factor
-            # We'll use efficiency weight as a proxy for pace variance if needed, 
-            # but for now we'll just use the dedicated weights
-            pass
+            # Standard pace baseline is ~65-68. 
+            # If pace is below 65, we consider it a 'variance-heavy' game.
+            if avg_pace < 65.0:
+                pace_diff = 65.0 - avg_pace
+                # Shift probability towards 0.5 (the middle)
+                # The higher the weight, the more the favorite's edge is neutralized
+                neutralization_factor = (pace_diff * 0.02) * self.weights.pace_variance_weight
+                if final_probability > 0.5:
+                    final_probability = max(0.5, final_probability - neutralization_factor)
+                else:
+                    final_probability = min(0.5, final_probability + neutralization_factor)
             
         # eFG% Matchup (A's offense vs B's defense)
         if None not in (team_a.off_efg_pct, team_b.def_efg_pct, team_b.off_efg_pct, team_a.def_efg_pct):
@@ -75,47 +81,16 @@ class SimulatorEngine:
         if team_a.momentum is not None and team_b.momentum is not None:
             momentum_advantage = (team_a.momentum - team_b.momentum) * 0.05
             final_probability += momentum_advantage * self.weights.momentum_weight
-
-        # Historical Seed Advantage
-        # Lower seed number is better. Example: (team_b=16) - (team_a=1) = +15 advantage for team A
-        if team_a.seed and team_b.seed:
-            seed_advantage = (team_b.seed - team_a.seed) * 0.015
-            final_probability += seed_advantage * getattr(self.weights, 'seed_weight', 0.0)
-        
-        # Step 3: Apply human intuition modifier
-        def get_situational_intuition(team_eval: Team, opponent: Team) -> float:
-            score = team_eval.intuition_score
-            data = team_eval.intuition_data
-            if not data:
-                return score
-                
-            score = float(data.get("base", score))
-            score += float(data.get("injuries_penalty", 0.0))
-            score += float(data.get("conf_tourney_boost", 0.0))
-            score += float(data.get("motivation_factor", 0.0))
+        # Free Throw Advantage (proxy for efficiency and drawing fouls)
+        if team_a.off_ft_pct is not None and team_b.def_ft_pct is not None and \
+           team_b.off_ft_pct is not None and team_a.def_ft_pct is not None:
+            ft_advantage = (team_a.off_ft_pct - team_b.def_ft_pct) - (team_b.off_ft_pct - team_a.def_ft_pct)
+            final_probability += ft_advantage * 0.01 * self.weights.ft_weight
             
-            for vuln in data.get("vulnerabilities", []):
-                metric = vuln.get("metric")
-                thresh = float(vuln.get("threshold", 0.0))
-                penalty = float(vuln.get("penalty", 0.0))
-                
-                opp_val = None
-                if metric == "3PAr": opp_val = opponent.three_par
-                elif metric == "Pace": opp_val = opponent.pace
-                elif metric == "TO%_Def": opp_val = opponent.def_to_pct # Press vulnerability
-                
-                if opp_val is not None and opp_val >= thresh:
-                    score += penalty
-                    
-            return score
-
-        a_situational = get_situational_intuition(team_a, team_b)
-        b_situational = get_situational_intuition(team_b, team_a)
-        
-        net_intuition = a_situational - b_situational
-        intuition_modifier = net_intuition * self.weights.intuition_weight
-        
-        final_probability += intuition_modifier
+        # 3PAr Advantage (higher 3PAr can mean more variance, but also efficiency if they make them)
+        if team_a.three_par is not None and team_b.three_par is not None:
+            threepar_advantage = (team_a.three_par - team_b.three_par) * 0.01
+            final_probability += threepar_advantage * self.weights.three_par_weight
         
         # Clamp to valid probability bounds [0.01, 0.99]
         final_probability = max(0.01, min(0.99, final_probability))
@@ -124,7 +99,6 @@ class SimulatorEngine:
         logging.debug(
             f"Matchup: {team_a.name} vs {team_b.name} | "
             f"Base Stats: {round(base_probability * 100, 1)}% | "
-            f"Intuition Delta: {net_intuition}pts | "
             f"Final: {team_a.name} {team_a_pct}%"
         )
         

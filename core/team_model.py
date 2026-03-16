@@ -24,9 +24,8 @@ class Team:
     momentum: Optional[float] = None       # Win % over the last 10 games
     trb_pct: Optional[float] = None        # Total Rebound Percentage
     three_par: Optional[float] = None      # 3-Point Attempt Rate
-    
-    intuition_score: float = 0.0  # The 'Hirschy Factor' (-10 to +10)
-    intuition_data: Optional[Dict[str, Any]] = None # Dynamic YAML mapping for injuries/matchups
+    off_ft_pct: Optional[float] = None     # Offensive Free Throw %
+    def_ft_pct: Optional[float] = None     # Defensive Free Throw % Allowed
     
     @property
     def pythagorean_expectation(self) -> float:
