@@ -123,6 +123,34 @@ def optimize_simulated_annealing(iterations=10000, temp=2.0, cooling_rate=0.9998
                 "fatigue_sensitivity": max(0, current_weights.fatigue_sensitivity + random.uniform(-0.1, 0.1)),
                 "bench_rest_bonus": max(0, current_weights.bench_rest_bonus + random.uniform(-0.1, 0.1)),
 
+                # Rounds 11-15: Fine-Grained Context
+                "travel_weight": max(0, current_weights.travel_weight + random.uniform(-0.1, 0.1)),
+                "pressure_weight": max(0, current_weights.pressure_weight + random.uniform(-0.1, 0.1)),
+                "chemistry_weight": max(0, current_weights.chemistry_weight + random.uniform(-0.1, 0.1)),
+                "freshman_weight": max(0, current_weights.freshman_weight + random.uniform(-0.1, 0.1)),
+
+                # Rounds 16-20: Roster & Depth Suite
+                "backcourt_weight": max(0, current_weights.backcourt_weight + random.uniform(-0.1, 0.1)),
+                "bench_synergy_weight": max(0, current_weights.bench_synergy_weight + random.uniform(-0.1, 0.1)),
+                "whistle_mastery_weight": max(0, current_weights.whistle_mastery_weight + random.uniform(-0.1, 0.1)),
+                "heating_up_weight": max(0, current_weights.heating_up_weight + random.uniform(-0.1, 0.1)),
+
+                # Rounds 21-25: Strategy & Adaptability
+                "adjustment_weight": max(0, current_weights.adjustment_weight + random.uniform(-0.1, 0.1)),
+                "zone_defense_weight": max(0, current_weights.zone_defense_weight + random.uniform(-0.1, 0.1)),
+                "foul_management_weight": max(0, current_weights.foul_management_weight + random.uniform(-0.1, 0.1)),
+                "clutch_execution_weight": max(0, current_weights.clutch_execution_weight + random.uniform(-0.01, 0.01)),
+
+                # Rounds 26-30: Post-Season Volatility
+                "conference_weight": max(0, current_weights.conference_weight + random.uniform(-0.1, 0.1)),
+                "neutral_variance_weight": max(0, current_weights.neutral_variance_weight + random.uniform(-0.1, 0.1)),
+                "rust_penalty": max(0, current_weights.rust_penalty + random.uniform(-0.02, 0.02)),
+                "rhythm_bonus": max(0, current_weights.rhythm_bonus + random.uniform(-0.02, 0.02)),
+
+                # Rounds 31-33: Final Convergence
+                "hirschy_factor_weight": max(0, current_weights.hirschy_factor_weight + random.uniform(-0.1, 0.1)),
+                "blue_blood_bonus": max(0, current_weights.blue_blood_bonus + random.uniform(-0.1, 0.1)),
+
                 "chaos_mode": False
             }
             

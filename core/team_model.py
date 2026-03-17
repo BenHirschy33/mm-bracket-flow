@@ -49,8 +49,18 @@ class Team:
     away_l: Optional[int] = None
     conf_w: Optional[int] = None        # Conference record (Phase 5)
     conf_l: Optional[int] = None        # Conference record (Phase 5)
+
+    # Rounds 11-15: Fine-Grained Context
+    travel_dist: Optional[float] = None # Miles from home to venue
+    travel_east: Optional[bool] = None # True if traveling across time zones eastward
+    portal_usage_pct: Optional[float] = None # % of usage from transfers
+    freshman_usage_pct: Optional[float] = None # % of usage from freshmen
+    tourney_momentum: Optional[float] = None # Momentum from conference tourney (0-1)
     neutral_w: Optional[int] = None        # Derived (Phase 5)
     neutral_l: Optional[int] = None        # Derived (Phase 5)
+    conference: Optional[str] = None       # Conference name
+    is_power_conf: Optional[bool] = None   # SEC, Big12, BigTen, ACC, BigEast, Pac12
+    historical_tourney_wins: Optional[int] = None # Program history (Blue Blood proxy)
     
     @property
     def road_dominance(self) -> float:
@@ -122,3 +132,17 @@ class Team:
         adj_o_exp = (self.off_efficiency or 100.0) ** exponent
         adj_d_exp = (self.def_efficiency or 100.0) ** exponent
         return adj_o_exp / (adj_o_exp + adj_d_exp)
+
+    @property
+    def hirschy_factor(self) -> float:
+        """
+        The Definitive Composite Metric.
+        Weights: Efficiency (40%), SOS (30%), Experience (15%), Momentum (15%).
+        Normalized to 0-100 scale.
+        """
+        eff = self.pythagorean_expectation * 100.0
+        s = min(100.0, max(0.0, (self.sos or 0.0) * 5.0 + 50.0)) # Scale SOS
+        e = min(100.0, (self.total_games or 30) * 2.0)
+        m = (self.momentum or 0.5) * 100.0
+        
+        return (eff * 0.4) + (s * 0.3) + (e * 0.15) + (m * 0.15)

@@ -195,3 +195,85 @@
 2026-03-16 20:34:20,052 [INFO] Cycle 7 Finished. Peak Fitness: 337.1
 2026-03-16 20:34:30,057 [INFO] --- Starting Cycle 8 ---
 2026-03-16 20:34:30,057 [INFO] Starting optimization cycle: python3 scripts/optimize_weights.py --iterations 5000
+2026-03-16 20:37:51,517 [INFO] New Best: Fitness 126.96 | Avg 159.15
+2026-03-16 20:37:51,517 [INFO] New Best: Fitness 149.92 | Avg 185.04
+2026-03-16 20:37:51,517 [INFO] New Best: Fitness 160.78 | Avg 202.08
+2026-03-16 20:37:51,517 [INFO] New Best: Fitness 151.99 | Avg 192.38
+2026-03-16 20:37:51,518 [INFO] New Best: Fitness 154.07 | Avg 193.5
+2026-03-16 20:37:51,518 [INFO] New Best: Fitness 161.58 | Avg 198.73
+2026-03-16 20:37:51,518 [INFO] New Best: Fitness 164.38 | Avg 199.46
+2026-03-16 20:37:51,518 [INFO] New Best: Fitness 152.88 | Avg 189.77
+2026-03-16 20:37:51,518 [INFO] New Best: Fitness 159.41 | Avg 199.12
+2026-03-16 20:37:51,518 [INFO] New Best: Fitness 160.32 | Avg 201.96
+2026-03-16 20:37:51,518 [INFO] New Best: Fitness 169.2 | Avg 209.12
+2026-03-16 20:37:51,518 [INFO] New Best: Fitness 166.0 | Avg 207.35
+2026-03-16 20:37:51,519 [INFO] New Best: Fitness 169.93 | Avg 210.65
+2026-03-16 20:37:51,519 [INFO] New Best: Fitness 165.35 | Avg 210.38
+2026-03-16 20:37:51,519 [INFO] New Best: Fitness 178.53 | Avg 220.0
+2026-03-16 20:37:51,519 [INFO] New Best: Fitness 190.38 | Avg 232.88
+2026-03-16 20:37:51,519 [INFO] New Best: Fitness 180.65 | Avg 217.23
+2026-03-16 20:37:51,519 [INFO] New Best: Fitness 181.76 | Avg 224.19
+2026-03-16 20:37:51,519 [INFO] New Best: Fitness 191.44 | Avg 233.38
+2026-03-16 20:37:51,519 [INFO] New Best: Fitness 184.74 | Avg 223.12
+2026-03-16 20:37:51,520 [INFO] New Best: Fitness 188.91 | Avg 235.04
+2026-03-16 20:37:51,520 [INFO] New Best: Fitness 186.49 | Avg 226.96
+2026-03-16 20:37:51,520 [INFO] New Best: Fitness 186.56 | Avg 224.85
+2026-03-16 20:37:51,520 [INFO] New Best: Fitness 177.76 | Avg 217.31
+2026-03-16 20:37:51,520 [INFO] New Best: Fitness 177.86 | Avg 216.5
+2026-03-16 20:37:51,520 [INFO] New Best: Fitness 184.15 | Avg 226.81
+2026-03-16 20:37:51,520 [INFO] New Best: Fitness 181.44 | Avg 226.27
+2026-03-16 20:37:51,520 [INFO] New Best: Fitness 182.34 | Avg 222.77
+2026-03-16 20:37:51,521 [INFO] New Best: Fitness 180.01 | Avg 223.46
+2026-03-16 20:37:51,521 [INFO] New Best: Fitness 188.74 | Avg 229.62
+2026-03-16 20:37:51,521 [INFO] New Best: Fitness 193.27 | Avg 237.88
+2026-03-16 20:37:51,521 [INFO] New Best: Fitness 200.25 | Avg 243.81
+2026-03-16 20:37:51,521 [INFO] New Best: Fitness 208.72 | Avg 250.27
+2026-03-16 20:37:51,521 [INFO] New Best: Fitness 209.98 | Avg 252.96
+2026-03-16 20:37:51,524 [INFO] Cycle 8 Finished. Peak Fitness: 209.98
+2026-03-16 20:38:01,528 [INFO] --- Starting Cycle 9 ---
+2026-03-16 20:38:01,528 [INFO] Starting optimization cycle: python3 scripts/optimize_weights.py --iterations 5000 --modern_only
+2026-03-16 20:38:32,738 [INFO] Autonomous Orchestrator Started
+2026-03-16 20:38:32,739 [INFO] --- Starting Cycle 1 ---
+2026-03-16 20:38:32,739 [INFO] Starting optimization cycle: python3 scripts/optimize_weights.py --iterations 5000 --modern_only
+2026-03-16 20:39:53,903 [INFO] New Best: Fitness 199.66 | Avg 228.71
+2026-03-16 20:39:53,904 [INFO] New Best: Fitness 219.26 | Avg 252.86
+2026-03-16 20:39:53,904 [INFO] New Best: Fitness 225.23 | Avg 261.0
+2026-03-16 20:39:53,904 [INFO] New Best: Fitness 235.3 | Avg 274.79
+2026-03-16 20:39:53,904 [INFO] New Best: Fitness 246.43 | Avg 271.14
+2026-03-16 20:39:53,904 [INFO] New Best: Fitness 248.49 | Avg 278.79
+2026-03-16 20:39:53,904 [INFO] New Best: Fitness 297.34 | Avg 328.57
+2026-03-16 20:39:53,904 [INFO] New Best: Fitness 301.47 | Avg 330.93
+2026-03-16 20:39:53,905 [INFO] New Best: Fitness 306.95 | Avg 335.79
+2026-03-16 20:39:53,910 [INFO] Cycle 9 Finished. Peak Fitness: 306.95
+2026-03-16 20:40:03,920 [INFO] --- Starting Cycle 10 ---
+2026-03-16 20:40:03,921 [INFO] Starting optimization cycle: python3 scripts/optimize_weights.py --iterations 5000
+2026-03-16 20:40:25,174 [INFO] New Best: Fitness 185.5 | Avg 212.29
+2026-03-16 20:40:25,174 [INFO] New Best: Fitness 185.71 | Avg 226.0
+2026-03-16 20:40:25,175 [INFO] New Best: Fitness 213.18 | Avg 239.43
+2026-03-16 20:40:25,175 [INFO] New Best: Fitness 216.49 | Avg 249.64
+2026-03-16 20:40:25,175 [INFO] New Best: Fitness 236.67 | Avg 271.29
+2026-03-16 20:40:25,175 [INFO] New Best: Fitness 246.2 | Avg 283.36
+2026-03-16 20:40:25,175 [INFO] New Best: Fitness 248.87 | Avg 284.07
+2026-03-16 20:40:25,175 [INFO] New Best: Fitness 250.59 | Avg 279.14
+2026-03-16 20:40:25,175 [INFO] New Best: Fitness 253.64 | Avg 298.07
+2026-03-16 20:40:25,175 [INFO] New Best: Fitness 311.73 | Avg 341.93
+2026-03-16 20:40:25,176 [INFO] New Best: Fitness 321.81 | Avg 360.36
+2026-03-16 20:40:25,181 [INFO] Cycle 1 Finished. Peak Fitness: 321.81
+2026-03-16 20:40:35,185 [INFO] --- Starting Cycle 2 ---
+2026-03-16 20:40:35,185 [INFO] Starting optimization cycle: python3 scripts/optimize_weights.py --iterations 5000
+2026-03-16 20:43:13,538 [INFO] Autonomous Orchestrator Started
+2026-03-16 20:43:13,538 [INFO] --- Starting Cycle 1 ---
+2026-03-16 20:43:13,538 [INFO] Starting optimization cycle: python3 scripts/optimize_weights.py --iterations 5000 --modern_only
+2026-03-16 20:43:13,633 [INFO] Cycle 1 Finished. Peak Fitness: 0
+2026-03-16 20:43:23,643 [INFO] --- Starting Cycle 2 ---
+2026-03-16 20:43:23,643 [INFO] Starting optimization cycle: python3 scripts/optimize_weights.py --iterations 5000
+2026-03-16 20:43:23,719 [INFO] Cycle 2 Finished. Peak Fitness: 0
+2026-03-16 20:43:30,001 [INFO] Autonomous Orchestrator Started
+2026-03-16 20:43:30,001 [INFO] --- Starting Cycle 1 ---
+2026-03-16 20:43:30,001 [INFO] Starting optimization cycle: python3 scripts/optimize_weights.py --iterations 5000 --modern_only
+2026-03-16 20:43:30,077 [INFO] Cycle 1 Finished. Peak Fitness: 0
+2026-03-16 20:43:40,079 [INFO] --- Starting Cycle 2 ---
+2026-03-16 20:43:40,080 [INFO] Starting optimization cycle: python3 scripts/optimize_weights.py --iterations 5000
+2026-03-16 20:43:43,824 [INFO] Autonomous Orchestrator Started
+2026-03-16 20:43:43,824 [INFO] --- Starting Cycle 1 ---
+2026-03-16 20:43:43,824 [INFO] Starting optimization cycle: python3 scripts/optimize_weights.py --iterations 5000 --modern_only

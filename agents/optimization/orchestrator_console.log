@@ -735,3 +735,197 @@ Iter 600/5000 | Best Fitness: 256.23
 2026-03-16 20:34:20,052 [INFO] Cycle 7 Finished. Peak Fitness: 337.1
 2026-03-16 20:34:30,057 [INFO] --- Starting Cycle 8 ---
 2026-03-16 20:34:30,057 [INFO] Starting optimization cycle: python3 scripts/optimize_weights.py --iterations 5000
+2026-03-16 20:37:51,517 [INFO] New Best: Fitness 126.96 | Avg 159.15
+2026-03-16 20:37:51,517 [INFO] New Best: Fitness 149.92 | Avg 185.04
+2026-03-16 20:37:51,517 [INFO] New Best: Fitness 160.78 | Avg 202.08
+2026-03-16 20:37:51,517 [INFO] New Best: Fitness 151.99 | Avg 192.38
+2026-03-16 20:37:51,518 [INFO] New Best: Fitness 154.07 | Avg 193.5
+2026-03-16 20:37:51,518 [INFO] New Best: Fitness 161.58 | Avg 198.73
+2026-03-16 20:37:51,518 [INFO] New Best: Fitness 164.38 | Avg 199.46
+2026-03-16 20:37:51,518 [INFO] New Best: Fitness 152.88 | Avg 189.77
+2026-03-16 20:37:51,518 [INFO] New Best: Fitness 159.41 | Avg 199.12
+2026-03-16 20:37:51,518 [INFO] New Best: Fitness 160.32 | Avg 201.96
+2026-03-16 20:37:51,518 [INFO] New Best: Fitness 169.2 | Avg 209.12
+2026-03-16 20:37:51,518 [INFO] New Best: Fitness 166.0 | Avg 207.35
+2026-03-16 20:37:51,519 [INFO] New Best: Fitness 169.93 | Avg 210.65
+2026-03-16 20:37:51,519 [INFO] New Best: Fitness 165.35 | Avg 210.38
+2026-03-16 20:37:51,519 [INFO] New Best: Fitness 178.53 | Avg 220.0
+2026-03-16 20:37:51,519 [INFO] New Best: Fitness 190.38 | Avg 232.88
+2026-03-16 20:37:51,519 [INFO] New Best: Fitness 180.65 | Avg 217.23
+2026-03-16 20:37:51,519 [INFO] New Best: Fitness 181.76 | Avg 224.19
+2026-03-16 20:37:51,519 [INFO] New Best: Fitness 191.44 | Avg 233.38
+2026-03-16 20:37:51,519 [INFO] New Best: Fitness 184.74 | Avg 223.12
+2026-03-16 20:37:51,520 [INFO] New Best: Fitness 188.91 | Avg 235.04
+2026-03-16 20:37:51,520 [INFO] New Best: Fitness 186.49 | Avg 226.96
+2026-03-16 20:37:51,520 [INFO] New Best: Fitness 186.56 | Avg 224.85
+2026-03-16 20:37:51,520 [INFO] New Best: Fitness 177.76 | Avg 217.31
+2026-03-16 20:37:51,520 [INFO] New Best: Fitness 177.86 | Avg 216.5
+2026-03-16 20:37:51,520 [INFO] New Best: Fitness 184.15 | Avg 226.81
+2026-03-16 20:37:51,520 [INFO] New Best: Fitness 181.44 | Avg 226.27
+2026-03-16 20:37:51,520 [INFO] New Best: Fitness 182.34 | Avg 222.77
+2026-03-16 20:37:51,521 [INFO] New Best: Fitness 180.01 | Avg 223.46
+2026-03-16 20:37:51,521 [INFO] New Best: Fitness 188.74 | Avg 229.62
+2026-03-16 20:37:51,521 [INFO] New Best: Fitness 193.27 | Avg 237.88
+2026-03-16 20:37:51,521 [INFO] New Best: Fitness 200.25 | Avg 243.81
+2026-03-16 20:37:51,521 [INFO] New Best: Fitness 208.72 | Avg 250.27
+[647] New Global Best! Fitness: 266.74 | Avg: 303.86 | Temp: 4353
+[697] New Global Best! Fitness: 268.21 | Avg: 309.29 | Temp: 4303
+Iter 700/5000 | Best Fitness: 268.21
+[702] New Global Best! Fitness: 268.54 | Avg: 306.86 | Temp: 4298
+[754] New Global Best! Fitness: 270.88 | Avg: 315.14 | Temp: 4246
+Iter 800/5000 | Best Fitness: 270.88
+[858] New Global Best! Fitness: 291.16 | Avg: 330.29 | Temp: 4142
+[877] New Global Best! Fitness: 291.77 | Avg: 333.43 | Temp: 4123
+Iter 900/5000 | Best Fitness: 291.77
+[983] New Global Best! Fitness: 303.39 | Avg: 347.07 | Temp: 4017
+Iter 1000/5000 | Best Fitness: 303.39
+Iter 1100/5000 | Best Fitness: 303.39
+Iter 1200/5000 | Best Fitness: 303.39
+Iter 1300/5000 | Best Fitness: 303.39
+Iter 1400/5000 | Best Fitness: 303.39
+[1403] New Global Best! Fitness: 309.26 | Avg: 347.29 | Temp: 3597
+Iter 1500/5000 | Best Fitness: 309.26
+Iter 1600/5000 | Best Fitness: 309.26
+Iter 1700/5000 | Best Fitness: 309.26
+[1702] New Global Best! Fitness: 308.49 | Avg: 352.93 | Temp: 3298
+Iter 1800/5000 | Best Fitness: 308.49
+Iter 1900/5000 | Best Fitness: 308.49
+Iter 2000/5000 | Best Fitness: 308.49
+Iter 2100/5000 | Best Fitness: 308.49
+Iter 2200/5000 | Best Fitness: 308.49
+Iter 2300/5000 | Best Fitness: 308.49
+Iter 2400/5000 | Best Fitness: 308.49
+Iter 2500/5000 | Best Fitness: 308.49
+Iter 2600/5000 | Best Fitness: 308.49
+Iter 2700/5000 | Best Fitness: 308.49
+Iter 2800/5000 | Best Fitness: 308.49
+Iter 2900/5000 | Best Fitness: 308.49
+[2947] New Global Best! Fitness: 311.53 | Avg: 352.07 | Temp: 2053
+Iter 3000/5000 | Best Fitness: 311.53
+Iter 3100/5000 | Best Fitness: 311.53
+Iter 3200/5000 | Best Fitness: 311.53
+Iter 3300/5000 | Best Fitness: 311.53
+Iter 3400/5000 | Best Fitness: 311.53
+[3473] New Global Best! Fitness: 322.58 | Avg: 363.5 | Temp: 1527
+Iter 3500/5000 | Best Fitness: 322.58
+Iter 3600/5000 | Best Fitness: 322.58
+Iter 3700/5000 | Best Fitness: 322.58
+Iter 3800/5000 | Best Fitness: 322.58
+Iter 3900/5000 | Best Fitness: 322.58
+Iter 4000/5000 | Best Fitness: 322.58
+Iter 4100/5000 | Best Fitness: 322.58
+Iter 4200/5000 | Best Fitness: 322.58
+Iter 4300/5000 | Best Fitness: 322.58
+[4382] New Global Best! Fitness: 324.64 | Avg: 365.79 | Temp: 618
+Iter 4400/5000 | Best Fitness: 324.64
+[4441] New Global Best! Fitness: 337.1 | Avg: 373.79 | Temp: 559
+Iter 4500/5000 | Best Fitness: 337.1
+Iter 4600/5000 | Best Fitness: 337.1
+Iter 4700/5000 | Best Fitness: 337.1
+Iter 4800/5000 | Best Fitness: 337.1
+Iter 4900/5000 | Best Fitness: 337.1
+
+=======================================================
+Final Best CV Fitness: 337.1
+Final Average Cross-Season Score: 373.79
+Best Configuration: 
+SimulationWeights(trb_weight=0.0, to_weight=3.6380683035801313, sos_weight=7.58160626032616, momentum_weight=0.4054522872064147, efficiency_weight=0.05304175323554138, ft_weight=1.5090778999339305, three_par_weight=2.1442169520303036, pace_variance_weight=0.14888619735403724, foul_drawing_weight=1.484348089096187, stl_weight=1.3896388386304834, blk_weight=0.8643344128795675, orb_weight=0, neutral_weight=1.183834910986775, non_conf_weight=0.25423035268977195, def_ft_rate_weight=1.486207325693255, luck_weight=-2.9318974343312414, due_factor_sensitivity=0.051553974649301636, momentum_regression_weight=0.0414535357425756, road_dominance_weight=0.2809661459414474, seed_weight=0.01998749809474864, ast_weight=0.4755925315695688, three_par_volatility_weight=0.12940349346511135, ts_weight=0.462208787589521, experience_weight=0.002585305119979545, late_round_def_premium=0, depth_weight=0.13648080848628302, continuity_weight=0.0305584888498579, pace_control_weight=0.1260755138787808, cinderella_factor=0.4932445053641382, luck_regression_weight=0.1934247919812112, star_reliance_weight=0.14883932533960953, orb_density_weight=1.2319848824760968, continuation_rule_bias=0.08402884137941591, coach_tournament_weight=0.017466943932091472, tempo_upset_weight=0.009959259258120058, fatigue_sensitivity=0.11351496352598586, bench_rest_bonus=0.08843673808649749, intuition_weight=0.0, defense_premium=6.369403879752959, chaos_mode=False)
+=======================================================
+Successfully saved weights to agents/optimization/best_weights.txt
+Starting Phase 5 optimization with 5000 iterations...
+Starting Phase 5: Definitive Truth Sweep...
+Initial CV Fitness: 126.18 | Avg Score: 156.81
+Iter 0/5000 | Best Fitness: 126.18
+[1] New Global Best! Fitness: 126.96 | Avg: 159.15 | Temp: 4999
+[12] New Global Best! Fitness: 149.92 | Avg: 185.04 | Temp: 4988
+[77] New Global Best! Fitness: 160.78 | Avg: 202.08 | Temp: 4923
+Iter 100/5000 | Best Fitness: 160.78
+[181] New Global Best! Fitness: 151.99 | Avg: 192.38 | Temp: 4819
+Iter 200/5000 | Best Fitness: 151.99
+[243] New Global Best! Fitness: 154.07 | Avg: 193.5 | Temp: 4757
+[264] New Global Best! Fitness: 161.58 | Avg: 198.73 | Temp: 4736
+Iter 300/5000 | Best Fitness: 161.58
+[400] New Global Best! Fitness: 164.38 | Avg: 199.46 | Temp: 4600
+Iter 400/5000 | Best Fitness: 164.38
+[462] New Global Best! Fitness: 152.88 | Avg: 189.77 | Temp: 4538
+[471] New Global Best! Fitness: 159.41 | Avg: 199.12 | Temp: 4529
+[486] New Global Best! Fitness: 160.32 | Avg: 201.96 | Temp: 4514
+Iter 500/5000 | Best Fitness: 160.32
+[513] New Global Best! Fitness: 169.2 | Avg: 209.12 | Temp: 4487
+[553] New Global Best! Fitness: 166.0 | Avg: 207.35 | Temp: 4447
+[563] New Global Best! Fitness: 169.93 | Avg: 210.65 | Temp: 4437
+[574] New Global Best! Fitness: 165.35 | Avg: 210.38 | Temp: 4426
+[582] New Global Best! Fitness: 178.53 | Avg: 220.0 | Temp: 4418
+Iter 600/5000 | Best Fitness: 178.53
+Iter 700/5000 | Best Fitness: 178.53
+[733] New Global Best! Fitness: 190.38 | Avg: 232.88 | Temp: 4267
+Iter 800/5000 | Best Fitness: 190.38
+Iter 900/5000 | Best Fitness: 190.38
+Iter 1000/5000 | Best Fitness: 190.38
+[1060] New Global Best! Fitness: 180.65 | Avg: 217.23 | Temp: 3940
+[1066] New Global Best! Fitness: 181.76 | Avg: 224.19 | Temp: 3934
+Iter 1100/5000 | Best Fitness: 181.76
+[1112] New Global Best! Fitness: 191.44 | Avg: 233.38 | Temp: 3888
+Iter 1200/5000 | Best Fitness: 191.44
+Iter 1300/5000 | Best Fitness: 191.44
+Iter 1400/5000 | Best Fitness: 191.44
+Iter 1500/5000 | Best Fitness: 191.44
+[1515] New Global Best! Fitness: 184.74 | Avg: 223.12 | Temp: 3485
+[1596] New Global Best! Fitness: 188.91 | Avg: 235.04 | Temp: 3404
+Iter 1600/5000 | Best Fitness: 188.91
+Iter 1700/5000 | Best Fitness: 188.91
+Iter 1800/5000 | Best Fitness: 188.91
+[1841] New Global Best! Fitness: 186.49 | Avg: 226.96 | Temp: 3159
+Iter 1900/5000 | Best Fitness: 186.49
+[1923] New Global Best! Fitness: 186.56 | Avg: 224.85 | Temp: 3077
+Iter 2000/5000 | Best Fitness: 186.56
+Iter 2100/5000 | Best Fitness: 186.56
+[2176] New Global Best! Fitness: 177.76 | Avg: 217.31 | Temp: 2824
+[2181] New Global Best! Fitness: 177.86 | Avg: 216.5 | Temp: 2819
+[2200] New Global Best! Fitness: 184.15 | Avg: 226.81 | Temp: 2800
+Iter 2200/5000 | Best Fitness: 184.15
+Iter 2300/5000 | Best Fitness: 184.15
+[2337] New Global Best! Fitness: 181.44 | Avg: 226.27 | Temp: 2663
+[2397] New Global Best! Fitness: 182.34 | Avg: 222.77 | Temp: 2603
+Iter 2400/5000 | Best Fitness: 182.34
+Iter 2500/5000 | Best Fitness: 182.34
+Iter 2600/5000 | Best Fitness: 182.34
+[2681] New Global Best! Fitness: 180.01 | Avg: 223.46 | Temp: 2319
+[2691] New Global Best! Fitness: 188.74 | Avg: 229.62 | Temp: 2309
+Iter 2700/5000 | Best Fitness: 188.74
+Iter 2800/5000 | Best Fitness: 188.74
+[2801] New Global Best! Fitness: 193.27 | Avg: 237.88 | Temp: 2199
+Iter 2900/5000 | Best Fitness: 193.27
+Iter 3000/5000 | Best Fitness: 193.27
+Iter 3100/5000 | Best Fitness: 193.27
+Iter 3200/5000 | Best Fitness: 193.27
+Iter 3300/5000 | Best Fitness: 193.27
+[3306] New Global Best! Fitness: 200.25 | Avg: 243.81 | Temp: 1694
+Iter 3400/5000 | Best Fitness: 200.25
+[3403] New Global Best! Fitness: 208.72 | Avg: 250.27 | Temp: 1597
+Iter 3500/5000 | Best Fitness: 208.72
+Iter 3600/5000 | Best Fitness: 208.72
+Iter 3700/5000 | Best Fitness: 208.72
+Iter 3800/5000 | Best Fitness: 208.72
+Iter 3900/5000 | Best Fitness: 208.72
+Iter 4000/5000 | Best Fitness: 208.72
+Iter 4100/5000 | Best Fitness: 208.72
+Iter 4200/5000 | Best Fitness: 208.72
+Iter 4300/5000 | Best Fitness: 208.72
+Iter 4400/5000 | Best Fitness: 208.72
+2026-03-16 20:37:51,521 [INFO] New Best: Fitness 209.98 | Avg 252.96
+2026-03-16 20:37:51,524 [INFO] Cycle 8 Finished. Peak Fitness: 209.98
+2026-03-16 20:38:01,528 [INFO] --- Starting Cycle 9 ---
+2026-03-16 20:38:01,528 [INFO] Starting optimization cycle: python3 scripts/optimize_weights.py --iterations 5000 --modern_only
+2026-03-16 20:39:53,903 [INFO] New Best: Fitness 199.66 | Avg 228.71
+2026-03-16 20:39:53,904 [INFO] New Best: Fitness 219.26 | Avg 252.86
+2026-03-16 20:39:53,904 [INFO] New Best: Fitness 225.23 | Avg 261.0
+2026-03-16 20:39:53,904 [INFO] New Best: Fitness 235.3 | Avg 274.79
+2026-03-16 20:39:53,904 [INFO] New Best: Fitness 246.43 | Avg 271.14
+2026-03-16 20:39:53,904 [INFO] New Best: Fitness 248.49 | Avg 278.79
+2026-03-16 20:39:53,904 [INFO] New Best: Fitness 297.34 | Avg 328.57
+2026-03-16 20:39:53,904 [INFO] New Best: Fitness 301.47 | Avg 330.93
+2026-03-16 20:39:53,905 [INFO] New Best: Fitness 306.95 | Avg 335.79
+2026-03-16 20:39:53,910 [INFO] Cycle 9 Finished. Peak Fitness: 306.95
+2026-03-16 20:40:03,920 [INFO] --- Starting Cycle 10 ---
+2026-03-16 20:40:03,921 [INFO] Starting optimization cycle: python3 scripts/optimize_weights.py --iterations 5000

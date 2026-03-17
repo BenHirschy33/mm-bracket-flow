@@ -26,8 +26,36 @@ class SimulationWeights:
     non_conf_weight: float = 0.0          # Rewards non-conference readiness
     def_ft_rate_weight: float = 0.0
     
-    # Intuition / Manual Factors
-    # Phase 4: Volatility & Luck
+    # Rounds 11-15: Fine-Grained Context
+    travel_weight: float = 0.0             # Penalty for dist > 150mi
+    pressure_weight: float = 0.0           # Resilience in late game
+    chemistry_weight: float = 0.0          # Portal reliance penalty
+    freshman_weight: float = 0.0           # Usage concentration penalty for frosh
+    
+    # Rounds 16-20: Roster & Depth Suite
+    backcourt_weight: float = 0.0          # Guard play resilience vs pressure
+    bench_synergy_weight: float = 0.0      # Bonus for bench rebounding/shooting
+    whistle_mastery_weight: float = 0.0    # Synergy of foul drawing + conversion
+    heating_up_weight: float = 0.0         # Late-season momentum stability
+    
+    # Rounds 21-25: Strategy & Adaptability
+    adjustment_weight: float = 0.0         # Halftime adjustment efficacy (Coaching)
+    zone_defense_weight: float = 0.0       # Effectiveness against high 3PAr teams
+    foul_management_weight: float = 0.0    # Resilience vs whistle/depth gap
+    clutch_execution_weight: float = 0.0   # Last-minute efficiency (TO/FT synergy)
+    
+    # Rounds 26-30: Post-Season Volatility
+    conference_weight: float = 0.0          # Multi-bid conference reliability boost
+    neutral_variance_weight: float = 0.0    # Neutral site scoring consistency
+    rust_penalty: float = 0.0              # Long layoff penalty for top seeds
+    rhythm_bonus: float = 0.0              # Momentum from play-in/close R64 win
+    
+    # Rounds 31-33: Final Convergence
+    hirschy_factor_weight: float = 0.0     # Composite metric dominance
+    blue_blood_bonus: float = 0.0          # Historical program success weight
+    
+    # Global Modifiers
+    defense_premium: float = 6.479         # Global multiplier for defensive metrics
     luck_weight: float = 0.0
     due_factor_sensitivity: float = 0.0  # Self-correction multiplier
     momentum_regression_weight: float = 0.0 # Dampens extreme streaks

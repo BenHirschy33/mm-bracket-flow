@@ -333,6 +333,181 @@ class SimulatorEngine:
         if (team_b.off_orb_pct or 0.0) > 34.0:
             final_probability -= (team_b.off_orb_pct - 34.0) * 0.01 * self.weights.orb_density_weight
 
+        # --- Rounds 11-15: Fine-Grained Context ---
+        # Round 11: Geospatial Impact
+        if self.weights.travel_weight > 0:
+            if (team_a.travel_dist or 0) > 150:
+                final_probability -= 0.02 * self.weights.travel_weight
+            if team_a.travel_east:
+                final_probability -= 0.015 * self.weights.travel_weight
+            if (team_b.travel_dist or 0) > 150:
+                final_probability += 0.02 * self.weights.travel_weight
+            if team_b.travel_east:
+                final_probability += 0.015 * self.weights.travel_weight
+        
+        # Round 12: Pressure Resilience
+        if round_num >= 4 and self.weights.pressure_weight > 0:
+            # Experience + FT% + Coach wins is the pressure-proof profile
+            clutch_a = ((team_a.off_ft_pct or 70) / 100.0) + (min(1.0, (team_a.coach_tournament_wins or 0) / 10.0))
+            clutch_b = ((team_b.off_ft_pct or 70) / 100.0) + (min(1.0, (team_b.coach_tournament_wins or 0) / 10.0))
+            final_probability += (clutch_a - clutch_b) * 0.05 * self.weights.pressure_weight
+
+        # Round 13: Roster Chemistry (Transfer Portal)
+        if round_num >= 5 and self.weights.chemistry_weight > 0:
+            chem_a = (team_a.portal_usage_pct or 20.0) / 100.0
+            chem_b = (team_b.portal_usage_pct or 20.0) / 100.0
+            # Higher portal usage = lower chemistry in high-stakes environments
+            final_probability -= (chem_a - chem_b) * 0.1 * self.weights.chemistry_weight
+
+        # Round 14: Elite Freshman Index
+        if round_num >= 4 and self.weights.freshman_weight > 0:
+            frosh_a = (team_a.freshman_usage_pct or 10.0) / 100.0
+            frosh_b = (team_b.freshman_usage_pct or 10.0) / 100.0
+            final_probability -= (frosh_a - frosh_b) * 0.08 * self.weights.freshman_weight
+
+        # Round 15: Conference Tournament Aftermath
+        momentum_boost_a = (team_a.tourney_momentum or 0.0) * 0.03
+        momentum_boost_b = (team_b.tourney_momentum or 0.0) * 0.03
+        final_probability += (momentum_boost_a - momentum_boost_b)
+
+        # --- Rounds 16-20: Roster & Depth Suite ---
+        # Round 16: Elite Backcourt Mastery
+        # Mitigation of defense pressure for elite ball-handling teams
+        if self.weights.backcourt_weight > 0:
+            guard_a = (team_a.off_ast_pct or 50) * (100 - (team_a.off_to_pct or 20)) / 1000.0
+            guard_b = (team_b.off_ast_pct or 50) * (100 - (team_b.off_to_pct or 20)) / 1000.0
+            # If facing a top 50 defense, the guard play matters more
+            defense_fac_a = (100 - (team_b.def_efficiency or 100)) / 10.0
+            defense_fac_b = (100 - (team_a.def_efficiency or 100)) / 10.0
+            final_probability += (guard_a * defense_fac_a - guard_b * defense_fac_b) * 0.01 * self.weights.backcourt_weight
+
+        # Round 17: Bench Synergy (Depth-driven Rebounding)
+        if self.weights.bench_synergy_weight > 0:
+            syn_a = (team_a.bench_minutes_pct or 25) * (team_a.trb_pct or 50) / 100.0
+            syn_b = (team_b.bench_minutes_pct or 25) * (team_b.trb_pct or 50) / 100.0
+            final_probability += (syn_a - syn_b) * 0.005 * self.weights.bench_synergy_weight
+
+        # Round 18: Whistle Mastery
+        if self.weights.whistle_mastery_weight > 0:
+            # Aggressive foul drawing + High FT% conversion
+            whistle_a = (team_a.off_ft_rate or 0.3) * (team_a.off_ft_pct or 70) / 100.0
+            whistle_b = (team_b.off_ft_rate or 0.3) * (team_b.off_ft_pct or 70) / 100.0
+            final_probability += (whistle_a - whistle_b) * 0.1 * self.weights.whistle_mastery_weight
+
+        # Round 19: Heating Up (Undervalued Momentum)
+        if self.weights.heating_up_weight > 0:
+            heat_a = (team_a.momentum or 0.5) * (1 - (team_a.luck or 0.0))
+            heat_b = (team_b.momentum or 0.5) * (1 - (team_b.luck or 0.0))
+            final_probability += (heat_a - heat_b) * 0.02 * self.weights.heating_up_weight
+
+        # Round 20: Venue Stability Variance
+        if round_num >= 1 and (self.teams.get(team_a.name) or team_a).home_w is not None:
+            # Simple check for Home/Away win% delta. High variance = Low stability on neutral sites.
+            def get_stability(t):
+                h_win = t.home_w / max(1, t.home_w + (t.home_l or 0)) if t.home_w is not None else 0.7
+                a_win = t.away_w / max(1, t.away_w + (t.away_l or 0)) if t.away_w is not None else 0.5
+                return 1.0 - abs(h_win - a_win)
+            
+            stab_a = get_stability(team_a)
+            stab_b = get_stability(team_b)
+            final_probability += (stab_a - stab_b) * 0.03
+
+        # --- Rounds 21-25: Strategy & Adaptability ---
+        # Round 21: Zone Defense Effectiveness
+        if self.weights.zone_defense_weight > 0:
+            # If team_a has high 3PAr, they might struggle against a team_b "Zone Profile"
+            # Proxy: team_b is "Zone Profile" if they have low STL but high BLK and good AdjD
+            is_zone_b = (team_b.off_stl_pct or 9.0) < 8.0 and (team_b.off_blk_pct or 9.0) > 10.0
+            if is_zone_b and (team_a.three_par or 0.35) > 0.40:
+                final_probability -= 0.03 * self.weights.zone_defense_weight
+            
+            is_zone_a = (team_a.off_stl_pct or 9.0) < 8.0 and (team_a.off_blk_pct or 9.0) > 10.0
+            if is_zone_a and (team_b.three_par or 0.35) > 0.40:
+                final_probability += 0.03 * self.weights.zone_defense_weight
+
+        # Round 22: Halftime Adjustments (Coaching Boost)
+        # Favors the stronger team (favorite) to rally or pull away
+        if self.weights.adjustment_weight > 0:
+            favorite_boost = abs(final_probability - 0.5) * 0.1 * self.weights.adjustment_weight
+            # Booster: If coach is elite, the adjustment is more effective
+            coach_boost_a = min(1.0, (team_a.coach_tournament_wins or 0) / 20.0)
+            coach_boost_b = min(1.0, (team_b.coach_tournament_wins or 0) / 20.0)
+            final_probability += (coach_boost_a - coach_boost_b) * 0.02 * self.weights.adjustment_weight
+
+        # Round 23: Foul Trouble Management
+        if self.weights.foul_management_weight > 0:
+            # High FOUL rate (def_ft_rate) + Small Rotation (bench_minutes_pct) = Danger
+            danger_a = (team_a.def_ft_rate or 30.0) * (100 - (team_a.bench_minutes_pct or 25.0)) / 1000.0
+            danger_b = (team_b.def_ft_rate or 30.0) * (100 - (team_b.bench_minutes_pct or 25.0)) / 1000.0
+            final_probability -= (danger_a - danger_b) * 0.05 * self.weights.foul_management_weight
+
+        # Round 24: Clutch Execution (Final 4 Min Synergy)
+        if self.weights.clutch_execution_weight > 0:
+            # Pure synergy of ball handling and foul shooting
+            clutch_a = (100 - (team_a.off_to_pct or 20)) + (team_a.off_ft_pct or 70)
+            clutch_b = (100 - (team_b.off_to_pct or 20)) + (team_b.off_ft_pct or 70)
+            final_probability += (clutch_a - clutch_b) * 0.001 * self.weights.clutch_execution_weight
+
+        # Round 25: Rotation Endurance (2nd Half depth)
+        if round_num >= 4 and self.weights.bench_rest_bonus > 0: # Reusing bench weights
+            endurance_a = (team_a.bench_minutes_pct or 25) * (team_a.pace or 70) / 100.0
+            endurance_b = (team_b.bench_minutes_pct or 25) * (team_b.pace or 70) / 100.0
+            final_probability += (endurance_a - endurance_b) * 0.01 * self.weights.bench_rest_bonus
+
+        # --- Rounds 26-30: Post-Season Volatility ---
+        # Round 26: Neutral Site Scoring Consistency
+        if self.weights.neutral_variance_weight > 0:
+            # Multiplier for neutral_win_pct: Teams that produce at neutral sites stay stable
+            final_probability += (team_a.neutral_win_pct - team_b.neutral_win_pct) * self.weights.neutral_variance_weight
+
+        # Round 27: Conference Strength Reliability
+        if self.weights.conference_weight > 0:
+            # Power conferences have higher consistency/depth in post-season
+            conf_bonus_a = 0.05 if team_a.is_power_conf else 0.0
+            conf_bonus_b = 0.05 if team_b.is_power_conf else 0.0
+            final_probability += (conf_bonus_a - conf_bonus_b) * self.weights.conference_weight
+
+        # Round 28: Seed-Based Luck Regression (Specialized for high seeds)
+        if (team_a.seed or 1) <= 3 and (team_a.luck or 0) > 2.0:
+            # Penalty for "over-seeded" top teams with high luck
+            final_probability -= (team_a.luck - 2.0) * 0.02 * self.weights.luck_regression_weight
+        if (team_b.seed or 1) <= 3 and (team_b.luck or 0) > 2.0:
+            final_probability += (team_b.luck - 2.0) * 0.02 * self.weights.luck_regression_weight
+
+        # Round 29: SOS-Weighted 3PT Defense
+        if self.weights.defense_premium > 0:
+            # Does their 3pt def hold up against elite opponents?
+            def_3a = (team_a.def_efficiency or 100) * (team_a.sos or 0)
+            def_3b = (team_b.def_efficiency or 100) * (team_b.sos or 0)
+            final_probability += (def_3b - def_3a) * 0.0001 * self.weights.defense_premium
+
+        # Round 30: Rust vs Rhythm
+        # If a team won their conf tourney (tourney_momentum=1.0) but is a high seed (rest),
+        # they might start slow. If they played a play-in, they might be in rhythm.
+        if round_num == 1:
+            # Proxy: If tourney_momentum is 1.0 (winner), possible rust
+            rust_a = self.weights.rust_penalty if (team_a.tourney_momentum or 0) > 0.9 else 0.0
+            rust_b = self.weights.rust_penalty if (team_b.tourney_momentum or 0) > 0.9 else 0.0
+            final_probability -= (rust_a - rust_b)
+
+        # --- Rounds 31-33: Final Convergence ---
+        # Round 31: Hirschy Factor Dominance (Global Composite)
+        if self.weights.hirschy_factor_weight > 0:
+            hirschy_a = team_a.hirschy_factor
+            hirschy_b = team_b.hirschy_factor
+            final_probability += (hirschy_a - hirschy_b) * 0.005 * self.weights.hirschy_factor_weight
+
+        # Round 32: Blue Blood Institutional Knowledge
+        if self.weights.blue_blood_bonus > 0:
+            hist_a = min(1.0, (team_a.historical_tourney_wins or 0) / 100.0)
+            hist_b = min(1.0, (team_b.historical_tourney_wins or 0) / 100.0)
+            # The "Pressure of the Jersey" bonus - slight edge in early rounds
+            if round_num <= 2:
+                final_probability += (hist_a - hist_b) * 0.05 * self.weights.blue_blood_bonus
+
+        # Round 33: Multi-Objective Scaling
+        # (Implicitly handled by the optimization of all weights simultaneously)
+
         # Clamp to valid probability bounds [0.01, 0.99]
         final_probability = max(0.01, min(0.99, final_probability))
         
