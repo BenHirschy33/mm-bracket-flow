@@ -254,6 +254,17 @@ function renderBracketWaterfall(data) {
         const regionBlock = document.createElement('div');
         regionBlock.className = 'region-block';
         regionBlock.setAttribute('data-region', regionName);
+
+        // Add Regional Label
+        const label = document.createElement('h2');
+        label.className = 'region-label-v2';
+        label.style.color = 'var(--accent-gold)';
+        label.style.fontSize = '1.5rem';
+        label.style.fontWeight = '800';
+        label.style.margin = '2rem 0 1rem 4rem';
+        label.style.letterSpacing = '0.1em';
+        label.textContent = `${regionName.toUpperCase()} REGION`;
+        regionBlock.appendChild(label);
         
         const displayArea = document.createElement('div');
         displayArea.className = 'region-display';
@@ -294,7 +305,8 @@ function renderBracketWaterfall(data) {
 
     container.appendChild(regionsColumn);
 
-    renderFinalFourBlock(data.final_four, data.championship, container);
+    // Integrate Finale into the vertical column
+    renderFinalFourBlock(data.final_four, data.championship, regionsColumn);
     
     if (appState.filter.region !== 'all') {
         zoomToRound('all'); // Default to full overview
@@ -417,13 +429,13 @@ window.zoomToRound = function(round) {
         translateY = 0;
     } else {
         scale = 1.0;
-        // Each round column is 224px + 32px gap = 256px
+        // Each round column is 240px + 40px gap = 280px
         if (round === 64) translateX = 0;
-        if (round === 32) translateX = -256;
-        if (round === 16) translateX = -512;
-        if (round === 8) translateX = -768;
-        if (round === 4) translateX = -1000; // Final Four focus
-        if (round === 2) translateX = -1150; // Championship focus
+        if (round === 32) translateX = -280;
+        if (round === 16) translateX = -560;
+        if (round === 8) translateX = -840;
+        if (round === 4) translateX = -1100; // Final Four focus
+        if (round === 2) translateX = -1250; // Championship focus
         
         translateY = 0; // Default to top of stack
     }

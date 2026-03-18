@@ -126,10 +126,10 @@
 /* Round-Centric Navigation */
 .sticky-toolbar {
     position: sticky;
-    top: 90px;
+    top: 70px; /* Tighter against nav */
     z-index: 100;
-    margin: 1rem 2rem;
-    padding: 1rem 2rem;
+    margin: 0.5rem 2rem;
+    padding: 0.75rem 1.5rem;
     display: flex;
     justify-content: center;
     background: var(--glass-bg);
@@ -187,12 +187,12 @@
     width: 100%;
     overflow: auto; /* Allow both X and Y scrolling */
     padding: 0;
-    margin-top: 2rem;
+    margin-top: 1rem; /* Tighter */
     position: relative;
     border: 1px solid var(--glass-border);
     border-radius: 24px;
     background: rgba(0, 0, 0, 0.2);
-    height: calc(100vh - 180px); /* Adjust height to fit screen */
+    height: calc(100vh - 150px); /* Reclaim space */
 }
 
 .bracket-stage {
@@ -229,16 +229,22 @@
     display: flex;
     flex-direction: row; /* All regions go left-to-right now */
     align-items: flex-start;
-    gap: 2rem;
+    gap: 2.5rem; /* Slightly more gap for column separation */
     width: max-content;
-    height: 2816px; /* 64 rows * 44px */
+    height: 3328px; /* 64 rows * 52px */
 }
 
 .round-column {
     display: grid;
-    grid-template-rows: repeat(64, 44px);
-    width: 14rem;
+    grid-template-rows: repeat(64, 52px); /* Taller rows to prevent clipping */
+    width: 15rem; /* Slightly wider */
     height: 100%;
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
+    position: relative;
+}
+
+.round-column:nth-child(even) {
+    background: rgba(255, 255, 255, 0.015); /* Subtle zebra striping */
 }
 
 .final_four_block { 
@@ -279,17 +285,18 @@
     background: var(--glass-bg);
     border: 1px solid var(--glass-border);
     border-radius: 12px;
-    padding: 0 0.5rem;
+    padding: 0 0.75rem;
     position: relative;
     transition: all 0.3s ease;
     width: 100%;
-    height: 85px; /* Fill space in 64-row layout */
+    height: 100px; /* Taller card */
     align-self: center;
     display: flex;
     flex-direction: column;
     justify-content: center;
     box-sizing: border-box;
     overflow: hidden;
+    gap: 6px;
 }
 
 .matchup-card:hover {
