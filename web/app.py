@@ -1,7 +1,7 @@
 import sys
 import os
 # Ensure local dependencies are prioritised
-sys.path.insert(0, os.path.join(os.getcwd(), 'local_lib'))
+sys.path.insert(0, os.path.join(os.getcwd(), 'local_lib_v2'))
 sys.path.append(os.getcwd())
 
 from flask import Flask, render_template, jsonify, request
@@ -335,6 +335,15 @@ def run_full_sim():
         base_dir = Path(f"years/{year}/data")
         teams_data = load_teams(base_dir / "team_stats.csv", year=year)
         bracket_data = load_bracket(base_dir / "chalk_bracket.json")
+        
+        # Load actual results if they exist (for historical years)
+        results_path = base_dir / "actual_results.json"
+        actual_results = {}
+        if results_path.exists():
+            import json
+            with open(results_path, 'r') as f:
+                actual_results = json.load(f)
+
         engine = SimulatorEngine(teams=teams_data, weights=custom_weights)
         engine.volatility = volatility # Inject volatility
         
@@ -353,7 +362,7 @@ def run_full_sim():
             
             # Round 1 Setup
             for high_seed, low_seed in SEED_MATCHUPS:
-                # Try direct seed, then 'a' suffix, then 'b' suffix
+                # Try direct seed, then 'a' suffix, then 'b' suffix (Play-ins)
                 def get_team_from_seed(seed_str):
                     if seed_str in seeds_map: return seeds_map[seed_str]
                     if f"{seed_str}a" in seeds_map: return seeds_map[f"{seed_str}a"]
@@ -366,14 +375,13 @@ def run_full_sim():
                 ht = teams_data.get(ht_name)
                 lt = teams_data.get(lt_name)
                 
-                # Robustness: If team missing, insert a placeholder to prevent list collapse
                 if not ht:
-                    ht = Team(name=f"TBD ({high_seed})", seed=int(high_seed), off_efficiency=100.0, def_efficiency=100.0, off_ppg=70.0, def_ppg=70.0)
+                    ht = Team(name=ht_name or f"TBD ({high_seed})", seed=int(high_seed), off_efficiency=100.0, def_efficiency=100.0, off_ppg=70.0, def_ppg=70.0)
                 else:
                     ht.seed = int(high_seed)
                 
                 if not lt:
-                    lt = Team(name=f"TBD ({low_seed})", seed=int(low_seed), off_efficiency=100.0, def_efficiency=100.0, off_ppg=70.0, def_ppg=70.0)
+                    lt = Team(name=lt_name or f"TBD ({low_seed})", seed=int(low_seed), off_efficiency=100.0, def_efficiency=100.0, off_ppg=70.0, def_ppg=70.0)
                 else:
                     lt.seed = int(low_seed)
 
@@ -382,18 +390,27 @@ def run_full_sim():
             if not current_round_teams:
                 continue
 
+            round_names = {1: "round_of_32", 2: "sweet_sixteen", 3: "elite_eight", 4: "final_four"}
             round_idx = 1
             while len(current_round_teams) > 1:
                 next_round = []
                 matchups = []
                 region_locks = locks.get('regions', {}).get(region_name, {}).get(str(round_idx), {})
-                # Ensure we handle odd numbers (though tournament brackets shouldn't have them)
+                
+                # Check historical results for this round
+                historical_winners = actual_results.get(round_names.get(round_idx, ""), [])
+
                 for i in range(0, len(current_round_teams) - 1, 2):
                     t_a = current_round_teams[i]
                     t_b = current_round_teams[i+1]
                     prob_a = engine.calculate_win_probability(t_a, t_b)
                     
-                    if t_a.name in region_locks:
+                    # Priority: 1. Actual Historical Result, 2. UI Lock, 3. Simulation
+                    if t_a.name in historical_winners:
+                        winner = t_a
+                    elif t_b.name in historical_winners:
+                        winner = t_b
+                    elif t_a.name in region_locks:
                         winner = t_a
                     elif t_b.name in region_locks:
                         winner = t_b
@@ -421,45 +438,50 @@ def run_full_sim():
             if current_round_teams:
                 final_four_field.append(current_round_teams[0])
                 
-        # Final Four (Safe Check)
+        # Final Four
         if len(final_four_field) < 4:
             # Pad with empty teams if regions failed
             while len(final_four_field) < 4:
                 final_four_field.append(list(teams_data.values())[0])
 
+        ff_winners = actual_results.get("final_four", [])
+        champ_winner = actual_results.get("champion")
+
+        # Semi 1
         ff_locks = locks.get('final_four', {})
-        if final_four_field[0].name in ff_locks:
-            ff_1 = final_four_field[0]
-        elif final_four_field[1].name in ff_locks:
-            ff_1 = final_four_field[1]
-        else:
-            ff_1 = engine.simulate_game(final_four_field[0], final_four_field[1], mode=mode)
+        if final_four_field[0].name in ff_winners: ff_1 = final_four_field[0]
+        elif final_four_field[1].name in ff_winners: ff_1 = final_four_field[1]
+        elif final_four_field[0].name in ff_locks: ff_1 = final_four_field[0]
+        elif final_four_field[1].name in ff_locks: ff_1 = final_four_field[1]
+        else: ff_1 = engine.simulate_game(final_four_field[0], final_four_field[1], mode=mode)
             
-        if final_four_field[2].name in ff_locks:
-            ff_2 = final_four_field[2]
-        elif final_four_field[3].name in ff_locks:
-            ff_2 = final_four_field[3]
-        else:
-            ff_2 = engine.simulate_game(final_four_field[2], final_four_field[3], mode=mode)
+        # Semi 2
+        if final_four_field[2].name in ff_winners: ff_2 = final_four_field[2]
+        elif final_four_field[3].name in ff_winners: ff_2 = final_four_field[3]
+        elif final_four_field[2].name in ff_locks: ff_2 = final_four_field[2]
+        elif final_four_field[3].name in ff_locks: ff_2 = final_four_field[3]
+        else: ff_2 = engine.simulate_game(final_four_field[2], final_four_field[3], mode=mode)
         
         sim_trace["final_four"] = [
             {"team_a": final_four_field[0].name, "seed_a": final_four_field[0].seed, "team_b": final_four_field[1].name, "seed_b": final_four_field[1].seed, "winner": ff_1.name},
             {"team_a": final_four_field[2].name, "seed_a": final_four_field[2].seed, "team_b": final_four_field[3].name, "seed_b": final_four_field[3].seed, "winner": ff_2.name}
         ]
         
+        # Championship
         champ_locks = locks.get('championship', {})
-        if ff_1.name in champ_locks:
-            champ = ff_1
-        elif ff_2.name in champ_locks:
-            champ = ff_2
-        else:
-            champ = engine.simulate_game(ff_1, ff_2, mode=mode)
+        if ff_1.name == champ_winner: champ = ff_1
+        elif ff_2.name == champ_winner: champ = ff_2
+        elif ff_1.name in champ_locks: champ = ff_1
+        elif ff_2.name in champ_locks: champ = ff_2
+        else: champ = engine.simulate_game(ff_1, ff_2, mode=mode)
             
         sim_trace["championship"] = {"team_a": ff_1.name, "seed_a": ff_1.seed, "team_b": ff_2.name, "seed_b": ff_2.seed, "winner": champ.name}
         sim_trace["winner"] = champ.name
         
         return jsonify(sim_trace)
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':

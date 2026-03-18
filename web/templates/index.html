@@ -33,6 +33,15 @@
                     <button class="tab-btn" data-mode="average">Highest Average</button>
                     <button class="tab-btn" data-mode="perfect">Perfect Bracket</button>
                 </div>
+                <div class="divider"></div>
+                <div class="region-nav">
+                    <button class="region-btn active" data-region="all">All</button>
+                    <button class="region-btn" data-region="East">East</button>
+                    <button class="region-btn" data-region="West">West</button>
+                    <button class="region-btn" data-region="South">South</button>
+                    <button class="region-btn" data-region="Midwest">Midwest</button>
+                    <button class="region-btn" data-region="final-four">F4</button>
+                </div>
             </div>
             <div class="action-group">
                 <button id="settings-toggle-btn" class="premium-btn secondary">⚙️ Simulation Settings</button>
@@ -173,24 +182,7 @@
             </div>
         </div>
 
-        <section id="bracket-visualization" class="glass-card">
-            <div class="card-header">
-                <h2 id="view-title">Tournament Flow</h2>
-                <div class="view-controls">
-                    <button class="tab-btn active" data-mode="deterministic">Chalk</button>
-                    <button class="tab-btn" data-mode="monte-carlo">Simulated Chaos</button>
-                </div>
-            </div>
-            <div class="bracket-toolbar">
-                <div class="region-filters">
-                    <button class="region-btn active" data-region="all">All Regions</button>
-                    <button class="region-btn" data-region="East">East</button>
-                    <button class="region-btn" data-region="West">West</button>
-                    <button class="region-btn" data-region="South">South</button>
-                    <button class="region-btn" data-region="Midwest">Midwest</button>
-                    <button class="region-btn" data-region="final-four">Final Four</button>
-                </div>
-            </div>
+        <section id="bracket-visualization" class="glass-card full-viewport">
             <div id="bracket-container" class="bracket-stage espn-layout">
                 <div class="empty-state">
                     <p>Initialize the 2026 bracket flow to begin simulation.</p>

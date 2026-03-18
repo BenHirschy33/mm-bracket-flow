@@ -13,7 +13,6 @@ const appState = {
     },
     optimalWeights: {},
     perfectWeights: {
-        // Placeholder: To be tuned for upset hunting
         efficiency: 0.25,
         momentum: 0.15,
         sos: 0.4,
@@ -35,7 +34,6 @@ function debounceSim() {
 
 function resetToOptimal() {
     const weights = appState.optimalWeights;
-    // Map API weight names to UI input IDs
     const mapping = {
         'weight-sos': weights.sos,
         'weight-trb': weights.trb,
@@ -60,11 +58,18 @@ function resetToOptimal() {
         if (numInput) numInput.value = val;
         if (valLabel) valLabel.textContent = val;
     }
+    
+    // Reset chaos metrics specifically
+    appState.volatility = 0;
+    const volSlider = document.getElementById('weight-volatility');
+    if (volSlider) volSlider.value = 0;
+    const volVal = document.getElementById('val-volatility');
+    if (volVal) volVal.textContent = '0';
+
     runSimulation();
 }
 
 function applyWeights(weights) {
-    // Map internal key names to UI weight IDs
     const mapping = {
         'weight-eff': weights.efficiency,
         'weight-sos': weights.sos,
@@ -84,12 +89,27 @@ function applyWeights(weights) {
 
         if (slider) {
             slider.value = val;
-            // Trigger input event to update color/glow if any
             slider.dispatchEvent(new Event('input'));
         }
         if (numInput) numInput.value = val;
         if (valLabel) valLabel.textContent = val;
     }
+
+    // Zero out chaos if not in custom mode
+    if (appState.mode !== 'custom') {
+        const chaos = ['volatility', 'intuition-factor', 'composure-index-weight', 'upset-delta-weight'];
+        chaos.forEach(c => {
+            if (weights[c] === undefined) {
+                const s = document.getElementById(`weight-${c}`);
+                if (s) {
+                    s.value = 0;
+                    s.dispatchEvent(new Event('input'));
+                }
+            }
+        });
+    }
+
+    runSimulation();
 }
 
 function toggleLock(region, round, teamName) {
@@ -97,9 +117,6 @@ function toggleLock(region, round, teamName) {
         if (appState.locks[region][teamName]) {
             delete appState.locks[region][teamName];
         } else {
-            // Mutual exclusion for Final Four/Champ (one winner per slot)
-            // This is a bit complex due to how FF matches are structured, 
-            // but for simplicity, we'll allow replacing.
             appState.locks[region] = { [teamName]: true };
         }
     } else {
@@ -109,17 +126,14 @@ function toggleLock(region, round, teamName) {
         const isCurrentlyLocked = appState.locks.regions[region][round][teamName];
         
         if (isCurrentlyLocked) {
-            // Unlock: Cascade Backward (Unlock all subsequent appearances of this team)
             for (let r = round; r <= 6; r++) {
                 if (appState.locks.regions[region]?.[r]) {
                     delete appState.locks.regions[region][r][teamName];
                 }
             }
-            // Also check FF/Champ
             delete appState.locks.final_four[teamName];
             delete appState.locks.championship[teamName];
         } else {
-            // Lock: Mutual Exclusion (Unlock opponent in the same matchup)
             const currentMatchups = appState.currentData?.regions?.[region]?.[round - 1]?.matchups;
             if (currentMatchups) {
                 const matchup = currentMatchups.find(m => m.team_a === teamName || m.team_b === teamName);
@@ -128,8 +142,6 @@ function toggleLock(region, round, teamName) {
                     delete appState.locks.regions[region][round][opponent];
                 }
             }
-            
-            // Lock: Cascade Forward (Lock all previous rounds to ensure they reached this round)
             for (let r = 1; r <= round; r++) {
                 if (!appState.locks.regions[region][r]) appState.locks.regions[region][r] = {};
                 appState.locks.regions[region][r][teamName] = true;
@@ -163,50 +175,47 @@ async function initWeights() {
 
 async function fetchTeams(year) {
     const teamList = document.getElementById('team-list');
-    teamList.innerHTML = '<div class="loading-spinner"></div>';
+    if (teamList) teamList.innerHTML = '<div class="loading-spinner"></div>';
     
     try {
         const response = await fetch(`/api/teams/${year}`);
         const teams = await response.json();
         
-        teamList.innerHTML = '';
+        if (teamList) teamList.innerHTML = '';
         appState.teams = {};
         teams.forEach(t => appState.teams[t.name] = t);
 
-        teams.sort((a, b) => a.seed - b.seed).forEach(team => {
-            const item = document.createElement('div');
-            item.className = 'team-item';
-            item.innerHTML = `
-                <div class="team-info">
-                    <span class="seed-num">${team.seed || '?'}</span>
-                    <div>
-                        <div style="font-weight: 600; font-size: 0.9rem; display: flex; align-items: center;">
-                            ${team.name}
-                            ${team.archetype !== 'Standard' ? `<span class="archetype-tag ${team.archetype.toLowerCase().replace(' ', '-')}">${team.archetype}</span>` : ''}
+        if (teamList) {
+            teams.sort((a, b) => a.seed - b.seed).forEach(team => {
+                const item = document.createElement('div');
+                item.className = 'team-item';
+                item.innerHTML = `
+                    <div class="team-info">
+                        <span class="seed-num">${team.seed || '?'}</span>
+                        <div>
+                            <div style="font-weight: 600; font-size: 0.9rem; display: flex; align-items: center;">
+                                ${team.name}
+                                ${team.archetype !== 'Standard' ? `<span class="archetype-tag ${team.archetype.toLowerCase().replace(' ', '-')}">${team.archetype}</span>` : ''}
+                            </div>
+                            <div class="stat-tag">Eff: ${team.off_efficiency || 'N/A'}</div>
                         </div>
-                        <div class="stat-tag">Eff: ${team.off_efficiency || 'N/A'} | Mom: ${team.momentum ? team.momentum.toFixed(2) : '0.00'}</div>
                     </div>
-                </div>
-                ${team.intuition_score ? `<div class="intuition-bubble">I: +${team.intuition_score.toFixed(1)}</div>` : ''}
-            `;
-            teamList.appendChild(item);
-        });
+                `;
+                teamList.appendChild(item);
+            });
+        }
     } catch (err) {
-        teamList.innerHTML = `<div class="error">Failed to load teams: ${err.message}</div>`;
+        if (teamList) teamList.innerHTML = `<div class="error">Failed to load teams: ${err.message}</div>`;
     }
 }
 
 async function runSimulation() {
-    const bracketContainer = document.getElementById('bracket-container');
-    
     const weights = {};
     const weightInputs = document.querySelectorAll('input[id^="weight-"]');
     weightInputs.forEach(input => {
         const id = input.id.replace('weight-', '').replace(/-/g, '_');
         let key = id;
         if (key === 'eff') key = 'efficiency';
-        if (key === 'rust_rhythm') key = 'rust';
-        
         weights[key] = parseFloat(input.value);
     });
     
@@ -217,18 +226,12 @@ async function runSimulation() {
             body: JSON.stringify({
                 year: parseInt(appState.year),
                 mode: appState.mode,
-                volatility: appState.volatility / 100, // Scale to 0-1
+                volatility: appState.volatility / 100,
                 weights: weights,
                 locks: appState.locks
             })
         });
         const data = await response.json();
-        
-        if (data.error) {
-            bracketContainer.innerHTML = `<div class="error-card"><h3>Simulation Error</h3><p>${data.error}</p></div>`;
-            return;
-        }
-        
         appState.currentData = data;
         renderBracketWaterfall(data);
     } catch (err) {
@@ -240,6 +243,7 @@ async function runSimulation() {
 
 function renderBracketWaterfall(data) {
     const container = document.getElementById('bracket-container');
+    if (!container) return;
     container.innerHTML = '';
     
     const regionsOrder = ['East', 'West', 'South', 'Midwest'];
@@ -252,35 +256,40 @@ function renderBracketWaterfall(data) {
         regionBlock.className = 'region-block';
         regionBlock.setAttribute('data-region', regionName);
         
-        // Handle Filtering
-        if (appState.filter.region !== 'all' && appState.filter.region !== regionName && appState.filter.region !== 'final-four') {
-            regionBlock.classList.add('hidden');
-        }
-
-        regionBlock.innerHTML = `<h3 class="region-title">${regionName}</h3>`;
-        
         const displayArea = document.createElement('div');
         displayArea.className = 'region-display';
         
         const roundsContainer = document.createElement('div');
         roundsContainer.className = 'rounds-flex';
         
-        rounds.forEach((r, roundIdx) => {
+        rounds.forEach((r) => {
             const roundDiv = document.createElement('div');
             roundDiv.className = `round-column round-${r.round}`;
             
-            r.matchups.forEach((m) => {
+            const isReverse = (regionName === 'West' || regionName === 'Midwest');
+            if (isReverse) {
+                roundDiv.style.gridColumn = 3 - r.round;
+            } else {
+                roundDiv.style.gridColumn = r.round;
+            }
+            
+            const span = Math.pow(2, r.round);
+            
+            r.matchups.forEach((m, idx) => {
                 const mCard = document.createElement('div');
                 mCard.className = 'matchup-card';
+                const start = (idx * span) + 1;
+                mCard.style.gridRow = `${start} / span ${span}`;
                 
-                const prob = m.probability ? (m.probability * 100).toFixed(0) : null;
+                const vol = appState.volatility / 100;
+                let probA = m.probability || 0.5;
+                let blendedA = ((1.0 - vol) * probA) + (vol * 0.5);
                 
-                mCard.appendChild(createTeamLine(regionName, r.round, m.team_a, m.seed_a, m.winner === m.team_a, prob));
-                mCard.appendChild(createTeamLine(regionName, r.round, m.team_b, m.seed_b, m.winner === m.team_b, prob ? 100 - prob : null));
+                mCard.appendChild(createTeamLine(regionName, r.round, m.team_a, m.seed_a, m.winner === m.team_a, (blendedA * 100).toFixed(0)));
+                mCard.appendChild(createTeamLine(regionName, r.round, m.team_b, m.seed_b, m.winner === m.team_b, ((1-blendedA) * 100).toFixed(0)));
                 
                 roundDiv.appendChild(mCard);
             });
-            
             roundsContainer.appendChild(roundDiv);
         });
         
@@ -290,68 +299,59 @@ function renderBracketWaterfall(data) {
     });
 
     renderFinalFourBlock(data.final_four, data.championship, container);
+    
+    if (appState.filter.region !== 'all') {
+        zoomToRegion(appState.filter.region, false); // Don't snap scroll on re-render
+    }
 }
 
 function renderFinalFourBlock(ff, champ, container) {
     const ffBlock = document.createElement('div');
-    ffBlock.className = 'region-block final-four-block';
-    if (appState.filter.region !== 'all' && appState.filter.region !== 'final-four') {
-        ffBlock.classList.add('hidden');
-    }
+    ffBlock.className = 'final_four_block';
     
-    ffBlock.innerHTML = `<h3 class="region-title">Final Four</h3>`;
+    const title = document.createElement('div');
+    title.className = 'region-grid-title';
+    title.style.gridColumn = '1 / 4';
+    title.textContent = 'National Championship';
+    ffBlock.appendChild(title);
     
-    const displayArea = document.createElement('div');
-    displayArea.className = 'region-display';
+    const ffFlex = document.createElement('div');
+    ffFlex.className = 'ff-flex-row';
+    ffFlex.style.display = 'flex';
+    ffFlex.style.alignItems = 'center';
+    ffFlex.style.gap = '3rem';
     
-    const roundsContainer = document.createElement('div');
-    roundsContainer.className = 'rounds-flex';
-    roundsContainer.style.justifyContent = 'center';
-    
-    // Left Semi (East vs South)
-    const leftSemiDiv = document.createElement('div');
-    leftSemiDiv.className = 'round-column round-5 left-semi';
     if (ff[0]) {
         const mDiv = document.createElement('div');
-        mDiv.className = 'matchup-card';
+        mDiv.className = 'matchup-card ff-matchup';
         mDiv.appendChild(createTeamLine('final_four', 1, ff[0].team_a, ff[0].seed_a, ff[0].winner === ff[0].team_a, ''));
         mDiv.appendChild(createTeamLine('final_four', 1, ff[0].team_b, ff[0].seed_b, ff[0].winner === ff[0].team_b, ''));
-        leftSemiDiv.appendChild(mDiv);
+        ffFlex.appendChild(mDiv);
     }
     
-    // Champ (Middle)
-    const champDiv = document.createElement('div');
-    champDiv.className = 'round-column round-6 championship-col';
     const cCard = document.createElement('div');
-    cCard.className = 'matchup-card champ-card';
+    cCard.className = 'matchup-card champ-matchup';
+    cCard.style.border = '2px solid var(--accent-gold)';
     cCard.appendChild(createTeamLine('championship', 1, champ.team_a, champ.seed_a, champ.winner === champ.team_a, ''));
     cCard.appendChild(createTeamLine('championship', 1, champ.team_b, champ.seed_b, champ.winner === champ.team_b, ''));
     
     if (champ.winner) {
         const trophy = document.createElement('div');
         trophy.className = 'champ-winner-glow';
-        trophy.style = "margin-top: 1.5rem; font-size: 1.2rem; font-weight: 800; color: var(--accent-gold); text-align: center;";
         trophy.innerHTML = `🏆 ${champ.winner} 🏆`;
         cCard.appendChild(trophy);
     }
-    champDiv.appendChild(cCard);
+    ffFlex.appendChild(cCard);
 
-    // Right Semi (West vs Midwest)
-    const rightSemiDiv = document.createElement('div');
-    rightSemiDiv.className = 'round-column round-5 right-semi';
     if (ff[1]) {
         const mDiv = document.createElement('div');
-        mDiv.className = 'matchup-card';
+        mDiv.className = 'matchup-card ff-matchup';
         mDiv.appendChild(createTeamLine('final_four', 1, ff[1].team_a, ff[1].seed_a, ff[1].winner === ff[1].team_a, ''));
         mDiv.appendChild(createTeamLine('final_four', 1, ff[1].team_b, ff[1].seed_b, ff[1].winner === ff[1].team_b, ''));
-        rightSemiDiv.appendChild(mDiv);
+        ffFlex.appendChild(mDiv);
     }
     
-    roundsContainer.appendChild(leftSemiDiv);
-    roundsContainer.appendChild(champDiv);
-    roundsContainer.appendChild(rightSemiDiv);
-    displayArea.appendChild(roundsContainer);
-    ffBlock.appendChild(displayArea);
+    ffBlock.appendChild(ffFlex);
     container.appendChild(ffBlock);
 }
 
@@ -361,14 +361,6 @@ function createTeamLine(region, round, teamName, seed, isWinner, prob) {
     const locked = isLocked(region, round, team) ? 'locked' : '';
     line.className = `team-line ${isWinner ? 'winner' : ''} ${locked} ${team === "TBD" ? 'tbd' : ''}`;
     
-    // First Four Check (Seeding logic)
-    let firstFourTag = "";
-    if (seed === 11 || seed === 16) {
-        // Simple heuristic: if the year is 2026 and we are in R64, these might be play-ins
-        // In a real scenario, this would come from the API
-        // firstFourTag = `<span class="first-four-tag">FF</span>`;
-    }
-
     line.innerHTML = `
         <span class="team-content">
             <span class="seed">${seed || '?'}</span>
@@ -383,6 +375,7 @@ function createTeamLine(region, round, teamName, seed, isWinner, prob) {
             if (e.target.classList.contains('lock-icon')) {
                 toggleLock(region, round, team);
             } else {
+                // Find opponent for modal
                 let opponent = "TBD";
                 const currentRound = appState.currentData?.regions[region]?.[round-1];
                 if (currentRound) {
@@ -398,121 +391,92 @@ function createTeamLine(region, round, teamName, seed, isWinner, prob) {
     return line;
 }
 
-// --- Modals ---
-async function openMatchupModal(teamA, teamB) {
-    if (!teamA || !teamB || teamA === "TBD" || teamB === "TBD") return;
-    const modal = document.getElementById('matchup-modal');
-    modal.classList.add('active');
-    document.getElementById('why-list').innerHTML = '<div class="loading-spinner"></div>';
-    
-    const weights = {};
-    document.querySelectorAll('input[id^="weight-"]').forEach(i => {
-        weights[i.id.replace('weight-', '')] = i.value;
-    });
+// --- Navigation & UX ---
 
-    try {
-        const query = new URLSearchParams({ team_a: teamA, team_b: teamB, year: appState.year, ...weights });
-        const response = await fetch(`/api/matchup/detail?${query.toString()}`);
-        const data = await response.json();
-        renderModalData(data);
-    } catch (err) {
-        console.error(err);
+function zoomToRegion(region, forceCenter = true) {
+    const container = document.getElementById('bracket-container');
+    const stage = document.querySelector('.bracket-stage');
+    if (!container || !stage) return;
+    
+    let scale = 1;
+    let tx = 0, ty = 0;
+
+    switch(region) {
+        case 'East': scale = 1.3; tx = 38; ty = 25; break;
+        case 'West': scale = 1.3; tx = -38; ty = 25; break;
+        case 'South': scale = 1.3; tx = 38; ty = -25; break;
+        case 'Midwest': scale = 1.3; tx = -38; ty = -25; break;
+        case 'final-four': scale = 2.0; tx = 0; ty = 0; break;
+        default: scale = 0.35; tx = 0; ty = 0; 
+    }
+
+    container.style.transform = `scale(${scale}) translate(${tx}%, ${ty}%)`;
+    
+    if (forceCenter) {
+        setTimeout(() => {
+            stage.scrollTo({ 
+                top: stage.scrollHeight / 2 - stage.clientHeight / 2, 
+                left: stage.scrollWidth / 2 - stage.clientWidth / 2, 
+                behavior: 'smooth' 
+            });
+        }, 100);
     }
 }
 
-function renderModalData(data) {
-    const probVal = data.probability !== null && data.probability !== undefined ? (data.probability * 100).toFixed(0) : '??';
-    document.getElementById('modal-prob').textContent = `${probVal}% Win Prob`;
-    const renderTeam = (id, team) => {
-        const div = document.getElementById(id);
-        const offEff = team.off_eff ? team.off_eff.toFixed(1) : 'N/A';
-        const defEff = team.def_eff ? team.def_eff.toFixed(1) : 'N/A';
-        const sosVal = team.sos ? team.sos.toFixed(1) : 'N/A';
-        div.innerHTML = `
-            <div class="name">(${team.seed || '?'}) ${team.name}</div>
-            <div class="stat-bubbles">
-                <div class="stat-bubble">Off: ${offEff}</div>
-                <div class="stat-bubble">Def: ${defEff}</div>
-                <div class="stat-bubble">SOS: ${sosVal}</div>
-            </div>
-        `;
-    };
-    renderTeam('modal-team-a', data.team_a);
-    renderTeam('modal-team-b', data.team_b);
-    
-    const whyList = document.getElementById('why-list');
-    whyList.innerHTML = data.analysis.map(item => `
-        <div class="why-item">
-            <strong>${item.factor}</strong>
-            <p>${item.description}</p>
-        </div>
-    `).join('') || '<p>Dead-locked statistical profile.</p>';
+function openMatchupModal(teamA, teamB) {
+    const modal = document.getElementById('matchup-modal');
+    if (modal) modal.classList.add('active');
 }
 
 function closeMatchupModal() {
-    document.getElementById('matchup-modal').classList.remove('active');
+    const modal = document.getElementById('matchup-modal');
+    if (modal) modal.classList.remove('active');
 }
 
 // --- Initialization ---
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Year Selection
     const yearSelect = document.getElementById('year-select');
-    appState.year = yearSelect.value;
-    fetchTeams(appState.year);
-    yearSelect.addEventListener('change', (e) => {
-        appState.year = e.target.value;
-        fetchTeams(appState.year);
-        runSimulation();
-    });
+    if (yearSelect) {
+        appState.year = yearSelect.value;
+        yearSelect.addEventListener('change', (e) => {
+            appState.year = e.target.value;
+            fetchTeams(appState.year);
+            runSimulation();
+        });
+    }
 
-    // Simulation Mode / Flows
     document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
+        btn.onclick = () => {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             appState.mode = btn.getAttribute('data-mode');
-            
-            if (appState.mode === 'average') {
-                resetToOptimal();
-            } else if (appState.mode === 'perfect') {
-                applyWeights(appState.perfectWeights);
-                runSimulation();
-            } else {
-                runSimulation();
-            }
-        });
+            if (appState.mode === 'average') resetToOptimal();
+            else if (appState.mode === 'perfect') applyWeights(appState.perfectWeights);
+            else runSimulation();
+        };
     });
 
-    // Volatility Slider
+    document.querySelectorAll('.region-btn').forEach(btn => {
+        btn.onclick = () => {
+            const region = btn.getAttribute('data-region');
+            document.querySelectorAll('.region-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            appState.filter.region = region;
+            zoomToRegion(region);
+        };
+    });
+
     const volSlider = document.getElementById('weight-volatility');
     const volVal = document.getElementById('val-volatility');
-    if (volSlider && volVal) {
+    if (volSlider) {
         volSlider.addEventListener('input', (e) => {
             appState.volatility = parseInt(e.target.value);
-            volVal.textContent = e.target.value;
+            if (volVal) volVal.textContent = e.target.value;
             debounceSim();
         });
     }
 
-    // Region Filtering
-    document.querySelectorAll('.region-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('.region-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            appState.filter.region = btn.getAttribute('data-region');
-            if (appState.currentData) renderBracketWaterfall(appState.currentData);
-        });
-    });
-
-    // Collapsibles
-    document.querySelectorAll('.group-header').forEach(header => {
-        header.addEventListener('click', () => {
-            header.parentElement.classList.toggle('expanded');
-        });
-    });
-
-    // Sync Sliders
     document.querySelectorAll('input[type="range"][id^="weight-"]').forEach(slider => {
         const id = slider.id.replace('weight-', '');
         const numInput = document.getElementById(`num-${id}`);
@@ -520,25 +484,15 @@ document.addEventListener('DOMContentLoaded', () => {
             if (numInput) numInput.value = e.target.value;
             const label = document.getElementById(`val-${id}`);
             if (label) label.textContent = e.target.value;
-            
-            // Auto-switch to Custom Sim mode
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.querySelector('.tab-btn[data-mode="custom"]').classList.add('active');
-            appState.mode = 'custom';
-            
             debounceSim();
         });
-        if (numInput) {
-            numInput.addEventListener('input', (e) => {
-                slider.value = e.target.value;
-                debounceSim();
-            });
-        }
     });
 
-    document.getElementById('run-sim-btn').onclick = runSimulation;
-    document.getElementById('reset-optimal').onclick = resetToOptimal;
-    document.getElementById('close-modal').onclick = closeMatchupModal;
+    const runBtn = document.getElementById('run-sim-btn');
+    if (runBtn) runBtn.onclick = runSimulation;
+
+    const resetBtn = document.getElementById('reset-optimal');
+    if (resetBtn) resetBtn.onclick = resetToOptimal;
 
     // Toggle Panels
     const panels = {
@@ -551,93 +505,24 @@ document.addEventListener('DOMContentLoaded', () => {
         const btn = document.getElementById(btnId);
         const panel = document.getElementById(panelId);
         if (btn && panel) {
-            btn.onclick = () => {
-                panel.classList.toggle('active');
-            };
+            btn.onclick = () => panel.classList.toggle('active');
         }
     });
 
-    // Close buttons
+    // Deep Dive Collapsible
+    document.querySelectorAll('.group-header').forEach(header => {
+        header.onclick = () => {
+            header.closest('.collapsible').classList.toggle('expanded');
+        };
+    });
+
     document.querySelectorAll('.close-settings, .close-field, .close-research').forEach(btn => {
-        btn.onclick = (e) => {
-            e.target.closest('.settings-modal').classList.remove('active');
-        };
-    });
-
-    // Info Icons -> Open Research Lab
-    const metricDescriptions = {
-        'efficiency': {
-            title: 'Efficiency Index (AdjEM)',
-            desc: 'The gold standard of predictability. It measures the per-possession points margin adjusted for strength of schedule. High weights here lead to a "chalkier" bracket.'
-        },
-        'sos': {
-            title: 'Strength of Schedule',
-            desc: 'A multiplier that rewards teams battle-tested in heavy conferences. High SOS prevents teams with inflated win records from overachieving.'
-        }
-    };
-
-    document.querySelectorAll('.info-icon').forEach(icon => {
-        icon.onclick = () => {
-            const key = icon.getAttribute('data-info');
-            const info = metricDescriptions[key];
-            if (info) {
-                const infoPanel = document.getElementById('metric-info-content');
-                infoPanel.innerHTML = `<strong>${info.title}</strong><p>${info.desc}</p>`;
-                document.getElementById('research-lab-panel').classList.add('active');
-            }
-        };
+        btn.onclick = (e) => e.target.closest('.settings-modal').classList.remove('active');
     });
 
     initWeights();
     fetchTeams(appState.year);
-    runSimulation();
-
-    // Zoom and Pan for Bracket
-    const stage = document.querySelector('.bracket-stage');
-    const container = document.getElementById('bracket-container');
-    let scale = 1;
-    let isPanning = false;
-    let startX, startY, scrollLeft, scrollTop;
-
-    stage.addEventListener('wheel', (e) => {
-        if (e.ctrlKey || e.metaKey) {
-            e.preventDefault();
-            scale += e.deltaY * -0.001;
-            scale = Math.min(Math.max(0.5, scale), 2);
-            container.style.transform = `scale(${scale})`;
-        }
-    });
-
-    stage.addEventListener('mousedown', (e) => {
-        isPanning = true;
-        stage.classList.add('active');
-        startX = e.pageX - stage.offsetLeft;
-        startY = e.pageY - stage.offsetTop;
-        scrollLeft = stage.scrollLeft;
-        scrollTop = stage.scrollTop;
-    });
-
-    stage.addEventListener('mouseleave', () => {
-        isPanning = false;
-    });
-
-    stage.addEventListener('mouseup', () => {
-        isPanning = false;
-    });
-
-    stage.addEventListener('mousemove', (e) => {
-        if (!isPanning) return;
-        e.preventDefault();
-        const x = e.pageX - stage.offsetLeft;
-        const y = e.pageY - stage.offsetTop;
-        const walkX = (x - startX) * 1.5;
-        const walkY = (y - startY) * 1.5;
-        stage.scrollLeft = scrollLeft - walkX;
-        stage.scrollTop = scrollTop - walkY;
-    });
 });
 
-// Expose for debugging/subagents
+// Expose for browser agent
 window.appState = appState;
-window.runSimulation = runSimulation;
-window.renderBracket = renderBracketWaterfall;
