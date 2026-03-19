@@ -168,12 +168,40 @@ function isLocked(region, round, teamName) {
 
 async function initWeights() {
     try {
-        const response = await fetch('/api/weights/optimal');
-        const weights = await response.json();
-        appState.optimalWeights = weights;
-        resetToOptimal();
+        // Fetch both preset profiles in parallel
+        const [avgRes, champRes] = await Promise.all([
+            fetch('/api/weights/preset?mode=avg'),
+            fetch('/api/weights/preset?mode=champion')
+        ]);
+        const avgData = await avgRes.json();
+        const champData = await champRes.json();
+
+        // Store the full weight dicts for each mode
+        appState.optimalWeights = avgData.weights || {};
+        appState.perfectWeights = champData.weights || {};
+
+        // Also populate the old flat-key format for backward compat with resetToOptimal sliders
+        const w = appState.optimalWeights;
+        appState._optimalFlat = {
+            trb: w.trb_weight,
+            to: w.to_weight,
+            sos: w.sos_weight,
+            momentum: w.momentum_weight,
+            efficiency: w.efficiency_weight,
+            ft: w.ft_weight,
+            def_premium: w.defense_premium,
+            orb_density: w.orb_density_weight,
+            luck_regression: w.luck_regression_weight,
+            coach_moxie: w.coach_tournament_weight,
+            tempo_upset: w.tempo_upset_weight,
+            fatigue: w.fatigue_sensitivity,
+            bench: w.bench_rest_bonus
+        };
+
+        console.log('[Weights] Loaded MAX_AVG preset:', avgData.meta);
+        console.log('[Weights] Loaded MAX_PERFECT preset:', champData.meta);
     } catch (err) {
-        console.error("Failed to fetch optimal weights", err);
+        console.error("Failed to fetch preset weights", err);
     }
 }
 

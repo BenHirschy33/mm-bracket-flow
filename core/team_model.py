@@ -43,6 +43,17 @@ class Team:
     star_reliance: Optional[float] = None # Pricing index for usage concentration (Phase 9)
     total_win_pct: Optional[float] = None # Cumulative Win % (Phase 2 refined SOS)
     
+    # Advanced Matchup Metrics (Cycle 3)
+    off_three_pt_pct: Optional[float] = None
+    def_three_pt_pct: Optional[float] = None
+    off_two_pt_pct: Optional[float] = None
+    def_two_pt_pct: Optional[float] = None
+    rim_protection_eff: Optional[float] = None
+    def_steal_rate: Optional[float] = None
+    def_orb_pct: Optional[float] = None
+    def_adj_eff: Optional[float] = None
+    distance_from_home: Optional[float] = None # Alias for travel_dist used in some logic
+    
     # Career/Venue Performance
     home_w: Optional[int] = None
     home_l: Optional[int] = None

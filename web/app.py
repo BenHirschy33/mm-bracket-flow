@@ -120,6 +120,38 @@ def get_optimal_weights():
         "bench": DEFAULT_WEIGHTS.bench_rest_bonus
     })
 
+@app.route('/api/weights/preset')
+def get_preset_weights():
+    """
+    Returns the optimizer-tuned weight set for a given mode.
+    mode=avg      -> MAX_AVG_WEIGHTS (highest average ESPN score)
+    mode=champion -> MAX_CHAMPION_WEIGHTS (highest perfect-bracket / champion accuracy)
+    Falls back to DEFAULT_WEIGHTS if gold_standard.json doesn't exist yet.
+    """
+    import json as _json
+    mode = request.args.get('mode', 'avg')  # 'avg' or 'champion'
+    gold_path = Path("agents/optimization/gold_standard.json")
+
+    if gold_path.exists():
+        try:
+            with open(gold_path) as f:
+                gold = _json.load(f)
+            key = "max_avg" if mode == "avg" else "max_champion"
+            weights_dict = gold[key]["weights"]
+            meta = gold[key].get("meta", {})
+            return jsonify({"mode": mode, "meta": meta, "weights": weights_dict})
+        except Exception as e:
+            pass  # Fall through to default
+
+    # Fallback: return DEFAULT_WEIGHTS as a flat dict
+    import dataclasses as _dc
+    return jsonify({
+        "mode": mode,
+        "meta": {"note": "gold_standard.json not yet generated — using defaults"},
+        "weights": _dc.asdict(DEFAULT_WEIGHTS)
+    })
+
+
 @app.route('/api/bracket/<int:year>', methods=['GET'])
 def get_bracket(year):
     try:

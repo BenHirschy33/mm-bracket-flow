@@ -1,5 +1,6 @@
 import json
 import csv
+import logging
 from pathlib import Path
 from typing import Dict
 try:
@@ -20,6 +21,7 @@ def normalize_team_name(name: str) -> str:
     
     # 2. Static Alias Mapping (High Priority)
     aliases = {
+        "Connecticut": "UConn",
         "UMBC": "Maryland-Baltimore County",
         "UPenn": "Pennsylvania",
         "Penn": "Pennsylvania",
@@ -32,7 +34,10 @@ def normalize_team_name(name: str) -> str:
         "USC": "Southern California",
         "SMU": "Southern Methodist",
         "TCU": "Texas Christian",
-        "BYU": "Brigham Young"
+        "BYU": "Brigham Young",
+        "St. Mary's (CA)": "Saint Mary's",
+        "UL Lafayette": "Louisiana",
+        "Umass": "Massachusetts"
     }
     if name in aliases:
         return aliases[name]
@@ -157,12 +162,12 @@ def load_teams(csv_filepath: str | Path, year: int = None) -> Dict[str, Team]:
                         # Phase 5+: Provenance                        # Based on header: Rk:0, School:1, G:2, W:3, L:4, W-L%:5, SRS:6, SOS:7, Sep:8, HW:9, HL:10, Sep:11, AW:12, AL:13, Sep:14, NW:15, NL:16
                         try:
                             # Record components
-                            matched_team.home_w = int(row[9])
-                            matched_team.home_l = int(row[10])
-                            matched_team.away_w = int(row[12])
-                            matched_team.away_l = int(row[13])
-                            matched_team.neutral_w = int(row[15])
-                            matched_team.neutral_l = int(row[16])
+                            matched_team.home_w = int(row[9]) if row[9].strip() else 0
+                            matched_team.home_l = int(row[10]) if row[10].strip() else 0
+                            matched_team.away_w = int(row[12]) if row[12].strip() else 0
+                            matched_team.away_l = int(row[13]) if row[13].strip() else 0
+                            matched_team.neutral_w = int(row[15]) if row[15].strip() else 0
+                            matched_team.neutral_l = int(row[16]) if row[16].strip() else 0
                             
                             # Advanced stats: Pace:20, ORtg:21 (Wait, let's verify)
                             # Actually from head: Separator at 20. Pace is 21. ORtg is 22.
@@ -171,8 +176,13 @@ def load_teams(csv_filepath: str | Path, year: int = None) -> Dict[str, Team]:
                         except (ValueError, IndexError) as e:
                             logging.warning(f"Error parsing record components for {school}: {e}")
                             # Fallback to derived neutral stats if direct parsing fails
-                            matched_team.neutral_w = max(0, total_w - matched_team.home_w - matched_team.away_w)
-                            matched_team.neutral_l = max(0, total_l - matched_team.home_l - matched_team.away_l)
+                            home_w = matched_team.home_w or 0
+                            away_w = matched_team.away_w or 0
+                            matched_team.neutral_w = max(0, total_w - home_w - away_w)
+                            
+                            home_l = matched_team.home_l or 0
+                            away_l = matched_team.away_l or 0
+                            matched_team.neutral_l = max(0, total_l - home_l - away_l)
 
                         # Phase 5+: Derived Efficiency Baseline
                         # pace = matched_team.pace if (matched_team.pace and matched_team.pace > 0) else 70.0 # Now set above

@@ -1,7 +1,0 @@
-{
-  "timestamp": "2026-03-17T11:47:24.000700",
-  "status": "IDLE_BETWEEN_CYCLES",
-  "current_fitness": 0,
-  "current_avg_score": 0,
-  "mode": "autonomous_scaling"
-}

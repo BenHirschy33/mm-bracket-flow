@@ -1,60 +1,68 @@
-# MM-Bracket-Flow
+# MM-Bracket-Flow V2: Calibrated & Optimized
 
-A perpetual March Madness prediction engine, designed to augment statistical analysis with human intuition. Built with a modular architecture to support multi-year bracket simulations, starting with the 2026 campaign.
+**MM-Bracket-Flow** is a professional-grade March Madness simulation engine that bridges pure statistical efficiency with human intuition. It uses a calibrated Logistic (Sigmoid) model to provide realistic upset probabilities and dual-mode optimization for targeted bracket strategies.
 
-## Philosophy
-**MM-Bracket-Flow** is built on the premise that raw statistical models (like KenPom and NET) are powerful algorithms, but they lack the nuanced "gut feeling" of seasoned college basketball analysts. This repository combining objective data with subjective intuition—the **Intuition Factor**.
+## 🚀 Key Features (V2)
 
-Our architecture is expressly designed for longevity. The `/core` directory houses year-agnostic simulation logic, while season-specific data—starting with 2026—is siloed elegantly in `/years/YYYY/`.
+### 1. The Sigmoid Simulation Engine
+Unlike many simulators that use additive win probabilities (which often saturate at 99.9% for elite teams), MM-Bracket-Flow V2 uses a **Logistic (Sigmoid) function**.
+- **Calibration**: Probabilities are naturally scaled, ensuring that even #1 seeds have a realistic "Upset Risk" (e.g., 85-90% instead of 99%).
+- **Round Weighting**: Defensive premiums and "Star Reliance" factors scale automatically with tournament depth.
 
-## The Intuition Engine (The "Intuition Factor")
-The core driver of subjective adjustments is `core/intuition_config.yaml`. 
-You can input a **Human Intuition Score** ranging from `-10` to `+10` for any team.
+### 2. Dual-Mode Optimization ("Gold Standard")
+The system maintains two distinct "Gold Standard" weight sets, optimized across 24 years of historical data (2000-2024):
+- **Max Average (MAX_AVG)**: Designed for stable, high-performance pool scoring. Targets the highest expected ESPN score.
+- **Perfectionist (MAX_PERFECT)**: Uses a rigorous **Analytic Log-Likelihood** model to maximize the joint probability of getting every single pick correct (1920 points).
 
-- `+10`: Extremely high confidence the team will overperform its metrics.
-- `-10`: Significant belief the team is poised for an early upset or will drastically underperform.
+### 3. The Intuition Factor
+Inject your own "Gut Feeling" via `core/intuition_config.yaml`. Any team can be assigned an Intuition Score from `-10` to `+10`, which shifts their win probability in the simulation.
 
-**How to refine:**
-Open `core/intuition_config.yaml` and tweak the seasonal weights. The core simulation engine incorporates these multipliers to adjust the baseline probabilities when simulating matchups. 
+---
 
-## 2026 Data Sources & Confidence
-This year's initial projections draw from:
-*   Selection Sunday (March 15, 2026) seedings and major early projections.
-*   **KenPom Rankings:** Duke, Michigan, Arizona, and Florida feature prominently as balanced efficiency juggernauts (Top 25 Offense/Defense rule) and project as No. 1 seeds.
+## 🛠 Installation & Setup
 
-**Baseline Assumption Confidence Score: 85.5%**
-The current 'Chalk' bracket structure (`/years/2026/data/chalk_bracket.json`) reflects a high degree of confidence in the top tier statistically, but anticipates adjustments as the Intuition Factor is mapped in.
+### 1. Prerequisites
+- Python 3.10+
+- `pip install -e .`
+- Recommended: `ruff` for linting.
 
-## Dynamic Updating (Second Chance Brackets)
-The tournament is fluid, and brackets bust. Use `core/live_update_handler.py` to input actual game winners as they happen in real-time. The framework instantly consumes these results to re-simulate "Second Chance" brackets for the remaining rounds based on actual survivors.
+### 2. Running Simulation
+```bash
+# Start the web interface
+python web/app.py
+```
+Open `http://localhost:5001` to access the interactive dashboard.
 
+### 3. Running Optimizer
+If you have new data and want to re-train the "Gold Standard" weights:
+```bash
+PYTHONPATH=. python3 scripts/dual_mode_optimizer.py --iterations 1000 --mode both
+```
 
-## Installation
+---
 
-1.  **Cloning the Repository:**
-    ```bash
-    git clone [repository-url]
-    cd MM-Bracket-Flow
-    ```
+## 📈 Metric Dictionary
+- **Defense Premium**: Weight given to `def_efficiency` (KenPom style). Highly effective in later rounds.
+- **Momentum Regression**: Penalty for teams that were "Lucky" (high W-L% vs SRS) entering the tournament.
+- **3PAr Volatility**: Increases the chance of upsets for high-volume 3-point shooting teams.
+- **Intuition Weight**: Scaling factor for the user's manual adjustments in `intuition_config.yaml`.
 
-2.  **Environment Setup:**
-    ```bash
-    python -m venv .venv
-    source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-    pip install -e .
-    pip install ruff
-    ```
+---
 
-## Running the App
+## 🎓 Future Educational & Research Ideas
+For next season, we aim to expand the educational scope of the project:
+1. **Machine Learning Feature Importance**: Use XGBoost to rank which metrics (e.g., Turnovers vs. SOS) are the true predictors of tournament success.
+2. **Bayesian Optimization**: Transition the current Annealing script to a Gaussian Process model for even faster weight convergence.
+3. **LLM "Aura" Analysis**: Integrate an LLM agent to scrape team news and sentiment to generate the "Intuition Factor" automatically.
+4. **Game Theory / Minimax**: Implement a bracket-pool "Contrarian Strategy" optimizer that favors picks that other humans in a pool are likely to miss.
 
-1.  **Start the Flask Backend:**
-    ```bash
-    python web/app.py
-    ```
-    The server will start at `http://127.0.0.1:5001`.
+---
 
-2.  **Access the UI:**
-    Open `web/templates/index.html` in your browser (or serve it through a local server if needed).
+## 📅 Roadmap & Next Steps (2025/2026)
+- [ ] **Real-Time Live Updates**: Automated ingestion of tournament scores for "Second Chance" re-simulations.
+- [ ] **NIL/Portal Stability Index**: New metrics to track team cohesion in the transfer portal era.
+- [ ] **Visual Bracket Editor**: Drag-and-drop UI for locking specific path results.
 
-## Contribution Guidelines & Safeguards
-*Local-Only Commit Policy*: Because statistical and live-update integrity is paramount, this repository observes strict push protections. Push commands are governed by manual review to ensure the perpetual simulator isn't tainted by accidental data overwrites.
+---
+
+*This project is built for longevity. Year-specific data resides in `/years/YYYY/`, ensuring the core logic remains evergreen.*
