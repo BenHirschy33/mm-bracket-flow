@@ -731,7 +731,10 @@ document.addEventListener('DOMContentLoaded', () => {
             header.closest('.collapsible').classList.toggle('expanded');
         };
     });
+    });
 
+    document.querySelectorAll('.close-settings, .close-field, .close-research').forEach(btn => {
+        btn.onclick = (e) => e.target.closest('.settings-modal').classList.remove('active');
     });
 
     initWeights();
