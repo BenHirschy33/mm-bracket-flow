@@ -736,9 +736,21 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.onclick = (e) => e.target.closest('.settings-modal').classList.remove('active');
     });
 
-    initWeights();
-    fetchTeams(appState.year);
-});
+function initWeights() {
+    fetch('/api/weights/preset?mode=avg')
+        .then(res => res.json())
+        .then(weights => {
+            Object.entries(weights).forEach(([key, val]) => {
+                const slider = document.getElementById(`weight-${key}`);
+                const numInput = document.getElementById(`num-${key}`);
+                const label = document.getElementById(`val-${key}`);
+                if (slider) slider.value = val;
+                if (numInput) numInput.value = val;
+                if (label) label.textContent = val;
+            });
+            appState.weights = weights;
+        });
+}
 
 // Expose for browser agent
 window.appState = appState;

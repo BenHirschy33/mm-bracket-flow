@@ -1231,15 +1231,18 @@ input[type="range"] {
 .ff-games-stack {
     display: flex;
     flex-direction: column;
-    gap: 12rem;
+    gap: 15rem;
 }
 
 .ff-left { grid-area: f4-left; }
 .ff-right { grid-area: f4-right; }
 .hero-champ { 
     grid-area: champ; 
-    transform: scale(1.2);
-    box-shadow: 0 0 50px var(--accent-gold-glow);
+    transform: scale(1.1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 
 .championship-box {
