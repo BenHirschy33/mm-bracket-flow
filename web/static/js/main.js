@@ -394,11 +394,9 @@ function renderBracketWaterfall(data) {
         
         if (m.winner) {
             const trophy = document.createElement('div');
-            trophy.className = 'champ-winner-glow';
-            trophy.style.fontSize = '1.5rem';
-            trophy.style.marginTop = '1.5rem';
+            trophy.className = 'champ-winner-glow trophy-outside';
             trophy.innerHTML = `🏆 ${m.winner} 🏆`;
-            mCard.appendChild(trophy);
+            champContainer.appendChild(trophy);
         }
         champContainer.appendChild(mCard);
     }
@@ -460,11 +458,11 @@ window.zoomToRound = function(round) {
         const scaleH = (vH - 180) / 1920;
         const scaleW = (vW - 100) / 2840;
         appState.zoom.scale = Math.min(scaleH, scaleW, 0.45); 
-        appState.zoom.x = 0;
+        appState.zoom.x = (vW - (2840 * appState.zoom.scale)) / 2;
         appState.zoom.y = 0;
     } else {
         appState.zoom.scale = 0.8; 
-        appState.zoom.x = 0;
+        appState.zoom.x = (window.innerWidth - (2840 * appState.zoom.scale)) / 2;
         appState.zoom.y = 0;
     }
 
