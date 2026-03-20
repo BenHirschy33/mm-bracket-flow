@@ -732,9 +732,11 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     });
 
-    document.querySelectorAll('.close-settings, .close-field, .close-research').forEach(btn => {
-        btn.onclick = (e) => e.target.closest('.settings-modal').classList.remove('active');
     });
+
+    initWeights();
+    fetchTeams(appState.year);
+});
 
 function initWeights() {
     fetch('/api/weights/preset?mode=avg')
