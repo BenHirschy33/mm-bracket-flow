@@ -8,10 +8,11 @@ from .config import SimulationWeights, DEFAULT_WEIGHTS
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 
 class SimulatorEngine:
-    def __init__(self, teams: Dict[str, Team], weights: SimulationWeights, locks: Optional[Dict[str, str]] = None):
+    def __init__(self, teams: Dict[str, Team], weights: SimulationWeights, locks: Optional[Dict[str, str]] = None, actual_results: Optional[Dict[str, Any]] = None):
         self.teams = teams
         self.weights = weights
         self.locks = locks or {}
+        self.actual_results = actual_results or {}
         self.volatility = 0.0 # Blending factor (0.0 = pure metrics, 1.0 = pure random)
         # Stateful tracking for "Due Factor" (Reset per simulation run)
         self.upset_count = 0
@@ -22,12 +23,38 @@ class SimulatorEngine:
         self.upset_count = 0
         self.total_games = 0
 
-    def simulate_game(self, team_a: Team, team_b: Team, mode: str = "deterministic") -> Team:
-        """Simulates a game and returns the winner, incorporating Volatility Index."""
-        prob_a = self.calculate_win_probability(team_a, team_b)
+    def get_locked_winner(self, team_a_name: str, team_b_name: str, round_num: int) -> Optional[str]:
+        """Checks both explicit matchup locks and live actual results."""
+        # 1. Check explicit Matchup Locks
+        lock_key1 = f"{team_a_name} vs {team_b_name}"
+        lock_key2 = f"{team_b_name} vs {team_a_name}"
+        if lock_key1 in self.locks: return self.locks[lock_key1]
+        if lock_key2 in self.locks: return self.locks[lock_key2]
+
+        # 2. Check Actual Results (Live Sync)
+        round_map = {1: "round_of_32", 2: "sweet_sixteen", 3: "elite_eight", 4: "final_four", 6: "champion"}
+        round_key = round_map.get(round_num)
+        if round_key and self.actual_results:
+            historical_winners = self.actual_results.get(round_key, [])
+            if isinstance(historical_winners, list):
+                if team_a_name in historical_winners: return team_a_name
+                if team_b_name in historical_winners: return team_b_name
+            elif isinstance(historical_winners, str) and historical_winners: # For 'champion'
+                if team_a_name == historical_winners: return team_a_name
+                if team_b_name == historical_winners: return team_b_name
+        
+        return None
+
+    def simulate_game(self, team_a: Team, team_b: Team, mode: str = "deterministic", round_num: int = 1) -> Team:
+        """Simulates a game and returns the winner, incorporating Volatility Index and Locks."""
+        # Check for Locks first
+        locked_winner_name = self.get_locked_winner(team_a.name, team_b.name, round_num)
+        if locked_winner_name:
+            return team_a if team_a.name == locked_winner_name else team_b
+
+        prob_a = self.calculate_win_probability(team_a, team_b, round_num)
         
         # Apply Volatility Index blending
-        # If volatility is 1.0, prob_a becomes 0.5 (perfect coin flip)
         blended_prob = ((1.0 - self.volatility) * prob_a) + (self.volatility * 0.5)
         
         if mode == "deterministic":
@@ -38,10 +65,16 @@ class SimulatorEngine:
     def _get_metric(self, team, attr, default=0.0):
         """Safely gets a numeric metric from a team object, defaulting if None."""
         val = getattr(team, attr, default)
-        return val if val is not None else default
+        if val is None: return default
+        try:
+            return float(val)
+        except (ValueError, TypeError):
+            return default
 
     def calculate_win_probability(self, team_a: Team, team_b: Team, round_num: int = 1) -> float:
         """Calculates win prob using a Logistic (Sigmoid) model for calibration."""
+        if not team_a or not team_b:
+            return 0.5
         # Step 1: Base Pythagorean Expectation (Initial Logit)
         # logit(p) = log(p / (1-p))
         eff_a = self._get_metric(team_a, 'pythagorean_expectation', 0.5)
@@ -172,14 +205,10 @@ class SimulatorEngine:
 
     def simulate_matchup(self, team_a_name: str, team_b_name: str, round_num: int = 1) -> str:
         """Simulates a game between two teams and returns the winner's name."""
-        # Check for Matchup Locks (Phase 8)
-        lock_key1 = f"{team_a_name} vs {team_b_name}"
-        lock_key2 = f"{team_b_name} vs {team_a_name}"
-        
-        if lock_key1 in self.locks:
-            return self.locks[lock_key1]
-        if lock_key2 in self.locks:
-            return self.locks[lock_key2]
+        # 1. Check for Locks (Explicit or Live)
+        locked_winner = self.get_locked_winner(team_a_name, team_b_name, round_num)
+        if locked_winner:
+            return locked_winner
             
         team_a = self.teams.get(team_a_name)
         team_b = self.teams.get(team_b_name)

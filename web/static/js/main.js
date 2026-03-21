@@ -1,5 +1,6 @@
 const appState = {
-    mode: 'custom',
+    mode: 'standard', // standard, average, perfect
+    showSettings: false,
     year: '2026',
     volatility: 0,
     filter: {
@@ -13,12 +14,21 @@ const appState = {
     },
     optimalWeights: {},
     perfectWeights: {
-        efficiency: 0.25,
-        momentum: 0.15,
-        sos: 0.4,
+        efficiency_weight: 0.25,
+        momentum_weight: 0.15,
+        sos_weight: 0.4,
         intuition_factor_weight: 0.8,
         upset_delta_weight: 0.9,
-        composure_index_weight: 0.7
+        composure_index_weight: 0.7,
+        three_point_dominance: 0.14,
+        orb_weight: 0.38,
+        ts_weight: 0.85,
+        defense_premium: 8.9,
+        rim_protection_weight: 0.12,
+        defensive_grit_bias: 0.39,
+        experience_weight: 10.5,
+        cinderella_factor: 4.3,
+        luck_regression_weight: 0.06
     },
     teams: {},
     currentData: null,
@@ -33,15 +43,89 @@ const appState = {
     }
 };
 
-// --- Core Logic ---
+// Expose for browser agent and HTML onclick handlers early
+window.appState = appState;
 
-function debounceSim() {
-    clearTimeout(appState.simTimer);
-    appState.simTimer = setTimeout(runSimulation, 400);
+// Define global handlers early so they are available for HTML onclick
+const zoomToRound = (round) => {
+    const vH = window.innerHeight;
+    const vW = window.innerWidth;
+    if (round === 'all') {
+        const scaleH = (vH - 250) / 1920;
+        const scaleW = (vW - 100) / 3560;
+        appState.zoom.scale = Math.min(scaleH, scaleW, 0.45);
+        appState.zoom.x = (vW - (3560 * appState.zoom.scale)) / 2;
+        appState.zoom.y = 10;
+        appState.filter.region = 'all';
+    } else {
+        appState.zoom.scale = 0.8;
+        appState.zoom.x = 20;
+        appState.zoom.y = 20;
+    }
+    applyZoom();
+};
+window.zoomToRound = zoomToRound;
+
+window.globalZoomOverview = function(round) {
+    const container = document.getElementById('bracket-container');
+    if (!container) return;
+
+    const overviewBtn = document.getElementById('overview-btn');
+    if (overviewBtn) {
+        if (round === 'all') overviewBtn.classList.add('active');
+        else overviewBtn.classList.remove('active');
+    }
+
+    if (round === 'all') {
+        const vH = window.innerHeight;
+        const vW = window.innerWidth;
+        // The Quad Grid is 2840px wide x 1920px high
+        // Calculate scale to fit within viewport
+        const scaleH = (vH - 250) / 1920;
+        const scaleW = (vW - 100) / 2840;
+        // Centering calculation for 5-column layout (approx 3500px total)
+        appState.zoom.scale = Math.min(scaleH, scaleW, 0.48); /* Slightly tighter fit */
+        appState.zoom.x = (vW - (3560 * appState.zoom.scale)) / 2; 
+        appState.zoom.y = 10; 
+    } else {
+        appState.zoom.scale = 0.8; 
+        appState.zoom.x = 0;
+        appState.zoom.y = 0;
+    }
+
+    applyZoom();
+    
+    const viewport = document.querySelector('.full-viewport');
+    if (viewport) {
+        viewport.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+    }
 }
 
-function resetToOptimal() {
-    const weights = appState.optimalWeights;
+window.globalResetUI = function() {
+    console.trace('[Reset] Trace:');
+    appState.locks = {
+        regions: {},
+        final_four: {},
+        championship: {}
+    };
+    appState.currentData = null;
+    
+    // Clear the visual bracket
+    renderInitialBracket(); 
+
+    // Also reset any active button states
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelector('.tab-btn[data-mode="custom"]')?.classList.add('active');
+    appState.mode = 'custom';
+    
+    const liveIndicator = document.getElementById('live-indicator');
+    if (liveIndicator) liveIndicator.style.display = 'none';
+
+    console.log('[Reset] Simulation state and locks cleared.');
+}
+
+window.globalResetOptimal = function() {
+    const weights = appState.optimalWeights || {};
     const mapping = {
         'weight-sos': weights.sos,
         'weight-trb': weights.trb,
@@ -56,17 +140,17 @@ function resetToOptimal() {
     };
 
     for (const [id, val] of Object.entries(mapping)) {
+        const finalVal = val !== undefined ? val : 0;
         const slider = document.getElementById(id);
         const statName = id.replace('weight-', '');
         const numInput = document.getElementById('num-' + statName);
         const valLabel = document.getElementById('val-' + statName);
 
-        if (slider) slider.value = val;
-        if (numInput) numInput.value = val;
-        if (valLabel) valLabel.textContent = val;
+        if (slider) slider.value = finalVal;
+        if (numInput) numInput.value = finalVal;
+        if (valLabel) valLabel.textContent = finalVal;
     }
     
-    // Reset chaos metrics specifically
     appState.volatility = 0;
     const volSlider = document.getElementById('weight-volatility');
     if (volSlider) volSlider.value = 0;
@@ -76,16 +160,33 @@ function resetToOptimal() {
     runSimulation();
 }
 
+// --- Core Logic ---
+
+function debounceSim() {
+    if (appState.isApplyingPreset) return;
+    clearTimeout(appState.simTimer);
+    appState.simTimer = setTimeout(runSimulation, 400);
+}
+
+// Logic moved to window.resetToOptimal
+
 function applyWeights(weights) {
+    if (!weights) return;
+    appState.isApplyingPreset = true; // Guard against slider event loops
     const mapping = {
-        'weight-eff': weights.efficiency,
-        'weight-sos': weights.sos,
-        'weight-trb': weights.trb,
-        'weight-momentum': weights.momentum,
-        'weight-def-premium': weights.def_premium,
-        'weight-intuition-factor': weights.intuition_factor_weight,
-        'weight-composure-index-weight': weights.composure_index_weight,
-        'weight-upset-delta-weight': weights.upset_delta_weight
+        'weight-eff': weights.efficiency || weights.efficiency_weight,
+        'weight-sos': weights.sos || weights.sos_weight,
+        'weight-trb': weights.trb || weights.trb_weight,
+        'weight-momentum': weights.momentum || weights.momentum_weight,
+        'weight-def-premium': weights.defense_premium || weights.def_premium || weights.late_round_def_premium,
+        'weight-three-point-dominance': weights.three_point_dominance,
+        'weight-orb': weights.orb_weight || weights.orb,
+        'weight-ts': weights.ts_weight || weights.ts,
+        'weight-rim-protection': weights.rim_protection_weight || weights.rim_protection,
+        'weight-defensive-grit-bias': weights.defensive_grit_bias,
+        'weight-experience': weights.experience_weight || weights.experience,
+        'weight-cinderella-factor': weights.cinderella_factor,
+        'weight-luck-regression': weights.luck_regression_weight || weights.luck_regression
     };
 
     for (const [id, val] of Object.entries(mapping)) {
@@ -103,8 +204,7 @@ function applyWeights(weights) {
             if (valLabel) valLabel.textContent = finalVal;
         }
     }
-
-    runSimulation();
+    setTimeout(() => { appState.isApplyingPreset = false; }, 300);
 }
 
 function switchToCustom() {
@@ -118,12 +218,14 @@ function switchToCustom() {
 
 function toggleLock(region, round, teamName) {
     if (region === 'final_four' || region === 'championship') {
+        if (!appState.locks[region]) appState.locks[region] = {};
         if (appState.locks[region][teamName]) {
             delete appState.locks[region][teamName];
         } else {
             appState.locks[region] = { [teamName]: true };
         }
     } else {
+        if (!appState.locks.regions) appState.locks.regions = {};
         if (!appState.locks.regions[region]) appState.locks.regions[region] = {};
         if (!appState.locks.regions[region][round]) appState.locks.regions[region][round] = {};
         
@@ -155,13 +257,54 @@ function toggleLock(region, round, teamName) {
     runSimulation();
 }
 
-function isLocked(region, round, teamName) {
-    if (region === 'final_four' || region === 'championship') {
-        return !!(appState.locks[region] && appState.locks[region][teamName]);
+function isLocked(region, round, team) {
+    if (region === 'final_four') return !!appState.locks.final_four[team];
+    if (region === 'championship') return !!appState.locks.championship[team];
+    return !!appState.locks.regions[region]?.[round]?.[team];
+}
+
+async function renderInitialBracket() {
+    try {
+        const response = await fetch(`/api/bracket/${appState.year}`);
+        const data = await response.json();
+        
+        if (data.error) {
+            console.error("Bracket load error:", data.error);
+            return;
+        }
+
+        // Transform into a TBD-filled structure for initial view
+        const initialData = {
+            regions: {},
+            final_four: null,
+            championship: null
+        };
+        
+        for (const [reg, matchups] of Object.entries(data.regions)) {
+            initialData.regions[reg] = [
+                { round: 1, matchups: matchups.map(m => ({ ...m, winner: null })) }
+            ];
+            // Add placeholder rounds for Round 2, 3, 4
+            for (let r = 2; r <= 4; r++) {
+                initialData.regions[reg].push({ 
+                    round: r, 
+                    matchups: Array(16 / Math.pow(2, r-1)).fill(null).map(() => ({ 
+                        team_a: null, team_b: null, winner: null 
+                    })) 
+                });
+            }
+        }
+        
+        renderBracketWaterfall(initialData);
+        // Default to Standard Overview zoom - use small delay to ensure rendering is complete
+        setTimeout(() => {
+            if (typeof zoomToRound === 'function') {
+                zoomToRound('all');
+            }
+        }, 100);
+    } catch (err) {
+        console.error("Initial bracket load failed", err);
     }
-    return !!(appState.locks.regions[region] && 
-              appState.locks.regions[region][round] && 
-              appState.locks.regions[region][round][teamName]);
 }
 
 // --- API Calls ---
@@ -180,26 +323,13 @@ async function initWeights() {
         appState.optimalWeights = avgData.weights || {};
         appState.perfectWeights = champData.weights || {};
 
-        // Also populate the old flat-key format for backward compat with resetToOptimal sliders
-        const w = appState.optimalWeights;
-        appState._optimalFlat = {
-            trb: w.trb_weight,
-            to: w.to_weight,
-            sos: w.sos_weight,
-            momentum: w.momentum_weight,
-            efficiency: w.efficiency_weight,
-            ft: w.ft_weight,
-            def_premium: w.defense_premium,
-            orb_density: w.orb_density_weight,
-            luck_regression: w.luck_regression_weight,
-            coach_moxie: w.coach_tournament_weight,
-            tempo_upset: w.tempo_upset_weight,
-            fatigue: w.fatigue_sensitivity,
-            bench: w.bench_rest_bonus
-        };
-
         console.log('[Weights] Loaded MAX_AVG preset:', avgData.meta);
         console.log('[Weights] Loaded MAX_PERFECT preset:', champData.meta);
+        
+        // Populate sliders for initial mode (custom/avg)
+        if (appState.mode === 'average') {
+            applyWeights(appState.optimalWeights);
+        }
     } catch (err) {
         console.error("Failed to fetch preset weights", err);
     }
@@ -252,6 +382,7 @@ async function runSimulation() {
     });
     
     try {
+        const useLive = (appState.mode === 'current');
         const response = await fetch(`/api/simulation/full`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -261,11 +392,18 @@ async function runSimulation() {
                 volatility: appState.volatility / 100,
                 weights: weights,
                 locks: appState.locks,
-                use_live_results: appState.useLiveResults || false
+                use_live_results: useLive
             })
         });
         const data = await response.json();
         appState.currentData = data;
+        
+        // Update Live Indicator
+        const liveIndicator = document.getElementById('live-indicator');
+        if (liveIndicator) {
+            liveIndicator.style.display = useLive ? 'flex' : 'none';
+        }
+        
         renderBracketWaterfall(data);
     } catch (err) {
         console.error("Simulation failed", err);
@@ -313,7 +451,7 @@ function renderBracketWaterfall(data) {
         // Region Label
         const label = document.createElement('div');
         label.className = 'region-label-v2';
-        label.style.top = '10px';
+        label.style.pointerEvents = 'none';
         if (config.mirrored) label.style.right = '2rem'; else label.style.left = '2rem';
         label.textContent = regionName;
         regContainer.appendChild(label);
@@ -348,77 +486,88 @@ function renderBracketWaterfall(data) {
                 let probA = m.probability || 0.5;
                 let blendedA = ((1.0 - vol) * probA) + (vol * 0.5);
                 
-                mCard.appendChild(createTeamLine(regionName, r.round, m.team_a, m.seed_a, m.winner === m.team_a, (blendedA * 100).toFixed(0)));
-                mCard.appendChild(createTeamLine(regionName, r.round, m.team_b, m.seed_b, m.winner === m.team_b, ((1-blendedA) * 100).toFixed(0)));
+                const isA = (m.team_a === m.winner);
+                const isActualA = isA && m.is_actual;
+                const isActualB = !isA && m.is_actual;
                 
-                col.appendChild(mCard);
-            });
+                mCard.appendChild(createTeamLine(regionName, r.round, m.team_a, m.seed_a, isA, isA ? m.probability : null, isActualA));
+                mCard.appendChild(createTeamLine(regionName, r.round, m.team_b, m.seed_b, !isA, !isA ? m.probability : null, isActualB));
+            
+            col.appendChild(mCard);
         });
     });
+});
 
-    // Populate Final Four (Round 5)
-    if (data.final_four) {
-        const leftF4 = document.createElement('div');
-        leftF4.className = 'ff-games-stack ff-left';
-        const rightF4 = document.createElement('div');
-        rightF4.className = 'ff-games-stack ff-right';
+// Populate Center Stage (Final Four & Championship)
+if (data.final_four) {
+    const leftF4 = document.createElement('div');
+    leftF4.className = 'ff-games-stack ff-left';
+    const rightF4 = document.createElement('div');
+    rightF4.className = 'ff-games-stack ff-right';
+    
+    // Create Championship centerpiece
+    const champContainer = document.createElement('div');
+    champContainer.className = 'hero-champ-container';
+
+    // Order: Left FF -> Champ -> Right FF
+    centerStage.appendChild(leftF4);
+    centerStage.appendChild(champContainer);
+    centerStage.appendChild(rightF4);
+
+    data.final_four.forEach((m, idx) => {
+        const mCard = document.createElement('div');
+        mCard.className = `matchup-card ff-matchup`;
+        mCard.style.width = '280px';
         
-        centerStage.appendChild(leftF4);
-        centerStage.appendChild(rightF4);
+        const isA = (m.team_a === m.winner);
+        const isActualA = isA && m.is_actual;
+        const isActualB = !isA && m.is_actual;
+        
+        mCard.appendChild(createTeamLine('final_four', 5, m.team_a, m.seed_a, isA, isA ? m.probability : null, isActualA));
+        mCard.appendChild(createTeamLine('final_four', 5, m.team_b, m.seed_b, !isA, !isA ? m.probability : null, isActualB));
+        
 
-        data.final_four.forEach((m, idx) => {
-            const mCard = document.createElement('div');
-            mCard.className = `matchup-card ff-matchup`;
-            mCard.style.width = '300px';
-            
-            mCard.appendChild(createTeamLine('final_four', 1, m.team_a, m.seed_a, m.winner === m.team_a, ''));
-            mCard.appendChild(createTeamLine('final_four', 1, m.team_b, m.seed_b, m.winner === m.team_b, ''));
-            
-            if (idx === 0) leftF4.appendChild(mCard); else rightF4.appendChild(mCard);
-        });
-    }
+        if (idx === 0) leftF4.appendChild(mCard); else rightF4.appendChild(mCard);
+    });
 
-    // Populate Championship (Round 6)
     if (data.championship) {
         const m = data.championship;
-        const champContainer = document.createElement('div');
-        champContainer.className = 'hero-champ';
-        centerStage.appendChild(champContainer);
-
         const mCard = document.createElement('div');
         mCard.className = 'matchup-card championship-box';
-        mCard.style.width = '420px';
+        mCard.style.width = '320px';
         
-        mCard.appendChild(createTeamLine('championship', 1, m.team_a, m.seed_a, m.winner === m.team_a, ''));
-        mCard.appendChild(createTeamLine('championship', 1, m.team_b, m.seed_b, m.winner === m.team_b, ''));
+        const isA = (m.team_a === m.winner);
+        const isActualA = isA && m.is_actual;
+        const isActualB = !isA && m.is_actual;
         
-        if (m.winner) {
-            const trophy = document.createElement('div');
-            trophy.className = 'champ-winner-glow trophy-outside';
-            trophy.innerHTML = `🏆 ${m.winner} 🏆`;
-            champContainer.appendChild(trophy);
-        }
+        mCard.appendChild(createTeamLine('championship', 6, m.team_a, m.seed_a, isA, isA ? m.probability : null, isActualA));
+        mCard.appendChild(createTeamLine('championship', 6, m.team_b, m.seed_b, !isA, !isA ? m.probability : null, isActualB));
+        
+        
         champContainer.appendChild(mCard);
     }
+}
     
     if (appState.filter.region !== 'all') {
         zoomToRound('all');
     }
 }
 
-function createTeamLine(region, round, teamName, seed, isWinner, prob) {
+function createTeamLine(region, round, teamName, seed, isWinner, prob, isActual = false) {
     const line = document.createElement('div');
     const team = teamName || "TBD";
-    const locked = isLocked(region, round, team) ? 'locked' : '';
-    line.className = `team-line ${isWinner ? 'winner' : ''} ${locked} ${team === "TBD" ? 'tbd' : ''}`;
+    const userLocked = isLocked(region, round, team);
+    const lockedClass = (userLocked || isActual) ? 'locked' : '';
+    line.className = `team-line ${isWinner ? 'winner' : ''} ${lockedClass} ${team === "TBD" ? 'tbd' : ''}`;
     
+    const cleanName = team.replace(/^\d+\s+/, '');
     line.innerHTML = `
         <span class="team-content">
             <span class="seed">${seed || '?'}</span>
-            <span class="name">${team}</span>
-            ${team !== "TBD" ? `<span class="lock-icon ${locked ? 'active' : ''}" title="Lock team to advance">🔒</span>` : ''}
+            <span class="name">${cleanName}</span>
+            ${team !== "TBD" ? `<span class="lock-icon ${lockedClass ? 'active' : ''} ${isActual ? 'is-actual' : ''}" title="${isActual ? 'Actual Tournament Result' : 'Lock team to advance'}">${isActual ? '🔒' : '🔒'}</span>` : ''}
         </span>
-        ${isWinner && prob ? `<span class="prob-tag">${prob}%</span>` : ''}
+        ${isWinner && prob ? `<span class="prob-tag">${(parseFloat(prob) * 100).toFixed(0)}%</span>` : ''}
     `;
 
     if (team !== "TBD") {
@@ -442,70 +591,40 @@ function createTeamLine(region, round, teamName, seed, isWinner, prob) {
 
 // --- Navigation & UX ---
 
-window.zoomToRound = function(round) {
-    const container = document.getElementById('bracket-container');
-    if (!container) return;
-
-    const overviewBtn = document.getElementById('overview-btn');
-    if (overviewBtn) {
-        if (round === 'all') overviewBtn.classList.add('active');
-        else overviewBtn.classList.remove('active');
-    }
-
-    if (round === 'all') {
-        const vH = window.innerHeight;
-        const vW = window.innerWidth;
-        const scaleH = (vH - 180) / 1920;
-        const scaleW = (vW - 100) / 2840;
-        appState.zoom.scale = Math.min(scaleH, scaleW, 0.45); 
-        appState.zoom.x = (vW - (2840 * appState.zoom.scale)) / 2;
-        appState.zoom.y = 0;
-    } else {
-        appState.zoom.scale = 0.8; 
-        appState.zoom.x = (window.innerWidth - (2840 * appState.zoom.scale)) / 2;
-        appState.zoom.y = 0;
-    }
-
-    applyZoom();
-    
-    const viewport = document.querySelector('.full-viewport');
-    if (viewport) {
-        viewport.scrollTo({ 
-            top: 0, 
-            left: 0, 
-            behavior: 'smooth' 
-        });
-    }
-}
+// Navigation & UX logic moved to top for global availability
 
 // --- Simulation Control ---
 
-window.resetSimulation = function() {
-    appState.locks = {
-        regions: {},
-        final_four: {},
-        championship: {}
-    };
-    
-    // Also reset any active button states
-    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-    document.querySelector('.tab-btn[data-mode="custom"]')?.classList.add('active');
-    appState.mode = 'custom';
-    
-    runSimulation();
-}
+// Reset logic moved to top for global availability
 
 function applyZoom() {
     const container = document.getElementById('bracket-container');
     const proxy = document.getElementById('zoom-container');
-    if (!container || !proxy) return;
+    const viewport = document.querySelector('.full-viewport');
+    if (!container || !proxy || !viewport) return;
     
+    // Clamp movement 
+    const vW = window.innerWidth;
+    const vH = window.innerHeight;
+    const gridW = 3560 * appState.zoom.scale; /* Updated for gaps */
+    const gridH = 1920 * appState.zoom.scale;
+    
+    // Minimal bleed for tight focus
+    const margin = 50; 
+    const minX = vW - gridW - margin;
+    const maxX = margin;
+    const minY = vH - gridH - margin;
+    const maxY = margin;
+    
+    appState.zoom.x = Math.min(Math.max(appState.zoom.x, minX), maxX);
+    appState.zoom.y = Math.min(Math.max(appState.zoom.y, minY), maxY);
+
     // Scale the visual
-    container.style.transform = `scale(${appState.zoom.scale})`;
+    container.style.transform = `translate(${appState.zoom.x}px, ${appState.zoom.y}px) scale(${appState.zoom.scale})`;
     
-    // Precise bounds for Quad Grid (2840px x 1920px)
-    proxy.style.width = (2840 * appState.zoom.scale + 100) + "px";
-    proxy.style.height = (1920 * appState.zoom.scale + 200) + "px";
+    // Precise bounds 
+    proxy.style.width = (3560 * appState.zoom.scale + 100) + "px";
+    proxy.style.height = (1920 * appState.zoom.scale + 100) + "px";
 }
 
 function initInteractiveZoom() {
@@ -541,7 +660,7 @@ function openMatchupModal(matchup) {
     const blendedA = ((1.0 - vol) * probA) + (vol * 0.5);
     
     const probBadge = document.getElementById('modal-prob');
-    if (probBadge) probBadge.textContent = `${(blendedA * 100).toFixed(0)}% Win Prob`;
+    if (probBadge) probBadge.textContent = `${(blendedA * 100).toFixed(2)}% Win Prob`;
 
     // Populate Modal Content
     const title = modal.querySelector('h2') || modal.querySelector('.modal-title');
@@ -556,7 +675,7 @@ function openMatchupModal(matchup) {
         
         whyContent.innerHTML = `
             <p><strong>Scenario Intelligence:</strong> ${favorite.name} enters as the statistical favorite with a ${confText} profile. 
-            The simulation indicates a ${ (Math.abs(blendedA - 0.5) * 200).toFixed(0) }% efficiency advantage in our multi-era regression model.</p>
+            The simulation indicates a ${ (Math.abs(blendedA - 0.5) * 200).toFixed(2) }% efficiency advantage in our multi-era regression model.</p>
             <p style="margin-top:0.5rem"><strong>Key Factor:</strong> Verticality and tempo control. ${teamA.name}'s efficiency at ${teamA.off_efficiency?.toFixed(1) || 'N/A'} vs ${teamB.name}'s ${teamB.off_efficiency?.toFixed(1) || 'N/A'} is the primary driver of this projection.</p>
         `;
     }
@@ -598,121 +717,63 @@ document.addEventListener('DOMContentLoaded', () => {
         yearSelect.addEventListener('change', (e) => {
             appState.year = e.target.value;
             fetchTeams(appState.year);
-            runSimulation();
+            renderInitialBracket(); /* Change from runSimulation */
         });
     }
+
+    renderInitialBracket(); /* Change from runSimulation */
 
     initInteractiveZoom();
 
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', () => {
+            const mode = btn.getAttribute('data-mode');
+            
+            if (mode === 'settings') {
+                document.getElementById('settings-panel')?.classList.add('active');
+                document.body.classList.add('mode-sandbox');
+                // Don't switch the active class for simulation modes if we just click settings
+                return;
+            }
+
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            appState.mode = btn.getAttribute('data-mode');
+            appState.mode = mode;
+            document.getElementById('settings-panel')?.classList.remove('active');
             
-            if (appState.mode === 'custom') {
-                const panel = document.getElementById('settings-panel');
-                if (panel) panel.classList.add('active');
+            if (appState.mode === 'standard') {
+                document.body.classList.remove('mode-sandbox');
             } else {
-                // Close any open settings modals when switching to non-custom modes
-                document.querySelectorAll('.settings-modal').forEach(panel => {
-                    panel.classList.remove('active');
-                });
+                 // Average/Perfect modes can also show sandbox if they aren't "Live"
+                 document.body.classList.remove('mode-sandbox');
             }
             
-            if (appState.mode === 'average') resetToOptimal();
+            if (appState.mode === 'average') applyWeights(appState.optimalWeights);
             else if (appState.mode === 'perfect') applyWeights(appState.perfectWeights);
-            else runSimulation();
+            
+            renderInitialBracket();
         });
     });
 
-    document.querySelectorAll('.region-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const region = btn.getAttribute('data-region');
-            document.querySelectorAll('.region-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            appState.filter.region = region;
-            // zoomToRegion is deprecated, we focus on rounds now.
-            // If the user wants to see a region, we'll just snap to Round 64.
-            window.zoomToRound(64); 
-        });
+    // Start Round Buttons
+    document.getElementById('start-r64-btn')?.addEventListener('click', () => startFromRound('r64'));
+    document.getElementById('start-r32-btn')?.addEventListener('click', () => startFromRound('r32'));
+    document.getElementById('sync-live-btn')?.addEventListener('click', syncLiveBracket);
+    document.querySelectorAll('.close-settings').forEach(btn => {
+        btn.onclick = () => document.getElementById('settings-panel')?.classList.remove('active');
     });
 
-    const volSlider = document.getElementById('weight-volatility');
-    const volVal = document.getElementById('val-volatility');
-    if (volSlider) {
-        volSlider.addEventListener('input', (e) => {
-            appState.volatility = parseInt(e.target.value);
-            if (volVal) volVal.textContent = e.target.value;
-            switchToCustom();
-            debounceSim();
-        });
-    }
-
-    // Matchup intelligence is now handled via event delegation inside createTeamLine or on cards
-    // Removing redundant global listener that might block clicks
-
-    const closeModal = document.getElementById('close-modal');
-    if (closeModal) {
-        closeModal.addEventListener('click', () => {
-            document.getElementById('matchup-modal').classList.remove('active');
-        });
-    }
-
-    document.querySelectorAll('input[type="range"][id^="weight-"], input[type="number"][id^="num-"]').forEach(input => {
-        input.addEventListener('input', (e) => {
-            const val = parseFloat(e.target.value);
-            const id = e.target.id.replace('weight-', '').replace('num-', '');
-            
-            const slider = document.getElementById(`weight-${id}`);
-            const numInput = document.getElementById(`num-${id}`);
-            const label = document.getElementById(`val-${id}`);
-            
-            if (slider) slider.value = val;
-            if (numInput) numInput.value = val;
-            if (label) label.textContent = val;
-            
-            switchToCustom();
-            debounceSim();
-        });
-    });
-
-    const scratchBtn = document.getElementById('run-sim-scratch-btn');
-    if (scratchBtn) scratchBtn.onclick = () => {
-        appState.useLiveResults = false;
-        runSimulation();
-    };
-
-    const liveBtn = document.getElementById('run-sim-live-btn');
-    if (liveBtn) liveBtn.onclick = () => {
-        appState.useLiveResults = true;
-        runSimulation();
-    };
-
-    const syncBtn = document.getElementById('sync-live-btn');
-    if (syncBtn) syncBtn.onclick = async () => {
-        syncBtn.disabled = true;
-        syncBtn.textContent = '🔄 Syncing...';
-        try {
-            const res = await fetch('/api/sync/live', { method: 'POST' });
-            const data = await res.json();
-            alert(data.message || 'Sync complete!');
-            fetchTeams(appState.year);
+    const runSimBtn = document.getElementById('run-simulation-btn');
+    if (runSimBtn) {
+        runSimBtn.onclick = () => {
+            runSimBtn.classList.add('pulse');
+            setTimeout(() => runSimBtn.classList.remove('pulse'), 400);
             runSimulation();
-        } catch (err) {
-            console.error('Sync failed', err);
-        } finally {
-            syncBtn.disabled = false;
-            syncBtn.textContent = '🔄 Sync';
-        }
-    };
-
-    const resetBtn = document.getElementById('reset-optimal');
-    if (resetBtn) resetBtn.onclick = resetToOptimal;
+        };
+    }
 
     // Toggle Panels
     const panels = {
-        'settings-toggle-btn': 'settings-panel',
         'field-stats-toggle-btn': 'field-stats-panel',
         'research-lab-toggle-btn': 'research-lab-panel'
     };
@@ -725,36 +786,55 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Deep Dive Collapsible
-    document.querySelectorAll('.group-header').forEach(header => {
-        header.onclick = () => {
-            header.closest('.collapsible').classList.toggle('expanded');
-        };
-    });
-
-    document.querySelectorAll('.close-settings, .close-field, .close-research').forEach(btn => {
-        btn.onclick = (e) => e.target.closest('.settings-modal').classList.remove('active');
-    });
-
+    // Initial data load
     initWeights();
     fetchTeams(appState.year);
 });
 
-function initWeights() {
-    fetch('/api/weights/preset?mode=avg')
-        .then(res => res.json())
-        .then(weights => {
-            Object.entries(weights).forEach(([key, val]) => {
-                const slider = document.getElementById(`weight-${key}`);
-                const numInput = document.getElementById(`num-${key}`);
-                const label = document.getElementById(`val-${key}`);
-                if (slider) slider.value = val;
-                if (numInput) numInput.value = val;
-                if (label) label.textContent = val;
-            });
-            appState.weights = weights;
+async function startFromRound(round) {
+    try {
+        const response = await fetch(`/api/sync/start_round?round=${round}&year=${appState.year}`, { 
+            method: 'POST' 
         });
+        const result = await response.json();
+        
+        if (!response.ok) {
+            alert(`Error: ${result.error || 'Failed to start round'}`);
+            return;
+        }
+
+        // Reset and Re-render
+        appState.mode = 'standard';
+        renderInitialBracket(); 
+        alert(result.message);
+        
+    } catch (err) {
+        console.error("Start round failed:", err);
+        alert("Failed to start from chosen round.");
+    }
 }
 
-// Expose for browser agent
+async function syncLiveBracket() {
+    const btn = document.getElementById('sync-live-btn');
+    if (btn) btn.classList.add('spinning');
+    
+    try {
+        const response = await fetch(`/api/sync/live?year=${appState.year}`, { method: 'POST' });
+        if (response.ok) {
+            appState.mode = 'standard';
+            await renderInitialBracket();
+            alert("Bracket synced with live data.");
+        }
+    } catch (err) {
+        console.error("Sync failed:", err);
+    } finally {
+        if (btn) btn.classList.remove('spinning');
+    }
+}
+
+// Expose for browser agent and HTML onclick handlers
 window.appState = appState;
+window.globalResetSimulation = () => {
+    appState.locks = { regions: {}, final_four: {}, championship: {} };
+    renderInitialBracket();
+};

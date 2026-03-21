@@ -8,6 +8,8 @@ import concurrent.futures
 import multiprocessing
 import os
 from pathlib import Path
+import sys
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 # Set start method to spawn for clean multiprocessing with numpy/sys.path
 try:
@@ -41,33 +43,34 @@ def get_multi_year_results(weights: SimulationWeights, years_list, iterations=50
                 logging.error(f"Year {year} failed: {e}")
     return results
 
+def recency_weight(year):
+    return 0.5 + 0.5 * ((year - 2011) / (2024 - 2011))
+
 def cross_validate_weights(weights: SimulationWeights):
     """
-    Performs Log-Likelihood fitness calculation to maximize "Perfect Bracket" probability.
-    Fitness = average(log_likelihood) across all years + (Perfect Rate bonus)
+    Performs Weighted Log-Likelihood fitness calculation.
+    Fitness = sum(log_likelihood * year_weight)
     """
     results = get_multi_year_results(weights, YEARS)
     if not results:
-        return -10000, 0, 0
+        return -100000, 0, 0
     
-    likelihoods = [r["log_likelihood"] for r in results]
-    avg_likelihood = np.mean(likelihoods)
+    weighted_ll = np.sum([r.get("log_likelihood", -500.0) * recency_weight(r["year"]) for r in results])
     
     # Secondary metrics for display
     avg_score = np.mean([r["avg_score"] for r in results])
     avg_accuracy = np.mean([r["champion_accuracy"] for r in results])
     perfect_rate = np.mean([r["perfect_rate"] for r in results])
     
-    # Fitness is primarily Log-Likelihood (sum of logs of correct probabilities)
-    # We add a massive bonus for actual "Perfect Brackets" encountered in simulations
-    fitness = avg_likelihood + (perfect_rate * 1000000)
+    # Fitness is the weighted Log-Likelihood
+    # We add a small bonus for pure average score to keep it grounded
+    fitness = weighted_ll + (avg_score * 0.1) + (perfect_rate * 5000)
     
     return fitness, avg_score, avg_accuracy
 
-def optimize_simulated_annealing(iterations=100000, cooling_rate=0.99998):
+def optimize_simulated_annealing(iterations=100000, mode="perfect"):
     """
-    Exhaustive "Gold Standard" Optimization.
-    Dynamically scans and jitters EVERY field in SimulationWeights.
+    Exhaustive "Gold Standard" Optimization V3.
     """
     current_weights = SimulationWeights()
     current_fitness, current_avg, current_acc = cross_validate_weights(current_weights)
@@ -77,37 +80,31 @@ def optimize_simulated_annealing(iterations=100000, cooling_rate=0.99998):
     best_avg = current_avg
     best_acc = current_acc
     
-    print(f"\n🚀 STARTING EXHAUSTIVE PHASE 6 SWEEP...")
+    print(f"\n🚀 STARTING OPTIMIZATION V3 ({mode.upper()} FOCUS)...")
     print(f"Window: 2011-2024 | Iterations: {iterations}")
     print(f"Current Fitness: {round(current_fitness, 2)} | Avg Score: {round(current_avg, 1)} | Champ: {round(current_acc * 100, 1)}%")
     print("===============================================================================\n")
 
     try:
         for i in range(iterations):
-            temp_sa = iterations - i
-            
-            # Dynamic Jitter Core: Pull all parameters from the current best
-            # This implements the user's "any and all metrics" requirement.
+            # Dynamic Jitter: Handle all 140+ fields
             new_params = vars(current_weights).copy()
             fields = list(new_params.keys())
             
-            # Jitter 15-20% of fields per iteration to explore correlations
-            k = max(2, len(fields) // 6)
+            # Adaptive jump size
+            temp_sa = 1.0 - (i / iterations)
+            k = max(2, int(len(fields) * (0.1 + 0.2 * temp_sa)))
             jitter_targets = random.sample(fields, k=k)
             
             for field in jitter_targets:
                 val = new_params[field]
                 if isinstance(val, bool):
-                    if random.random() < 0.02: # Rare toggle
+                    if random.random() < 0.05: 
                         new_params[field] = not val
                 elif isinstance(val, (int, float)):
-                    # Adaptive jitter based on field name
-                    # Primary weights get larger exploration range
-                    if any(x in field for x in ["premium", "sos", "to", "eff", "weight"]):
-                        step = random.uniform(-0.5, 0.5)
-                    else:
-                        step = random.uniform(-0.1, 0.1)
-                    
+                    # Adaptive range based on current value
+                    magnitude = max(0.1, abs(val) * (0.1 + 0.4 * temp_sa))
+                    step = random.uniform(-magnitude, magnitude)
                     new_val = val + step
                     
                     # Resilience Constraints
@@ -116,16 +113,17 @@ def optimize_simulated_annealing(iterations=100000, cooling_rate=0.99998):
                     elif field == "defense_premium":
                         new_params[field] = max(1.0, min(50.0, new_val))
                     elif field == "luck_weight":
-                        new_params[field] = new_val # Allowed negative for regression
+                        new_params[field] = new_val # negative allowed
+                    elif "pct" in field or "rate" in field:
+                        new_params[field] = max(0, min(100, new_val))
                     else:
                         new_params[field] = max(0, new_val)
 
             new_weights = SimulationWeights(**new_params)
             new_fitness, new_avg, new_acc = cross_validate_weights(new_weights)
             
-            # Acceptance logic
+            # Acceptance logic (Maximize Fitness)
             if new_fitness > current_fitness:
-                # Update current and check if it's a global best
                 current_weights = new_weights
                 current_fitness = new_fitness
                 
@@ -134,15 +132,13 @@ def optimize_simulated_annealing(iterations=100000, cooling_rate=0.99998):
                     best_fitness = new_fitness
                     best_avg = new_avg
                     best_acc = new_acc
-                    print(f"[{i}] ⭐ NEW GLOBAL BEST! Fit: {round(best_fitness, 2)} | Avg: {round(best_avg, 1)} | Champ: {round(best_acc * 100, 1)}%")
-                    
-                    # Periodic Save to prevent data loss during long runs
-                    if i % 10 == 0:
-                        save_weights(best_weights, best_fitness, best_avg, best_acc, i)
+                    print(f"[{i}] ⭐ NEW BEST! Fit: {round(best_fitness, 2)} | Avg: {round(best_avg, 1)} | Champ: {round(best_acc * 100, 1)}%")
+                    save_weights(best_weights, best_fitness, best_avg, best_acc, i)
             else:
+                # Annealing rejection
                 delta = new_fitness - current_fitness
-                # Standard Simulated Annealing Acceptance
-                if random.random() < math.exp(delta / max(1.0, temp_sa / 100.0)):
+                accept_prob = math.exp(delta / max(0.01, 50.0 * temp_sa))
+                if random.random() < accept_prob:
                     current_weights = new_weights
                     current_fitness = new_fitness
 

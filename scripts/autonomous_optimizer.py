@@ -3,14 +3,15 @@ import subprocess
 import json
 import os
 import logging
+import threading
 from datetime import datetime
 from pathlib import Path
+from scripts.v2025_tuner import get_v2025_adjustments
 
 # Setup logging
 log_dir = Path("agents/optimization")
 log_dir.mkdir(parents=True, exist_ok=True)
 heartbeat_file = log_dir / "heartbeat.log"
-indicators_file = Path("docs/spec/v2025_indicators.json")
 
 logging.basicConfig(
     level=logging.INFO,
@@ -22,87 +23,74 @@ logging.basicConfig(
 )
 
 def log_heartbeat():
-    with open(heartbeat_file, "a") as f:
-        f.write(f"HEARTBEAT | {datetime.now().isoformat()} | Optimizer Active\n")
-
-def get_v2025_adjustments():
-    """Extracts suggested parameter adjustments from indicators file."""
-    if not indicators_file.exists():
-        return {}
-    
     try:
-        with open(indicators_file, "r") as f:
-            data = json.load(f)
-            
-        adjustments = {}
-        # Example: continuity_weight bump
-        continuity = data.get("research_loop_1", {}).get("roster_continuity", {})
-        if "continuity_weight" in continuity.get("config_param", ""):
-            # Simple heuristic parser for "(bumped from X to Y)"
-            adjustments["continuity_weight"] = 0.250 # Hardcoded for now based on the JSON string
-            
-        return adjustments
+        with open(heartbeat_file, "a") as f:
+            f.write(f"HEARTBEAT | {datetime.now().isoformat()} | Optimizer Active\n")
+        logging.debug("Heartbeat logged.")
     except Exception as e:
-        logging.error(f"Failed to parse indicators: {e}")
-        return {}
+        logging.error(f"Heartbeat failed: {e}")
 
-def run_optimization_sweep(iterations=10000):
-    """Executes a single optimization sweep."""
-    logging.info(f"Starting optimization sweep with {iterations} iterations...")
-    
-    # In a real scenario, we might pass adjustments via CLI or environment
-    # For now, we just run the script which takes iterations as an argument
-    try:
-        process = subprocess.Popen(
-            ["python3", "scripts/optimize_weights.py", "--iterations", str(iterations)],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True
-        )
-        
-        # Monitor progress and log heartbeats while running
-        start_time = time.time()
-        while process.poll() is None:
-            time.sleep(30) # Check every 30 seconds
-            if time.time() - start_time >= 300: # Every 5 minutes
-                log_heartbeat()
-                start_time = time.time()
-                
-        stdout, stderr = process.communicate()
-        if process.returncode == 0:
-            logging.info("Optimization sweep completed successfully.")
-        else:
-            logging.error(f"Optimization sweep failed with return code {process.returncode}")
-            logging.error(stderr)
-            
-    except Exception as e:
-        logging.error(f"Error running optimization: {e}")
+def heartbeat_monitor(stop_event):
+    """Threaded monitor to log heartbeats every 5 minutes."""
+    while not stop_event.is_set():
+        log_heartbeat()
+        # Sleep in 1s chunks to allow faster termination
+        for _ in range(300):
+            if stop_event.is_set(): break
+            time.sleep(1)
+
+def promote_weights(best_weights_file):
+    """
+    Placeholder for future auto-promotion logic.
+    Could automatically update core/config.py if fitness improves significantly.
+    """
+    logging.info(f"Checking {best_weights_file} for potential promotion...")
 
 def main():
-    logging.info("Initializing Autonomous Optimization Protocol...")
+    logging.info("Initializing Autonomous Optimization Protocol V2...")
     
-    # Initial heartbeat
-    log_heartbeat()
+    stop_event = threading.Event()
+    monitor_thread = threading.Thread(target=heartbeat_monitor, args=(stop_event,), daemon=True)
+    monitor_thread.start()
     
-    while True:
-        # 1. Check for adjustments
-        adjustments = get_v2025_adjustments()
-        if adjustments:
-            logging.info(f"Applying v2025 adjustments: {adjustments}")
-            # Note: The current optimize_weights.py doesn't take these yet, 
-            # but we could modify it to accept a JSON of overrides.
+    try:
+        while True:
+            # 1. Load 2025 Adjustments
+            adjustments = get_v2025_adjustments()
+            logging.info(f"Loaded {len(adjustments)} 2025 indicators from research.")
             
-        # 2. Run Sweep
-        run_optimization_sweep(iterations=10000)
-        
-        # 3. Cooldown / Wait before next sweep if needed
-        # (Though "Infinite" implies running again immediately or after a short pause)
-        logging.info("Cycle complete. Restarting in 60 seconds...")
-        time.sleep(60)
-        log_heartbeat()
+            # 2. Run Sweep (Infinite Loop)
+            # Increase iterations for deeper research
+            iterations = 50000 
+            logging.info(f"Starting sweep ({iterations} iterations)...")
+            
+            # We call the refined optimize_weights.py
+            cmd = ["python3", "scripts/optimize_weights.py", "--iterations", str(iterations)]
+            process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            
+            # Stream output to log (filtering for bests)
+            while True:
+                line = process.stdout.readline()
+                if not line: break
+                if "BEST" in line.upper() or "GLOBAL" in line.upper():
+                    logging.info(f"OPTIMIZER: {line.strip()}")
+            
+            process.wait()
+            
+            if process.returncode == 0:
+                logging.info("Sweep complete. Checking for promotion...")
+                promote_weights("agents/optimization/best_weights.txt")
+            else:
+                error_msg = process.stderr.read()
+                logging.error(f"Sweep failed with code {process.returncode}: {error_msg}")
+            
+            logging.info("Cycle complete. Cooldown (60s) before next sweep...")
+            time.sleep(60)
+            
+    except KeyboardInterrupt:
+        logging.info("Stopping Autonomous Optimizer...")
+        stop_event.set()
+        monitor_thread.join(timeout=2)
 
 if __name__ == "__main__":
-    try:
-        main()
-    except KeyboardInterrupt:
-        logging.info("Autonomous optimizer stopped by user.")
+    main()
