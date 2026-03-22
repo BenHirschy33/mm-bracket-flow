@@ -23,6 +23,8 @@ class Team:
     def_to_pct: Optional[float] = None     # Defensive Turnover %
     sos: Optional[float] = None            # Strength of Schedule (e.g., KenPom SOS rating)
     momentum: Optional[float] = None       # Win % over the last 10 games
+    recent_form: Optional[float] = None    # Peaking Indicator: Net Rating over last 10 games
+    pace_variance: Optional[float] = None # Variance in possessions p/game
     trb_pct: Optional[float] = None        # Total Rebound Percentage
     three_par: Optional[float] = None      # 3-Point Attempt Rate
     off_ft_pct: Optional[float] = None     # Offensive Free Throw % (Percentage made)
@@ -42,6 +44,14 @@ class Team:
     coach_tournament_wins: Optional[int] = None # Coach Moxie metric (Research Loop 1)
     star_reliance: Optional[float] = None # Pricing index for usage concentration (Phase 9)
     total_win_pct: Optional[float] = None # Cumulative Win % (Phase 2 refined SOS)
+    
+    # Advanced Modern Metrics (Cycle 4)
+    adj_off_sq: Optional[float] = None    # ShotQuality Adjusted Offensive Efficiency
+    adj_def_sq: Optional[float] = None    # ShotQuality Adjusted Defensive Efficiency
+    rim_3_rate: Optional[float] = None    # Rim-and-3 Shooting Rate
+    kill_shots_scored: Optional[float] = None # EvanMiya Kill Shots (10-0 runs)
+    kill_shots_conceded: Optional[float] = None
+    bpr: Optional[float] = None           # EvanMiya Bayesian Performance Rating
     
     # Advanced Matchup Metrics (Cycle 3)
     off_three_pt_pct: Optional[float] = None
