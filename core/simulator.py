@@ -75,71 +75,60 @@ class SimulatorEngine:
         """Calculates win prob using a Logistic (Sigmoid) model for calibration."""
         if not team_a or not team_b:
             return 0.5
-        # Step 1: Base Pythagorean Expectation (Initial Logit)
-        # logit(p) = log(p / (1-p))
-        eff_a = self._get_metric(team_a, 'pythagorean_expectation', 0.5)
-        eff_b = self._get_metric(team_b, 'pythagorean_expectation', 0.5)
+        # Step 1: Base Process-Based EV (Adj SQ Margin)
+        # logit(p) = log(p / (1-p)) or directly using the SQ delta
+        sq_off_a = self._get_metric(team_a, 'adj_off_sq', team_a.off_efficiency or 100.0)
+        sq_def_a = self._get_metric(team_a, 'adj_def_sq', team_a.def_efficiency or 100.0)
+        sq_off_b = self._get_metric(team_b, 'adj_off_sq', team_b.off_efficiency or 100.0)
+        sq_def_b = self._get_metric(team_b, 'adj_def_sq', team_b.def_efficiency or 100.0)
         
-        # Avoid division by zero
-        eff_a = max(0.0001, eff_a)
-        eff_b = max(0.0001, eff_b)
+        sq_margin_a = sq_off_a - sq_def_a
+        sq_margin_b = sq_off_b - sq_def_b
         
-        # Base delta in logit space
-        # p = a / (a+b) -> logit(p) = log(a/b)
-        delta = math.log(eff_a / eff_b)
+        # Foundational matchup math shift (Phase 3.1)
+        delta = (sq_margin_a - sq_margin_b) * 0.1 * self.weights.sq_margin_weight
         
-        # Step 2: Advanced Metric Modifiers (Now additive in Logit space)
-        # This prevents probability saturation and handles heavy weights gracefully.
-        
-        # Defense Premium
-        def_a = self._get_metric(team_a, 'def_efficiency', 100.0)
-        def_b = self._get_metric(team_b, 'def_efficiency', 100.0)
-        delta += (def_b - def_a) * 0.05 * self.weights.defense_premium
-        
-        # Seed Advantage
+        # Step 2: Advanced Metric Modifiers
+        # Seed Advantage (Psychological / Historical baseline)
         seed_diff = self._get_metric(team_b, 'seed', 16) - self._get_metric(team_a, 'seed', 16)
-        delta += seed_diff * 0.2 * self.weights.seed_weight
+        delta += seed_diff * 0.15 * self.weights.seed_weight
         
-        # SOS
-        sos_a = self._get_metric(team_a, 'sos', 0.0) * self._get_metric(team_a, 'total_win_pct', 0.5)
-        sos_b = self._get_metric(team_b, 'sos', 0.0) * self._get_metric(team_b, 'total_win_pct', 0.5)
-        delta += (sos_a - sos_b) * 0.1 * self.weights.sos_weight
+        # Peaking Indicator (Recent Form)
+        recent_a = self._get_metric(team_a, 'recent_form', 0.0)
+        recent_b = self._get_metric(team_b, 'recent_form', 0.0)
+        delta += (recent_a - recent_b) * 0.2 * self.weights.momentum_weight
             
-        # Turnover Margin
+        # Turnover Margin (Chaos factor)
         margin_a = self._get_metric(team_a, 'def_to_pct', 20.0) - self._get_metric(team_a, 'off_to_pct', 20.0)
         margin_b = self._get_metric(team_b, 'def_to_pct', 20.0) - self._get_metric(team_b, 'off_to_pct', 20.0)
-        delta += (margin_a - margin_b) * 0.1 * self.weights.to_weight
-            
-        # Momentum
-        delta += (self._get_metric(team_a, 'momentum', 0.5) - self._get_metric(team_b, 'momentum', 0.5)) * 1.5 * self.weights.momentum_weight
-            
-        # Free Throw Advantage
-        ft_a = (self._get_metric(team_a, 'off_ft_pct', 70.0) / 100.0) * self._get_metric(team_b, 'def_ft_rate', 0.3)
-        ft_b = (self._get_metric(team_b, 'off_ft_pct', 70.0) / 100.0) * self._get_metric(team_a, 'def_ft_rate', 0.3)
-        delta += (ft_a - ft_b) * 2.0 * self.weights.ft_weight
-            
-        # Foul Drawing
-        delta += (self._get_metric(team_a, 'off_ft_rate', 0.3) - self._get_metric(team_b, 'off_ft_rate', 0.3)) * 2.0 * self.weights.foul_drawing_weight
+        delta += (margin_a - margin_b) * 0.05 * self.weights.to_weight
 
-        # Chaos Stats
-        delta += (self._get_metric(team_a, 'off_stl_pct', 8.0) - self._get_metric(team_b, 'off_stl_pct', 8.0)) * 0.2 * self.weights.stl_weight
-        delta += (self._get_metric(team_a, 'off_blk_pct', 8.0) - self._get_metric(team_b, 'off_blk_pct', 8.0)) * 0.2 * self.weights.blk_weight
-        delta += (self._get_metric(team_a, 'off_orb_pct', 25.0) - self._get_metric(team_b, 'off_orb_pct', 25.0)) * 0.2 * self.weights.orb_weight
-        delta += (self._get_metric(team_b, 'def_ft_rate', 0.3) - self._get_metric(team_a, 'def_ft_rate', 0.3)) * 2.0 * self.weights.def_ft_rate_weight
-
-        # Luck & Momentum Regression
+        # Luck Regression (Mean reversion)
         luck_a = self._get_metric(team_a, 'luck', 0.0)
         luck_b = self._get_metric(team_b, 'luck', 0.0)
-        delta += (luck_b - luck_a) * 0.5 * self.weights.luck_weight
-        
-        # 3PAr Volatility (Shrinks the delta towards zero if both teams are 3pt heavy)
-        avg_3par = (self._get_metric(team_a, 'three_par', 0.37) + self._get_metric(team_b, 'three_par', 0.37)) / 2
-        volatility_scale = 1.0 / (1.0 + (avg_3par - 0.37) * self.weights.three_par_volatility_weight)
-        delta *= max(0.5, min(1.5, volatility_scale))
-
-        # Efficiency Advantage
-        delta += (self._get_metric(team_a, 'off_ts_pct', 55.0) - self._get_metric(team_b, 'off_ts_pct', 55.0)) * 0.1 * self.weights.ts_weight
+        delta += (luck_b - luck_a) * 0.3 * self.weights.luck_weight
         delta += (self._get_metric(team_a, 'total_games', 30) - self._get_metric(team_b, 'total_games', 30)) * 0.02 * self.weights.experience_weight
+
+        # --- Advanced Modern Metrics (Cycle 4) ---
+        # Adj SQ Margin (Process-based Expected Value)
+        sq_off_a = self._get_metric(team_a, 'adj_off_sq', team_a.off_efficiency or 100.0)
+        sq_def_a = self._get_metric(team_a, 'adj_def_sq', team_a.def_efficiency or 100.0)
+        sq_off_b = self._get_metric(team_b, 'adj_off_sq', team_b.off_efficiency or 100.0)
+        sq_def_b = self._get_metric(team_b, 'adj_def_sq', team_b.def_efficiency or 100.0)
+        
+        sq_margin_a = sq_off_a - sq_def_a
+        sq_margin_b = sq_off_b - sq_def_b
+        delta += (sq_margin_a - sq_margin_b) * 0.05 * self.weights.sq_margin_weight
+
+        # Kill Shot Differential (Momentum Multiplier)
+        ks_diff_a = self._get_metric(team_a, 'kill_shots_scored', 0.0) - self._get_metric(team_a, 'kill_shots_conceded', 0.0)
+        ks_diff_b = self._get_metric(team_b, 'kill_shots_scored', 0.0) - self._get_metric(team_b, 'kill_shots_conceded', 0.0)
+        delta += (ks_diff_a - ks_diff_b) * 0.3 * self.weights.kill_shot_momentum_weight
+
+        # BPR (Bayesian Performance Rating)
+        bpr_a = self._get_metric(team_a, 'bpr', 0.0)
+        bpr_b = self._get_metric(team_b, 'bpr', 0.0)
+        delta += (bpr_a - bpr_b) * 0.1 # Direct logit contribution
 
         # Round-Weighted Defense
         def_advantage = (self._get_metric(team_b, 'def_efficiency', 100.0) - self._get_metric(team_a, 'def_efficiency', 100.0))
@@ -193,7 +182,15 @@ class SimulatorEngine:
             # Scale delta by a normalization factor to prevent saturation
             # Higher variance_scale = more 50/50 games (more upsets)
             # Lower variance_scale = more chalky (saturated)
-            variance_scale = 1.0 + (self.volatility * 2.0)
+            
+            # Rim-and-3 Rate Volatility Scale
+            # Teams with high Rim-and-3 rates have higher variance (3-point dependence)
+            rim_3_a = self._get_metric(team_a, 'rim_3_rate', 0.4)
+            rim_3_b = self._get_metric(team_b, 'rim_3_rate', 0.4)
+            avg_rim_3 = (rim_3_a + rim_3_b) / 2.0
+            variance_multiplier = 1.0 + (avg_rim_3 * 2.0 * self.weights.rim_3_volatility_weight)
+            
+            variance_scale = (1.0 + (self.volatility * 2.0)) * variance_multiplier
             final_probability = 1.0 / (1.0 + math.exp(-delta / variance_scale))
         except OverflowError:
             final_probability = 1.0 if delta > 0 else 0.0
@@ -204,22 +201,85 @@ class SimulatorEngine:
         return final_probability
 
     def simulate_matchup(self, team_a_name: str, team_b_name: str, round_num: int = 1) -> str:
-        """Simulates a game between two teams and returns the winner's name."""
-        # 1. Check for Locks (Explicit or Live)
+        """
+        Simulates a game using a possession-scaled resolution loop.
+        Integrates Pace Delta, Kill Shot triggers, and FT Floor survival.
+        """
+        # 1. Check for Locks
         locked_winner = self.get_locked_winner(team_a_name, team_b_name, round_num)
-        if locked_winner:
-            return locked_winner
+        if locked_winner: return locked_winner
             
         team_a = self.teams.get(team_a_name)
         team_b = self.teams.get(team_b_name)
-        
         if not team_a: return team_b_name
         if not team_b: return team_a_name
         
+        # 2. Base Configuration
         prob_a = self.calculate_win_probability(team_a, team_b, round_num)
-        winner = team_a_name if random.random() < prob_a else team_b_name
         
-        # State Update for Due Factor
+        # 3. Pace Scaling (Phase 3.2)
+        pace_a = self._get_metric(team_a, 'pace', 70.0)
+        pace_b = self._get_metric(team_b, 'pace', 70.0)
+        # Determine who controls the pace based on recent form/momentum
+        form_a = self._get_metric(team_a, 'momentum', 0.5)
+        form_b = self._get_metric(team_b, 'momentum', 0.5)
+        pace_controller_weight = form_a / (form_a + form_b) if (form_a + form_b) > 0 else 0.5
+        base_possessions = (pace_a * pace_controller_weight) + (pace_b * (1 - pace_controller_weight))
+        
+        # Add random variance based on PaceVar
+        var_a = self._get_metric(team_a, 'pace_variance', 2.0)
+        var_b = self._get_metric(team_b, 'pace_variance', 2.0)
+        total_possessions = int(random.gauss(base_possessions, (var_a + var_b) / 2))
+        
+        # 4. Simulation Resolution Loop (Phase 3.3)
+        score_a = 0.0
+        score_b = 0.0
+        
+        # Kill Shot triggers (Phase 3.3.1)
+        ks_scored_a = self._get_metric(team_a, 'kill_shots_scored', 7.0)
+        ks_scored_b = self._get_metric(team_b, 'kill_shots_scored', 7.0)
+        ks_conc_a = self._get_metric(team_a, 'kill_shots_conceded', 7.0)
+        ks_conc_b = self._get_metric(team_b, 'kill_shots_conceded', 7.0)
+        
+        # Resolve in segments to allow for "Run States"
+        segments = 4 
+        poss_per_segment = total_possessions // segments
+        
+        for _ in range(segments):
+            # Probability trigger for a "Run State"
+            if random.random() < 0.15: # 15% chance of a run state segment
+                # Run is triggered, weight segment toward team with higher Kill Shot diff
+                ks_diff_a = ks_scored_a - ks_conc_a
+                ks_diff_b = ks_scored_b - ks_conc_b
+                run_bias = (ks_diff_a - ks_diff_b) * 0.02 * self.weights.kill_shot_momentum_weight
+                seg_prob = max(0.1, min(0.9, prob_a + run_bias))
+            else:
+                seg_prob = prob_a
+            
+            # Simplified point resolution for the segment
+            # (Roughly: possessions * points per possession ~ scoring)
+            # We use the probability to determine who 'wins' the segment points
+            seg_winner_a = (random.random() < seg_prob)
+            pts = (poss_per_segment * 1.1) + random.uniform(-5, 5) # NCAA avg PPP is ~1.0-1.1
+            if seg_winner_a:
+                score_a += pts
+                score_b += (pts * 0.9) # Loser stays close in segment
+            else:
+                score_b += pts
+                score_a += (pts * 0.9)
+        
+        # 5. Late-Game Free Throw Floor (Phase 3.3.2)
+        if abs(score_a - score_b) < 5:
+            ftr_a = self._get_metric(team_a, 'off_ft_rate', 0.3)
+            ftr_b = self._get_metric(team_b, 'off_ft_rate', 0.3)
+            if ftr_a > ftr_b:
+                score_a += 1.5 # Clutch survival bonus
+            elif ftr_b > ftr_a:
+                score_b += 1.5
+        
+        winner = team_a_name if score_a >= score_b else team_b_name
+        
+        # State Update
         self.total_games += 1
         favored_team = team_a_name if prob_a > 0.5 else team_b_name
         if winner != favored_team:
