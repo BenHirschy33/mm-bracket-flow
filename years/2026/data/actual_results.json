@@ -1,1 +1,10 @@
-{"round_of_32": [], "sweet_sixteen": [], "elite_eight": [], "final_four": [], "champion": ""}
+{
+  "sweet_sixteen": [
+    "Michigan Wolverines",
+    "Duke",
+    "Houston",
+    "Michigan State",
+    "Texas",
+    "Illinois"
+  ]
+}

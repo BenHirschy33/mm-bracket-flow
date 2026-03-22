@@ -1,3 +1,5 @@
+console.log("[MM-Bracket-Flow] main.js loaded v1.2");
+
 const appState = {
     mode: 'standard', // standard, average, perfect
     showSettings: false,
@@ -111,7 +113,7 @@ window.globalResetUI = function() {
     appState.currentData = null;
     
     // Clear the visual bracket
-    renderInitialBracket(); 
+    renderMMBracket(); 
 
     // Also reset any active button states
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -263,7 +265,8 @@ function isLocked(region, round, team) {
     return !!appState.locks.regions[region]?.[round]?.[team];
 }
 
-async function renderInitialBracket() {
+async function renderMMBracket() {
+    console.log("[MM-Bracket-Flow] Executing renderMMBracket");
     try {
         const response = await fetch(`/api/bracket/${appState.year}`);
         const data = await response.json();
@@ -288,7 +291,7 @@ async function renderInitialBracket() {
             for (let r = 2; r <= 4; r++) {
                 initialData.regions[reg].push({ 
                     round: r, 
-                    matchups: Array(16 / Math.pow(2, r-1)).fill(null).map(() => ({ 
+                    matchups: Array(16 / Math.pow(2, r)).fill(null).map(() => ({ 
                         team_a: null, team_b: null, winner: null 
                     })) 
                 });
@@ -439,8 +442,13 @@ function renderBracketWaterfall(data) {
     // Populate Regional Rounds (1-4)
     regionsOrder.forEach((regionName) => {
         const config = regionConfigs[regionName];
-        const rounds = data.regions[regionName];
+        let rounds = data.regions[regionName];
         if (!rounds) return;
+
+        // Ensure rounds have the .round property attached for UI rendering
+        if (Array.isArray(rounds)) {
+            rounds = rounds.map((r, i) => r.round ? r : { round: i + 1, matchups: r.matchups || r });
+        }
 
         const regContainer = document.createElement('div');
         regContainer.className = `region-container ${config.mirrored ? 'mirrored' : ''}`;
@@ -467,6 +475,7 @@ function renderBracketWaterfall(data) {
 
         rounds.forEach((r) => {
             const col = columns[r.round - 1];
+            if (!col) return;
             const span = Math.pow(2, r.round);
             
             r.matchups.forEach((m, mIdx) => {
@@ -717,30 +726,45 @@ document.addEventListener('DOMContentLoaded', () => {
         yearSelect.addEventListener('change', (e) => {
             appState.year = e.target.value;
             fetchTeams(appState.year);
-            renderInitialBracket(); /* Change from runSimulation */
+            renderMMBracket(); 
         });
     }
 
-    renderInitialBracket(); /* Change from runSimulation */
+    renderMMBracket(); 
 
     initInteractiveZoom();
+    
+    document.getElementById('run-simulation-btn')?.addEventListener('click', () => {
+        const btn = document.getElementById('run-simulation-btn');
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = `<span style="display:inline-block; animation: spin 1s linear infinite; margin-right:8px;">↻</span>SIMULATING...`;
+        btn.style.pointerEvents = 'none';
+        
+        runSimulation().finally(() => {
+            btn.innerHTML = originalHtml;
+            btn.style.pointerEvents = 'auto';
+        });
+    });
 
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', () => {
-            const mode = btn.getAttribute('data-mode');
+            const mode = btn.dataset.mode;
+            if (!mode) return;
             
-            if (mode === 'settings') {
-                document.getElementById('settings-panel')?.classList.add('active');
-                document.body.classList.add('mode-sandbox');
-                // Don't switch the active class for simulation modes if we just click settings
-                return;
-            }
-
+            // Update app state and UI
+            appState.mode = mode;
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            appState.mode = mode;
-            document.getElementById('settings-panel')?.classList.remove('active');
+
+            if (mode === 'settings') {
+                const panel = document.getElementById('settings-panel');
+                if (panel) panel.classList.add('active');
+                return;
+            }
             
+            // For other modes, ensure settings panel is closed
+            document.getElementById('settings-panel')?.classList.remove('active');
+
             if (appState.mode === 'standard') {
                 document.body.classList.remove('mode-sandbox');
             } else {
@@ -751,25 +775,21 @@ document.addEventListener('DOMContentLoaded', () => {
             if (appState.mode === 'average') applyWeights(appState.optimalWeights);
             else if (appState.mode === 'perfect') applyWeights(appState.perfectWeights);
             
-            renderInitialBracket();
+            renderMMBracket();
         });
     });
 
-    // Start Round Buttons
-    document.getElementById('start-r64-btn')?.addEventListener('click', () => startFromRound('r64'));
-    document.getElementById('start-r32-btn')?.addEventListener('click', () => startFromRound('r32'));
-    document.getElementById('sync-live-btn')?.addEventListener('click', syncLiveBracket);
-    document.querySelectorAll('.close-settings').forEach(btn => {
-        btn.onclick = () => document.getElementById('settings-panel')?.classList.remove('active');
-    });
+    // Consolidated Sync Button
+    const btnSyncLive = document.getElementById('btn-sync-current');
+    if (btnSyncLive) btnSyncLive.addEventListener('click', () => syncStartRound('live'));
 
-    const runSimBtn = document.getElementById('run-simulation-btn');
-    if (runSimBtn) {
-        runSimBtn.onclick = () => {
-            runSimBtn.classList.add('pulse');
-            setTimeout(() => runSimBtn.classList.remove('pulse'), 400);
-            runSimulation();
-        };
+    const btnCloseSettings = document.getElementById('close-settings-btn');
+    const panelSettings = document.getElementById('settings-panel');
+
+    if (btnCloseSettings) {
+        btnCloseSettings.addEventListener('click', () => {
+            panelSettings.style.display = 'none';
+        });
     }
 
     // Toggle Panels
@@ -791,26 +811,63 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchTeams(appState.year);
 });
 
-async function startFromRound(round) {
+async function syncStartRound(round) {
+    let btnId = 'btn-sync-current';
+    if (round !== 'live') btnId = `btn-lock-${round}`;
+    const btn = document.getElementById(btnId);
+    const originalText = btn ? btn.innerHTML : '';
+    
+    if (btn) {
+        btn.innerHTML = `<span style="display:inline-block; animation: spin 1s linear infinite; margin-right: 8px;">↻</span>${btn.innerText}`;
+        btn.style.pointerEvents = 'none';
+        btn.style.opacity = '0.7';
+    }
+    
+    // Artificial delay to ensure spinner renders on localhost
+    await new Promise(r => setTimeout(r, 500));
+    
+    if (round === 'live') {
+        try {
+            const response = await fetch(`/api/sync/live?year=${appState.year}`, { method: 'POST' });
+            const data = await response.json();
+            alert(data.message || data.error);
+            appState.mode = 'standard';
+            await fetchTeams(appState.year);
+            renderMMBracket(); 
+        } catch (err) {
+            console.error(err);
+            alert("Failed to sync live bracket.");
+        } finally {
+            if (btn) {
+                btn.innerHTML = originalText;
+                btn.style.pointerEvents = 'auto';
+                btn.style.opacity = '1';
+            }
+        }
+        return;
+    }
+
     try {
         const response = await fetch(`/api/sync/start_round?round=${round}&year=${appState.year}`, { 
             method: 'POST' 
         });
         const result = await response.json();
-        
-        if (!response.ok) {
-            alert(`Error: ${result.error || 'Failed to start round'}`);
-            return;
+        if (response.ok) {
+            alert(`Success: ${result.message}`);
+            await fetchTeams(appState.year);
+            renderMMBracket();
+        } else {
+            alert(`Error: ${result.error}`);
         }
-
-        // Reset and Re-render
-        appState.mode = 'standard';
-        renderInitialBracket(); 
-        alert(result.message);
-        
     } catch (err) {
-        console.error("Start round failed:", err);
-        alert("Failed to start from chosen round.");
+        console.error("Sync error:", err);
+        alert("Failed to start round synchronization");
+    } finally {
+        if (btn) {
+            btn.innerHTML = originalText;
+            btn.style.pointerEvents = 'auto';
+            btn.style.opacity = '1';
+        }
     }
 }
 
@@ -822,7 +879,7 @@ async function syncLiveBracket() {
         const response = await fetch(`/api/sync/live?year=${appState.year}`, { method: 'POST' });
         if (response.ok) {
             appState.mode = 'standard';
-            await renderInitialBracket();
+            await renderMMBracket();
             alert("Bracket synced with live data.");
         }
     } catch (err) {
@@ -836,5 +893,19 @@ async function syncLiveBracket() {
 window.appState = appState;
 window.globalResetSimulation = () => {
     appState.locks = { regions: {}, final_four: {}, championship: {} };
-    renderInitialBracket();
+    renderMMBracket();
 };
+
+// Backdrop dismissal for modals
+document.addEventListener('click', (e) => {
+    const overlay = document.querySelector('.modal-overlay');
+    const settings = document.getElementById('settings-panel');
+    if (e.target === overlay) {
+        overlay.style.display = 'none';
+        overlay.classList.remove('active');
+    }
+    if (e.target === settings) {
+        settings.style.display = 'none';
+        settings.classList.remove('active');
+    }
+});

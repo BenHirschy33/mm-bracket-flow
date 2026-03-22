@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/css/styles.css">
+    <link rel="stylesheet" href="/static/css/styles.css?v=2.0">
 </head>
 <body class="theme-deep-midnight">
     <div class="bg-vignette"></div>
@@ -29,18 +29,15 @@
                 </select>
                 <div class="divider"></div>
                 <div class="tab-nav">
-                    <button class="tab-btn active" data-mode="standard">Standard Overview</button>
                     <button class="tab-btn" data-mode="settings">Simulation Settings</button>
                     <button class="tab-btn" data-mode="average">Average Bracket</button>
                     <button class="tab-btn" data-mode="perfect">Perfect Bracket</button>
                 </div>
-            </div>
-            <div class="action-group">
-                <button id="sync-live-btn" class="premium-btn secondary" title="Sync Current Bracket">🔄 Sync</button>
-                <button id="start-r64-btn" class="premium-btn secondary">Start R64</button>
-                <button id="start-r32-btn" class="premium-btn secondary">Start R32</button>
                 <div class="divider"></div>
-                <button id="run-simulation-btn" class="premium-btn primary accent big" style="padding: 0.8rem 2rem; font-weight: 800; letter-spacing: 0.05rem;">RUN SIMULATION</button>
+                <button class="tab-btn" data-mode="overview">Standard Overview</button>
+                <button id="btn-sync-current" class="premium-btn secondary">Sync Live Results 🔄</button>
+                <div class="divider"></div>
+                <button id="run-simulation-btn" class="premium-btn primary accent big">RUN SIMULATION</button>
                 <div id="live-indicator" class="live-badge" style="display: none; margin-left: 1rem;">LIVE</div>
             </div>
         </div>
@@ -50,11 +47,9 @@
 
         <!-- Floating Settings Panel -->
         <div id="settings-panel" class="settings-modal">
-            <div class="settings-content glass">
-                <div class="settings-header">
-                    <h2>Simulation Settings</h2>
-                    <button class="close-settings">&times;</button>
-                </div>
+            <div class="modal-content glass">
+                <button id="close-settings-btn" class="close-btn">&times;</button>
+                <h3>Simulation Weights</h3>
                 
                 <section id="simulation-controls" class="sidebar-card">
                     <div class="sidebar-header">
@@ -248,6 +243,6 @@
         </div>
     </div>
 
-    <script src="/static/js/main.js" type="module"></script>
+    <script src="/static/js/main.js?v=2.0" type="module"></script>
 </body>
 </html>

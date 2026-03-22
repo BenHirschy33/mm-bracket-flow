@@ -126,7 +126,8 @@ def sync_live_data(year=2026):
     
     if actual_results_path.exists():
         with open(actual_results_path, 'r') as f:
-            actual_results = json.load(f)
+            content = f.read().strip()
+            actual_results = json.loads(content) if content else {}
     else:
         actual_results = {
             "round_of_32": [],
@@ -163,6 +164,12 @@ def sync_live_data(year=2026):
                     break
         
         if winner_name:
+            if round_key not in actual_results:
+                if round_key == "champion":
+                    actual_results[round_key] = None
+                else:
+                    actual_results[round_key] = []
+
             if round_key == "champion":
                 if actual_results["champion"] != winner_name:
                     actual_results["champion"] = winner_name
@@ -175,6 +182,7 @@ def sync_live_data(year=2026):
                 if winner_name not in actual_results[round_key]:
                     actual_results[round_key].append(winner_name)
                     updates_found = True
+                    logging.info(f"Added {winner_name} to {round_key}")
                     logging.info(f"Added {winner_name} to {round_key}")
 
     if updates_found:

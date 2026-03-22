@@ -7,6 +7,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(base_dir, '..')))
 from flask import Flask, render_template, jsonify, request
 from flask_cors import CORS
 from pathlib import Path
+import json
 
 from core.parser import load_teams, load_bracket
 from core.simulator import SimulatorEngine
@@ -165,29 +166,50 @@ def sync_start_round():
         "champion": ""
     }
 
+    valid_rounds = {
+        'r64': [], 
+        'r32': ["round_of_32"],
+        'r16': ["round_of_32", "sweet_sixteen"],
+        'r8': ["round_of_32", "sweet_sixteen", "elite_eight"],
+        'r4': ["round_of_32", "sweet_sixteen", "elite_eight", "final_four"],
+        'r2': ["round_of_32", "sweet_sixteen", "elite_eight", "final_four", "champion"]
+    }
+
+    if round_name not in valid_rounds:
+        return jsonify({"error": "Unsupported round selection"}), 400
+
     if round_name == 'r64':
-        # Just reset
         with open(path, 'w') as f:
             json.dump(results, f, indent=2)
         return jsonify({"message": "Reset to Round of 64 baseline", "count": 0})
 
-    # For R32, we need R64 games to be final
-    if round_name == 'r32':
-        # Trigger a sync first to pull latest data
-        from scripts.sync_live_data import sync_live_data
-        sync_live_data(year)
-        
-        with open(path, 'r') as f:
-            current = json.load(f)
-        
-        # In our logic, round_of_32 in JSON stores the winners of Round of 64
-        count = len(current.get("round_of_32", []))
-        if count == 0:
-            return jsonify({"error": "No Round of 64 results found yet in live data.", "count": 0}), 400
-            
-        return jsonify({"message": f"Locked {count} teams for Round of 32", "count": count})
+    from scripts.sync_live_data import sync_live_data
+    sync_live_data(year)
+    
+    with open(path, 'r') as f:
+        content = f.read().strip()
+        current = json.loads(content) if content else results
 
-    return jsonify({"error": "Unsupported round selection"}), 400
+    allowed_keys = valid_rounds[round_name]
+    highest_key = allowed_keys[-1]
+    
+    count = len(current.get(highest_key, [])) if highest_key != 'champion' else (1 if current.get('champion') else 0)
+    
+    if count == 0:
+        friendly_name = highest_key.replace('_', ' ').title()
+        return jsonify({"error": f"No {friendly_name} winners found for {year} yet. (Data pending or round not reached).", "count": 0}), 400
+        
+    for k in results.keys():
+        if k not in allowed_keys:
+            if k == 'champion':
+                current[k] = ""
+            else:
+                current[k] = []
+
+    with open(path, 'w') as f:
+        json.dump(current, f, indent=2)
+
+    return jsonify({"message": f"Locked teams up to {round_name.upper()} start", "count": count})
 
 # Removed duplicate sync_live
 
@@ -578,30 +600,45 @@ def run_full_sim():
         ff_locks = locks.get('final_four', {})
         
         # Semi 1 Simulation
+        prob_ff1 = 0.5
         if mode == 'current' and not use_live_results: ff_1 = None
-        else: ff_1 = engine.simulate_game(e_win, s_win, mode=mode, round_num=5) if (e_win and s_win) else None
+        else: 
+            if e_win and s_win:
+                prob_ff1 = engine.calculate_win_probability(e_win, s_win, round_num=5)
+                ff_1 = engine.simulate_game(e_win, s_win, mode=mode, round_num=5)
+            else: ff_1 = None
 
         # Semi 2 Simulation
+        prob_ff2 = 0.5
         if mode == 'current' and not use_live_results: ff_2 = None
-        else: ff_2 = engine.simulate_game(w_win, m_win, mode=mode, round_num=5) if (w_win and m_win) else None
+        else:
+            if w_win and m_win:
+                prob_ff2 = engine.calculate_win_probability(w_win, m_win, round_num=5)
+                ff_2 = engine.simulate_game(w_win, m_win, mode=mode, round_num=5)
+            else: ff_2 = None
         
         ff_winners = actual_results.get("final_four", [])
         ff_1_actual = use_live_results and ff_1 and ff_1.name in ff_winners
         ff_2_actual = use_live_results and ff_2 and ff_2.name in ff_winners
         
         sim_trace["final_four"] = [
-            {"team_a": e_win.name if e_win else "TBD", "seed_a": e_win.seed if e_win else None, "team_b": s_win.name if s_win else "TBD", "seed_b": s_win.seed if s_win else None, "winner": ff_1.name if ff_1 else None, "is_actual": ff_1_actual},
-            {"team_a": w_win.name if w_win else "TBD", "seed_a": w_win.seed if w_win else None, "team_b": m_win.name if m_win else "TBD", "seed_b": m_win.seed if m_win else None, "winner": ff_2.name if ff_2 else None, "is_actual": ff_2_actual}
+            {"team_a": e_win.name if e_win else "TBD", "seed_a": e_win.seed if e_win else None, "team_b": s_win.name if s_win else "TBD", "seed_b": s_win.seed if s_win else None, "winner": ff_1.name if ff_1 else None, "probability": prob_ff1 if ff_1 else None, "is_actual": ff_1_actual},
+            {"team_a": w_win.name if w_win else "TBD", "seed_a": w_win.seed if w_win else None, "team_b": m_win.name if m_win else "TBD", "seed_b": m_win.seed if m_win else None, "winner": ff_2.name if ff_2 else None, "probability": prob_ff2 if ff_2 else None, "is_actual": ff_2_actual}
         ]
         
         # Championship
+        prob_champ = 0.5
         if mode == 'current' and not use_live_results: champ = None
-        else: champ = engine.simulate_game(ff_1, ff_2, mode=mode, round_num=6) if (ff_1 and ff_2) else None
+        else:
+            if ff_1 and ff_2:
+                prob_champ = engine.calculate_win_probability(ff_1, ff_2, round_num=6)
+                champ = engine.simulate_game(ff_1, ff_2, mode=mode, round_num=6)
+            else: champ = None
         
         champ_winner = actual_results.get("champion")
         champ_actual = use_live_results and champ and champ.name == champ_winner
             
-        sim_trace["championship"] = {"team_a": ff_1.name if ff_1 else "TBD", "seed_a": ff_1.seed if ff_1 else None, "team_b": ff_2.name if ff_2 else "TBD", "seed_b": ff_2.seed if ff_2 else None, "winner": champ.name if champ else None, "is_actual": champ_actual}
+        sim_trace["championship"] = {"team_a": ff_1.name if ff_1 else "TBD", "seed_a": ff_1.seed if ff_1 else None, "team_b": ff_2.name if ff_2 else "TBD", "seed_b": ff_2.seed if ff_2 else None, "winner": champ.name if champ else None, "probability": prob_champ if champ else None, "is_actual": champ_actual}
         sim_trace["winner"] = champ.name if champ else None
         
         return jsonify(sim_trace)
@@ -615,6 +652,7 @@ def sync_live_results():
     try:
         import subprocess
         year = request.args.get('year', default=2026, type=int)
+        # Execute the sync script which gracefully appends to actual_results
         result = subprocess.run(["python3", "scripts/sync_live_data.py", "--year", str(year)], capture_output=True, text=True)
         if result.returncode == 0:
             return jsonify({"message": f"Successfully synced {year} tournament data.", "output": result.stdout})
@@ -624,4 +662,15 @@ def sync_live_results():
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
+    import os, signal, subprocess
+    try:
+        pids = subprocess.check_output(['lsof', '-t', '-i:5001']).decode().strip().split('\n')
+        for pid_str in pids:
+            if pid_str:
+                pid = int(pid_str)
+                if pid != os.getpid():
+                    os.kill(pid, signal.SIGKILL)
+                    print(f"Killed existing process {pid} on port 5001")
+    except Exception:
+        pass
     app.run(debug=True, port=5001)

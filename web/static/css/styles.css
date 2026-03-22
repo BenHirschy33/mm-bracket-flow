@@ -4,8 +4,8 @@
     left: 0;
     right: 0;
     height: 100px;
-    background: rgba(15, 20, 30, 0.85);
-    backdrop-filter: blur(25px);
+    background: rgba(10, 12, 18, 0.98); /* Near solid dark for logo contrast */
+    backdrop-filter: blur(30px);
     border-bottom: 1px solid var(--glass-border);
     z-index: 1000;
     display: flex;
@@ -14,25 +14,25 @@
     padding: 0 4rem;
 }
 
-.logo-container h1 {
+.logo-container h1, .glow-text {
     font-family: 'Outfit', sans-serif;
     font-weight: 800;
-    font-size: 1.8rem;
-    letter-spacing: 0.15rem;
+    font-size: 1.6rem;
+    letter-spacing: 0.12rem;
     margin: 0;
-    background: linear-gradient(135deg, #fff, var(--accent-gold));
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
+    color: #ffffff !important;
+    text-shadow: 0 0 15px rgba(255, 255, 255, 0.4);
+    background: none !important;
+    -webkit-text-fill-color: initial !important;
 }
 
 .logo-container .subtitle {
-    font-size: 0.75rem;
+    font-size: 0.65rem;
     text-transform: uppercase;
-    letter-spacing: 0.3rem;
+    letter-spacing: 0.2rem;
     color: var(--text-secondary);
     margin: 0;
-    margin-top: 2px;
+    margin-top: 1px;
 }
 
 .header-controls {
@@ -128,43 +128,51 @@
     --sidebar-width: 320px;
 }
 
+
+/* Redesigned Full-Screen Settings Panel */
 .settings-modal {
     position: fixed;
-    top: 0;
-    right: -420px;
-    width: 400px;
-    height: 100vh;
-    z-index: 1000;
-    transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.settings-modal.left {
-    right: auto;
-    left: -420px;
-    transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.settings-modal.center {
-    left: 50%;
-    transform: translateX(-50%);
-    top: -100vh;
-    bottom: auto;
-    height: auto;
-    width: 600px;
-    z-index: 1100;
-    transition: top 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    top: 100px;
+    left: 0;
+    width: 100%;
+    height: calc(100vh - 100px);
+    z-index: 900; /* Set beneath the glass-nav (1000) so it drops down from behind it */
+    background: rgba(10, 12, 18, 0.98);
+    backdrop-filter: blur(50px) saturate(180%);
+    transform: translateY(-100%);
+    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    overflow-y: auto;
+    display: flex;
+    justify-content: center;
+    padding: 0;
 }
 
 .settings-modal.active {
-    right: 0;
+    transform: translateY(0);
 }
 
-.settings-modal.left.active {
-    left: 0;
+.settings-modal .modal-content {
+    width: 100%;
+    max-width: 1400px;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 4rem 2rem;
+    position: relative;
+    color: var(--text-primary);
 }
 
-.settings-modal.center.active {
-    top: 100px;
+.settings-modal .close-btn {
+    position: absolute;
+    top: 2rem;
+    right: 3rem;
+    font-size: 3rem;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    z-index: 100;
+    transition: color 0.3s ease;
 }
 
 .settings-content {
@@ -351,11 +359,13 @@
 
 .region-container {
     display: grid;
-    grid-template-columns: repeat(4, 280px);
+    grid-template-columns: repeat(4, 250px);
     grid-template-rows: repeat(16, 60px);
     position: relative;
     border: none;
-    gap: 4rem; /* Wider round-to-round gaps */
+    gap: 3rem; /* Adjusted gap */
+    width: fit-content;
+    height: 960px; /* 16 * 60px */
 }
 
 .region-container.mirrored {
@@ -405,19 +415,23 @@
     to { transform: scale(1.05); opacity: 0.9; }
 }
 
-.region-container .round-column {
+/* Universal round-column styling - ensures rows are exactly 60px */
+.round-column {
     display: grid;
-    grid-template-rows: repeat(16, 60px);
-    width: 280px;
+    grid-template-rows: repeat(16, 60px); 
+    width: 240px;
     height: 100%;
-/* border removed */
     position: relative;
     pointer-events: none;
+    align-content: start;
+}
+
+.region-container .round-column {
+    grid-row: 1 / span 16;
 }
 
 .region-container.mirrored .round-column {
-    border-right: none;
-/* border removed */
+    direction: ltr; /* Reset for grid content */
 }
 
 /* Legacy regional blocks are removed in favor of a unified tournament grid */
@@ -445,12 +459,12 @@
 
 .round-column {
     display: grid;
-    grid-template-rows: repeat(64, 60px); /* Consistent 60px rows */
+    grid-template-rows: repeat(32, 60px); /* 32 for better alignment in unified view */
     width: 240px;
-    height: 100%;
-/* border removed */
+    height: auto;
     position: relative;
-    pointer-events: none; /* Clicks pass to cards */
+    pointer-events: none;
+    align-content: start;
 }
 
 /* Ensure cards in the grid have pointer events */
@@ -503,21 +517,22 @@
 }
 
 .matchup-card {
-    background: var(--glass-bg);
+    background: rgba(255, 255, 255, 0.03);
     border: 1px solid var(--glass-border);
     border-radius: 12px;
-    padding: 0 0.75rem;
-    position: relative;
-    transition: all 0.3s ease;
-    width: 100%;
-    height: 110px !important; /* Force uniform height across all rounds */
-    min-height: 110px !important;
-    max-height: 110px !important;
-    align-self: center;
+    padding: 0;
     display: flex;
     flex-direction: column;
     justify-content: center;
+    position: relative;
+    transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+    width: 100%;
+    height: 110px;
+    min-height: 110px;
+    max-height: 110px;
+    align-self: center;
     z-index: 10;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
 }
 
 .matchup-card.hero-champ {
@@ -639,6 +654,10 @@ body {
     opacity: 0.8;
     z-index: -2;
     animation: meshPulse 15s ease-in-out infinite alternate;
+}
+
+body.mode-sandbox .bg-mesh {
+    display: none;
 }
 
 @keyframes meshPulse {
@@ -847,9 +866,10 @@ main {
 }
 
 .control-groups {
-    display: flex;
-    flex-direction: column;
-    gap: 2.5rem;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 5rem;
+    align-items: start;
 }
 
 .group-title {
@@ -1478,10 +1498,11 @@ input[type="range"] {
 /* TBD Placeholder */
 .team-line.tbd {
     color: var(--text-secondary);
-    opacity: 0.3;
+    opacity: 0.15; /* Even fainter */
     font-style: italic;
-    background: rgba(255, 255, 255, 0.02);
+    background: transparent; /* Remove background to prevent layering look */
     border: none;
+    box-shadow: none;
 }
 
 .champ-winner-glow {
@@ -1504,18 +1525,86 @@ body.mode-sandbox .logo-container h1 {
 body.mode-sandbox::before {
     content: 'SANDBOX';
     position: fixed;
-    top: 5rem;
+    top: 50%;
     left: 50%;
-    transform: translateX(-50%);
-    font-size: 8rem;
-    font-weight: 900;
-    color: rgba(249, 115, 22, 0.05);
+    transform: translate(-50%, -50%);
+    font-size: 15rem;
+    font-weight: 950;
+    color: rgba(255, 255, 255, 0.015); /* Extremely subtle */
     pointer-events: none;
-    z-index: 0;
+    z-index: -1;
     letter-spacing: 2rem;
+    white-space: nowrap;
 }
 
 .matchup-card.is-actual {
     border-color: #22d3ee;
     box-shadow: 0 0 15px rgba(34, 211, 238, 0.2);
+}
+
+/* Dropdown Navigation Styles */
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 70px; /* Bridge the gap directly to the button */
+    left: 0;
+    min-width: 220px;
+    background: rgba(20, 25, 35, 0.98);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    padding: 12px;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.6);
+    z-index: 2000;
+}
+
+/* Invisible bridge and top-padding for stability */
+.dropdown-menu::before {
+    content: '';
+    position: absolute;
+    top: -20px;
+    left: 0;
+    right: 0;
+    height: 20px;
+}
+
+.dropdown:hover .dropdown-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.dropdown-item {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    padding: 0.8rem 1.2rem;
+    text-align: left;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.dropdown-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+}
+
+.dropdown-item hr {
+    border: none;
+    border-top: 1px solid var(--glass-border);
+    margin: 6px 0;
+}
+
+.arrow {
+    font-size: 0.7rem;
+    margin-left: 8px;
+    opacity: 0.7;
 }
