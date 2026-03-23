@@ -42,7 +42,7 @@ def heartbeat_monitor(stop_event):
             if stop_event.is_set(): break
             time.sleep(1)
 
-def promote_weights(mode):
+def promote_weights(mode, fitness=None, avg=None, acc=None):
     """
     Automates the promotion of optimized weights to the gold_standard.json 
     for UI consumption.
@@ -68,7 +68,7 @@ def promote_weights(mode):
         # Map mode to UI keys
         mode_map = {
             "balanced": "max_balanced",
-            "perfect": "max_champion",
+            "perfect": "max_perfect",
             "average": "max_avg"
         }
         ui_key = mode_map.get(mode)
@@ -78,13 +78,18 @@ def promote_weights(mode):
             "weights": new_weights,
             "meta": {
                 "timestamp": datetime.now().isoformat(),
-                "mode": mode
+                "mode": mode,
+                "fitness": fitness,
+                "avg_score": avg,
+                "champ_acc": acc
             }
         }
         
         with open(gold_path, 'w') as f:
             json.dump(gold_data, f, indent=2)
-        logging.info(f"[{mode.upper()}] PROMOTION SUCCESS: Updated {ui_key} in gold_standard.json")
+        
+        stats_str = f" | Fit: {fitness:.2f}" if fitness else ""
+        logging.info(f"[{mode.upper()}] PROMOTION SUCCESS: Updated {ui_key}{stats_str}")
     except Exception as e:
         logging.error(f"[{mode.upper()}] Promotion failed: {e}")
 
@@ -100,17 +105,16 @@ def run_mode_loop(mode, stop_event):
             # 1. Load 2025 Adjustments
             adjustments = get_v2025_adjustments()
             
-            # 2. Sweep iterations (Optimal frequency for adaptive controller)
-            iterations = 25000 
+            # 2. Sweep iterations (High-precision V5)
+            iterations = 1000000 
             logging.info(f"[{mode.upper()}] Starting sweep ({iterations} iterations, Jitter={jitter_scale:.2f})...")
             
             # Use --workers 3 to manage 11-core load (3 modes * 3 workers = 9 + overhead)
             cmd = [
-                "python3", "scripts/optimize_weights.py", 
+                "python3", "-u", "scripts/optimize_weights.py", 
                 "--iterations", str(iterations),
-                "--jitter-scale", str(jitter_scale),
-                "--mode", mode,
-                "--workers", "3"
+                "--jitter-scale", f"{jitter_scale:.4f}",
+                "--mode", mode
             ]
             process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
             
@@ -124,8 +128,14 @@ def run_mode_loop(mode, stop_event):
                 line_str = line.strip()
                 if "BEST" in line_str.upper() or "GLOBAL" in line_str.upper():
                     logging.info(f"[{mode.upper()}] {line_str}")
-                    # Real-time promotion to UI gold_standard.json
-                    promote_weights(mode)
+                    # Parse stats from string like: "[balanced] [6] ⭐ NEW BEST! Fit: -88.17 | Avg: 451.0 | Champ: 30.3%"
+                    try:
+                        fit_val = float(line_str.split("Fit:")[1].split("|")[0].strip())
+                        avg_val = float(line_str.split("Avg:")[1].split("|")[0].strip())
+                        acc_val = float(line_str.split("Champ:")[1].split("%")[0].strip()) / 100.0
+                        promote_weights(mode, fitness=fit_val, avg=avg_val, acc=acc_val)
+                    except (IndexError, ValueError):
+                        promote_weights(mode)
                 
                 if "Final Peak Fitness:" in line_str:
                     try:

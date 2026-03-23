@@ -37,3 +37,5 @@ Thumbs.db
 .agent/logs/
 local_lib/
 test_venv/
+.venv_opt
+.venv_fix

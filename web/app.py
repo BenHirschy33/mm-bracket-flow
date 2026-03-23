@@ -182,7 +182,7 @@ def get_preset_weights():
             elif mode == "balanced":
                 key = "max_balanced"
             else:
-                key = "max_champion"
+                key = "max_perfect"
 
             weights_dict = gold[key]["weights"]
             meta = gold[key].get("meta", {})

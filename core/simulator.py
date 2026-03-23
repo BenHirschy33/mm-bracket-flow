@@ -13,7 +13,7 @@ class SimulatorEngine:
         self.weights = weights
         self.locks = locks or {}
         self.actual_results = actual_results or {}
-        self.volatility = 0.0 # Blending factor (0.0 = pure metrics, 1.0 = pure random)
+        self.volatility = self.weights.base_volatility # Blending factor (0.0 = pure metrics, 1.0 = pure random)
         # Stateful tracking for "Due Factor" (Reset per simulation run)
         self.upset_count = 0
         self.total_games = 0

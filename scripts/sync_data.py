@@ -10,8 +10,17 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "local_lib"))
 import argparse
 import csv
 import json
-import cloudscraper
 import pandas as pd
+import sys
+import os
+
+# Mac permissions hack: load pandas from system, then load cloudscraper from .venv_fix
+sys.path.append(os.path.join(os.getcwd(), '.venv_fix', 'lib', 'python3.11', 'site-packages'))
+try:
+    import cloudscraper
+except ImportError:
+    print("cloudscraper not found in .venv_fix. Please run: .venv_fix/bin/pip install cloudscraper")
+    sys.exit(1)
 
 def safe_float(val):
     try:

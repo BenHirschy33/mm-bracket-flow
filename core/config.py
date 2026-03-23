@@ -6,6 +6,9 @@ from typing import Dict, Any
 
 @dataclass
 class SimulationWeights:
+    # --- Integration & Meta ---
+    base_volatility: float = 0.0  # Base volatility index to blend purely statistical predictions
+
     # --- Performance & Efficiency ---
     trb_weight: float = 0.7106
     to_weight: float = 3.0491
