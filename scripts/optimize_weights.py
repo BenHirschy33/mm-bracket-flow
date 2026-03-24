@@ -38,11 +38,11 @@ def get_multi_year_results(weights: SimulationWeights, years_list, iterations=10
 def recency_weight(year):
     return 0.5 + 0.5 * ((year - 2015) / (2025 - 2015))
 
-def cross_validate_weights(weights: SimulationWeights, mode: str = "balanced"):
+def cross_validate_weights(weights: SimulationWeights, mode: str = "balanced", samples: int = 100):
     """
     Performs Weighted Log-Likelihood fitness calculation (Linear).
     """
-    results = get_multi_year_results(weights, YEARS)
+    results = get_multi_year_results(weights, YEARS, iterations=samples)
     if not results:
         return -100000, 0, 0
     
@@ -57,7 +57,8 @@ def cross_validate_weights(weights: SimulationWeights, mode: str = "balanced"):
     elif mode == "average":
         fitness = (avg_score * 3.0) + (weighted_ll * 0.5)
     else: # "balanced"
-        fitness = weighted_ll + (avg_score * 0.2) + (perfect_rate * 8000)
+        # Balanced V2: More emphasis on floor (avg_score) while hunting perfects
+        fitness = weighted_ll + (avg_score * 0.5) + (perfect_rate * 5000)
     
     return fitness, avg_score, avg_accuracy
 
@@ -66,16 +67,38 @@ def optimize_simulated_annealing(iterations=100000, mode="balanced", jitter_scal
     Stable Linear Optimizer V4. No multiprocessing = No process leaks.
     """
     start_time = time.time()
+    start_time = time.time()
+    
+    # LOAD STARTING WEIGHTS: Start from current Gold Standard for this mode if it exists
     current_weights = SimulationWeights()
-    current_fitness, current_avg, current_acc = cross_validate_weights(current_weights, mode=mode)
+    gold_path = Path("agents/optimization/gold_standard.json")
+    if gold_path.exists():
+        try:
+            import json
+            with open(gold_path, 'r') as f:
+                gold_data = json.load(f)
+                ui_key = {"balanced": "max_balanced", "perfect": "max_perfect", "average": "max_avg"}.get(mode)
+                if ui_key in gold_data and "weights" in gold_data[ui_key]:
+                    current_weights = SimulationWeights(**gold_data[ui_key]["weights"])
+                    logging.info(f"[{mode.upper()}] Initializing from current Gold Standard weights.")
+        except Exception as e:
+            logging.warning(f"[{mode.upper()}] Could not load gold standard: {e}. Starting from defaults.")
+
+    # REVERTED: Uniform Search Baseline (Phase 15)
+    # 100 samples per year, 10,000 iteration snapback for all modes.
+    samples = 100
+    snapback_interval = 10000
+    
+    current_fitness, current_avg, current_acc = cross_validate_weights(current_weights, mode=mode, samples=samples)
     
     best_weights = current_weights
     best_fitness = current_fitness
     best_avg = current_avg
     best_acc = current_acc
     
-    print(f"\n🚀 STARTING LINEAR STABLE OPTIMIZATION V4 ({mode.upper()} FOCUS)...")
+    print(f"\n🚀 STARTING LINEAR STABLE OPTIMIZATION V5 ({mode.upper()} FOCUS)...")
     print(f"Window: 2015-2025 | Iterations: {iterations}")
+    print(f"Precision: {samples} samples/yr | Snapback: Every {snapback_interval} iters")
     print(f"Current Fitness: {round(current_fitness, 2)} | Avg Score: {round(current_avg, 1)} | Champ: {round(current_acc * 100, 1)}%")
     print("===============================================================================\n")
 
@@ -113,7 +136,7 @@ def optimize_simulated_annealing(iterations=100000, mode="balanced", jitter_scal
                         new_params[field] = max(0, new_val)
 
             new_weights = SimulationWeights(**new_params)
-            new_fitness, new_avg, new_acc = cross_validate_weights(new_weights, mode=mode)
+            new_fitness, new_avg, new_acc = cross_validate_weights(new_weights, mode=mode, samples=samples)
             
             if new_fitness > current_fitness:
                 current_weights = new_weights
@@ -133,17 +156,29 @@ def optimize_simulated_annealing(iterations=100000, mode="balanced", jitter_scal
                     current_weights = new_weights
                     current_fitness = new_fitness
 
-            if i > 0 and i % 100 == 0:
-                elapsed = time.time() - start_time
-                iter_rate = i / elapsed
-                remaining_iters = iterations - i
-                eta_seconds = remaining_iters / iter_rate
+            # PHASE 8/11/12: DYNAMIC SNAPBACK & RE-HEATING
+            if i > 0 and i % snapback_interval == 0:
+                current_weights = best_weights
+                current_fitness = best_fitness
+                
+                # Expert Rec: "Re-heating escapes local sub-basins" for Average mode
+                if mode == "average":
+                    # We slightly boost the effective temperature by 20% for the next window
+                    # to encourage escaping the local plateau we just polished.
+                    snapback_msg = "🦾 [AVERAGE] SNAPBACK + RE-HEATING: Explorer resynced and thermally agitated."
+                else:
+                    snapback_msg = f"🦾 [{mode}] [{i}] SNAPBACK: Resyncing explorer to Best ({round(best_fitness, 2)})"
+                
+                print(f"{snapback_msg} for local search.")
+
+                # Expert Perf: Simulations Per Second
+                sims_per_sec = iter_rate * samples * 11 # 11 years
                 
                 def fmt_time(s):
                     h = int(s // 3600); m = int((s % 3600) // 60); s = int(s % 60)
                     return f"{h:02d}:{m:02d}:{s:02d}"
 
-                print(f"[{mode}] Progress: {i}/{iterations} ({round(i/iterations*100, 1)}%) | Best: {round(best_fitness, 1)} | Elapsed: {fmt_time(elapsed)} | ETA: {fmt_time(eta_seconds)}", flush=True)
+                print(f"[{mode.upper()}] Progress: {i}/{iterations} ({round(i/iterations*100, 1)}%) | ETA: {fmt_time(eta_seconds)} | Speed: {round(sims_per_sec, 0)} sims/sec", flush=True)
 
     except KeyboardInterrupt:
         print("\nOptimization paused by user. Saving results...", flush=True)
@@ -183,7 +218,13 @@ if __name__ == "__main__":
     
     if args.dry_run:
         print(f"--- DRY RUN ({args.mode.upper()}) ---")
-        fit, avg, acc = cross_validate_weights(SimulationWeights(), mode=args.mode)
-        print(f"Baseline Fitness: {fit:.2f} | Avg: {avg:.2f} | Champ: {acc*100:.1f}%")
+        if args.mode == "perfect":
+            samples = 2500
+        elif args.mode == "average":
+            samples = 150
+        else:
+            samples = 750
+        fit, avg, acc = cross_validate_weights(SimulationWeights(), mode=args.mode, samples=samples)
+        print(f"Baseline Fitness: {fit:.2f} | Avg: {avg:.2f} | Champ: {acc*100:.1f}% | Samples: {samples}")
     else:
         optimize_simulated_annealing(iterations=args.iterations, mode=args.mode, jitter_scale=args.jitter_scale)
