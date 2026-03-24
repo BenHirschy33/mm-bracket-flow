@@ -126,7 +126,8 @@ class SimulatorEngine:
         sq_margin_b = sq_off_b - sq_def_b
         
         # Foundational matchup math shift (Phase 3.1)
-        delta = (sq_margin_a - sq_margin_b) * 0.1 * self.weights.sq_margin_weight
+        # Combined with Cycle 4 Advanced Metric update to avoid double-counting
+        delta = (sq_margin_a - sq_margin_b) * 0.15 * self.weights.sq_margin_weight
         
         # Step 2: Advanced Metric Modifiers
         # Seed Advantage (Psychological / Historical baseline)
@@ -150,16 +151,6 @@ class SimulatorEngine:
         delta += (self._get_metric(team_a, 'total_games', 30) - self._get_metric(team_b, 'total_games', 30)) * 0.02 * self.weights.experience_weight
 
         # --- Advanced Modern Metrics (Cycle 4) ---
-        # Adj SQ Margin (Process-based Expected Value)
-        sq_off_a = self._get_metric(team_a, 'adj_off_sq', team_a.off_efficiency or 100.0)
-        sq_def_a = self._get_metric(team_a, 'adj_def_sq', team_a.def_efficiency or 100.0)
-        sq_off_b = self._get_metric(team_b, 'adj_off_sq', team_b.off_efficiency or 100.0)
-        sq_def_b = self._get_metric(team_b, 'adj_def_sq', team_b.def_efficiency or 100.0)
-        
-        sq_margin_a = sq_off_a - sq_def_a
-        sq_margin_b = sq_off_b - sq_def_b
-        delta += (sq_margin_a - sq_margin_b) * 0.05 * self.weights.sq_margin_weight
-
         # Kill Shot Differential (Momentum Multiplier)
         ks_diff_a = self._get_metric(team_a, 'kill_shots_scored', 0.0) - self._get_metric(team_a, 'kill_shots_conceded', 0.0)
         ks_diff_b = self._get_metric(team_b, 'kill_shots_scored', 0.0) - self._get_metric(team_b, 'kill_shots_conceded', 0.0)

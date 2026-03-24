@@ -67,6 +67,7 @@ def evaluate_bracket(year: int, weights: SimulationWeights, iterations: int = 1)
     points = {1: 10, 2: 20, 3: 40, 4: 80, 5: 160, 6: 320}
     regions = bracket_data.get("regions", {})
 
+    all_scores = []
     for _ in range(iterations):
         engine.reset_state()
         sim_score = 0
@@ -91,7 +92,6 @@ def evaluate_bracket(year: int, weights: SimulationWeights, iterations: int = 1)
                     winner = teams_data.get(winner_name) or Team(name=winner_name, seed=16, off_efficiency=100.0, def_efficiency=100.0, off_ppg=70.0, def_ppg=70.0)
                     current_teams.append(winner)
                     
-                    # Update Likelihood if this was the first iteration
                     if _ == 0:
                         actual_winner_name = t_h.name if normalize_team_name(t_h.name) in actual_r32 else t_l.name
                         p_correct = prob_h if actual_winner_name == t_h.name else (1.0 - prob_h)
@@ -112,11 +112,8 @@ def evaluate_bracket(year: int, weights: SimulationWeights, iterations: int = 1)
                     next_round.append(winner)
                     
                     if _ == 0:
-                        # Find which of these was the actual winner for likelihood
                         is_a_actual = normalize_team_name(t_a.name) in actuals[r_idx-1]
                         is_b_actual = normalize_team_name(t_b.name) in actuals[r_idx-1]
-                        # This likelihood part is tricky because the matchup might not be actual.
-                        # We only count it if at least one was an actual winner.
                         if is_a_actual: total_log_likelihood += math.log(max(0.001, prob_a))
                         elif is_b_actual: total_log_likelihood += math.log(max(0.001, 1.0 - prob_a))
                     
@@ -125,32 +122,31 @@ def evaluate_bracket(year: int, weights: SimulationWeights, iterations: int = 1)
             
             final_four_field.append(current_teams[0])
 
-        # F4 and Championship
-        # Simplified: Just check champion for likelihood
         if len(final_four_field) == 4:
             ff1_name = engine.simulate_matchup(final_four_field[0].name, final_four_field[1].name, round_num=5)
             ff2_name = engine.simulate_matchup(final_four_field[2].name, final_four_field[3].name, round_num=5)
             champ_name = engine.simulate_matchup(ff1_name, ff2_name, round_num=6)
-            if _ == 0:
-                # Likelihood of actual champion winning if they were in the final
-                # (Skipping deep path tracking for speed, the R1-R4 likelihood is 90% of the signal)
-                pass 
             if normalize_team_name(champ_name) == actual_champion:
                 sim_score += points[6]
                 champion_hits += 1
         
         total_score += sim_score
+        all_scores.append(sim_score)
         if sim_score > peak_score: peak_score = sim_score
         if sim_score >= 800: elite_hits += 1
         if sim_score == 1920: perfect_hits += 1
 
+    sorted_scores = sorted(all_scores, reverse=True)
+    top_subset = sorted_scores[:max(10, int(iterations * 0.01))]
+
     return {
         "avg_score": total_score / iterations,
-        "log_likelihood": total_log_likelihood, # The "Perfect Bracket" proxy
+        "log_likelihood": total_log_likelihood, 
         "champion_accuracy": champion_hits / iterations,
         "elite_rate": elite_hits / iterations,
         "perfect_rate": perfect_hits / iterations,
-        "peak_score": float(peak_score)
+        "peak_score": float(peak_score),
+        "top_scores": top_subset 
     }
 
 if __name__ == "__main__":

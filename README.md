@@ -26,11 +26,40 @@ The UI communicates with `gold_standard.json` via three primary optimized payloa
 - `/scripts`: Data synchronization and autonomous optimization tools.
 - `/years`: Historical data (2015-2025) used for authoritative back-testing.
 
-### Running the Optimizer
+### Running the Optimizer (2025 Standard)
+The most authoritative way to run the simulation is via the **Phase 14 Epoch Pipeline**:
 ```bash
-# To run the 100k iteration autonomous sweep in the background:
-nohup python3 scripts/autonomous_optimizer.py > optimize_run.log 2>&1 &
+# RECOMMENDED: Runs Scout (250k) -> Fork (Polish/Deep Space)
+python3 scripts/autonomous_optimizer.py --pipeline
 ```
+
+### Log Maintenance
+- Optimization logs are stored in `agents/optimization/`.
+- Timestamped logs (e.g., `autonomous_optimizer_YYYYMMDD_HHMMSS.log`) are generated per run.
+- It is safe to delete old `.log` files and the `heartbeat.log` at any time to save space.
+- Keep the `.json` files as they contain the actual optimized weights.
+
+### 🦾 Maintenance & Process Control
+```bash
+# RECOVERY: Kill existing and start parallel sweeps (Manual)
+python3 scripts/relaunch_optimizer.py
+
+# EMERGENCY: Kill all optimization workers
+pkill -f scripts/optimize_weights.py && pkill -f scripts/autonomous_optimizer.py
+```
+
+### 🏔️ Optimizer Resilience & MacBook Settings
+The optimizer is built to be **indestructible** and **resumeable**:
+1. **Resume Logic**: Every time the script starts, it reads `gold_standard.json` to load your current high scores. It never starts from zero; it only tries to beat its current record.
+2. **MacBook Sleep**: If the laptop deep-sleeps, the process will pause.
+   - **Recommendation**: Leave the lid **open** and go to *System Settings > Battery* to prevent sleeping while on power.
+   - **Recovery**: If it stops, just run `python3 scripts/relaunch_optimizer.py`. It will clean up any zombie processes and resume exactly where it left off.
+3. **CPU Safety**: We use a surgical process manager. `scripts/relaunch_optimizer.py` ensures that only the optimizer is restarted, leaving your UI and other Python projects untouched.
+
+---
+
+## 📈 Behavior Notes
+- **Update Frequency**: You may notice `max_perfect` updating more often than `max_avg`. This is expected! "Perfect" mode chases high-variance breakthroughs, while "Average" mode focuses on stable statistical gains, which are harder to "beat" once a strong baseline is found.
 
 ---
 
