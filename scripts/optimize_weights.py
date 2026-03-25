@@ -165,7 +165,7 @@ def cross_validate_weights(weights: SimulationWeights, mode: str = "balanced", s
 
 def print_progress(mode, label, i, iterations, start_iter, start_time, fitness, avg, peak):
     """Unified progress formatter for heartbeats and new bests."""
-    percent = ((i - start_iter + 1) / max(1, iterations - start_iter)) * 100
+    percent = ((i + 1) / max(1, iterations)) * 100
     elapsed = time.time() - start_time
     iter_rate = (i - start_iter + 1) / max(0.1, elapsed)
     eta_seconds = (iterations - i) / max(0.01, iter_rate)
