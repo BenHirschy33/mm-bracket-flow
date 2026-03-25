@@ -41,26 +41,33 @@ The bridge between discovery and production is now automated. Every time a **NEW
 
 ## 🛠 Operation & Maintenance
 
-### Starting / Resuming the Marathon
-
-To start all three modes simultaneously in the background:
+### 1. Starting / Resuming the Marathon
+To start all three modes in the background (using unbuffered output for live monitoring):
 
 ```bash
-python3 scripts/optimize_weights.py --mode average --resume > agents/optimization/refine_average.log 2>&1 & \
-python3 scripts/optimize_weights.py --mode balanced --resume > agents/optimization/refine_balanced.log 2>&1 & \
-python3 scripts/optimize_weights.py --mode perfect --resume > agents/optimization/refine_perfect.log 2>&1 &
+python3 -u scripts/optimize_weights.py --mode average --resume > agents/optimization/refine_average.log 2>&1 &
+python3 -u scripts/optimize_weights.py --mode balanced --resume > agents/optimization/refine_balanced.log 2>&1 &
+python3 -u scripts/optimize_weights.py --mode perfect --resume > agents/optimization/refine_perfect.log 2>&1 &
 ```
 
-### Monitoring Progress
+### 2. Checking Status
+Check the current iteration, best fitness, and checkpoint age for any mode:
 
 ```bash
-# Follow the live discovery of new peaks
+python3 scripts/optimize_weights.py --mode perfect --status
+python3 scripts/optimize_weights.py --mode balanced --status
+```
+
+To watch the discovery of new peaks live:
+```bash
 tail -f agents/optimization/refine_*.log
 ```
 
+### 3. Stopping Safely (Soft Shutdown)
+Sends a `SIGINT` signal to the scripts. They will immediately save a safety checkpoint and exit.
+
 ```bash
-# Follow the live discovery of new peaks
-tail -f agents/optimization/refine_*.log
+pkill -2 -f "optimize_weights.py"
 ```
 
 ---
