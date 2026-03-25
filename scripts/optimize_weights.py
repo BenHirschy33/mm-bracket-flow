@@ -81,11 +81,9 @@ class StateManager:
             if old_pid != self.pid:
                 try:
                     os.kill(old_pid, 0)
-                    # Attempt to kill if stale (Phase 41)
-                    logging.warning(f"⚠️ [{self.mode.upper()}] Stale process {old_pid} found. Evicting...")
-                    os.kill(old_pid, signal.SIGTERM)
-                    time.sleep(1)
-                    return False # Successfully evicted
+                    # Found a live process
+                    print(f"⚠️  STALE PROCESS DETECTED (PID: {old_pid}). USE --restart TO OVERWRITE OR KILL MANUALLY.", flush=True)
+                    return True # Is stale (alive and not us)
                 except OSError:
                     pass
         return False
@@ -173,10 +171,42 @@ def print_progress(mode, label, i, iterations, start_iter, start_time, fitness, 
     timestamp = time.strftime("%H:%M:%S")
     print(f"[{timestamp}] [{mode.upper()}] [{i+1}/{iterations}] ({percent:.1f}%) ETA: {h_eta}h {m_eta}m | {label} | Fit: {fitness:.2f} | Avg: {avg:.2f} | Max: {peak:.2f}", flush=True)
 
-def optimize_simulated_annealing(mode="balanced", jitter_scale=1.0, iterations=None, load_state=None, resume=False, restart=False):
+def optimize_simulated_annealing(mode="balanced", jitter_scale=1.0, iterations=None, load_state=None, resume=False, restart=False, pause=False, status=False):
     """
     Resumable State Machine Optimizer V5 (Hardcoded Profiles).
     """
+    print(f"🚀 [{mode.upper()}] ENGINE INITIALIZING...", flush=True)
+
+    state_mgr = StateManager(mode)
+    signal_path = Path(f"agents/optimization/.signal_{mode}")
+
+    if pause:
+        with open(signal_path, "w") as f:
+            f.write("PAUSE")
+        print(f"✅ PAUSE signal sent to [{mode.upper()}]. It will exit at the next heartbeat.")
+        return
+
+    if status:
+        checkpoint = state_mgr.load()
+        if not checkpoint:
+            print(f"❌ No checkpoint found for mode: {mode}")
+            return
+        
+        age_mins = (time.time() - checkpoint.get("timestamp", 0)) / 60
+        fit = checkpoint.get("best_fitness", 0)
+        avg = checkpoint.get("best_espn_avg", 0)
+        mx = checkpoint.get("best_espn_max", 0)
+        cur_it = checkpoint.get("total_iterations_run", 0)
+        
+        print(f"--- [{mode.upper()}] STATUS ---")
+        print(f"Iteration: {cur_it}")
+        print(f"Best Fit:  {fit:.2f}")
+        print(f"ESPN Avg:  {avg:.1f}")
+        print(f"ESPN Max:  {mx:.0f}")
+        print(f"Age:       {age_mins:.1f} minutes")
+        print("-----------------------")
+        return
+
     config = MODE_CONFIGS.get(mode)
     if not config:
         logging.error(f"❌ [CRITICAL] Unknown mode: {mode}")
@@ -192,8 +222,7 @@ def optimize_simulated_annealing(mode="balanced", jitter_scale=1.0, iterations=N
     state_mgr = StateManager(mode)
     
     # Check for stale process
-    if restart and state_mgr.check_stale_process():
-        logging.error(f"⚠️ [ABORT] Stale process detected for mode {mode}. Close it first!")
+    if not restart and state_mgr.check_stale_process():
         return
           # 1. INITIAL HYDRATION (Gold Standard Baseline)
     gold_path = Path("agents/optimization/gold_standard.json")
@@ -363,6 +392,22 @@ def optimize_simulated_annealing(mode="balanced", jitter_scale=1.0, iterations=N
             if i % 100 == 0 or i % heartbeat_interval == 0:
                 best_metrics = {"sa_fitness": best_fitness, "espn_average": best_avg, "espn_max": best_max, "accuracy": best_acc}
                 state_mgr.save(current_weights, best_weights, temp_sa, i, best_metrics)
+                
+                # Signal Polling (Remote Control)
+                if signal_path.exists():
+                    try:
+                        with open(signal_path, "r") as f:
+                            sig = f.read().strip().upper()
+                        
+                        if sig == "PAUSE":
+                            print(f"\n[{time.strftime('%H:%M:%S')}] 🛑 PAUSE SIGNAL RECEIVED. EXITING SAFELY.", flush=True)
+                            signal_path.unlink()
+                            return
+                        elif sig == "SAVE":
+                            print(f"\n[{time.strftime('%H:%M:%S')}] 💾 SAVE SIGNAL RECEIVED. BACKUP COMPLETED.", flush=True)
+                            signal_path.unlink()
+                    except:
+                        pass
 
             # STAGNATION BREAK
             if i - last_best_iteration > stagnation_limit and i > 5000:
@@ -442,6 +487,8 @@ if __name__ == "__main__":
     parser.add_argument("--resume", action="store_true")
     parser.add_argument("--restart", action="store_true")
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--pause", action="store_true")
+    parser.add_argument("--status", action="store_true")
     args = parser.parse_args()
     
     if args.dry_run:
@@ -456,5 +503,7 @@ if __name__ == "__main__":
             iterations=None, # Use rigid MODE_CONFIGS
             load_state=args.load_state,
             resume=args.resume,
-            restart=args.restart
+            restart=args.restart,
+            pause=args.pause,
+            status=args.status
         )
