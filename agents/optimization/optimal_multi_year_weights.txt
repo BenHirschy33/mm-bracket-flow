@@ -1,3 +1,0 @@
-Phase 2 Best CV Fitness: 276.27660981322276
-Final Average Score: 306.6666666666667
-SimulationWeights(trb_weight=0.0, to_weight=6.045602607274068, sos_weight=7.634513123217654, momentum_weight=0.42411689591191576, efficiency_weight=0.17950082965188058, ft_weight=1.2461477388953786, three_par_weight=0.0, pace_variance_weight=0.0, intuition_weight=0.0, defense_premium=7.236091692962846)

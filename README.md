@@ -39,45 +39,26 @@ The bridge between discovery and production is now automated. Every time a **NEW
 
 ---
 
+## 🏁 Marathon Completion (March 26, 2026)
+
+The 2026 Optimization Marathon is officially complete. The engine has discovered and stabilized high-performance weights for all three target modes.
+
+### 🏆 Final Peak Performance
+- **Average Mode**: **211.41** (Elite Cubic Upside)
+- **Perfect Mode**: **14,708.24** (Convex Power-Law)
+- **Balanced Mode**: **99.44** (Synchronized Sync)
+
+---
+
 ## 🛠 Operation & Maintenance
 
-### 1. Starting / Resuming the Marathon
-To start all three modes in the background (using unbuffered output for live monitoring):
+### 1. Repository Hygiene
+As of March 26, all live logs and temporary artifacts have been removed. Mode-specific backups and checkpoints are archived in `agents/optimization/backups/`.
 
-```bash
-python3 -u scripts/optimize_weights.py --mode average --resume > agents/optimization/refine_average.log 2>&1 &
-python3 -u scripts/optimize_weights.py --mode balanced --resume > agents/optimization/refine_balanced.log 2>&1 &
-python3 -u scripts/optimize_weights.py --mode perfect --resume > agents/optimization/refine_perfect.log 2>&1 &
-```
-
-### 2. Checking Status
-Check the current iteration, best fitness, and checkpoint age for any mode:
-
-```bash
-python3 scripts/optimize_weights.py --mode perfect --status
-python3 scripts/optimize_weights.py --mode balanced --status
-```
-
-To watch the discovery of new peaks live:
-```bash
-tail -f agents/optimization/refine_*.log
-```
-
-### 3. Stopping Safely (Soft Shutdown)
-Sends a `SIGINT` signal to the scripts. They will immediately save a safety checkpoint and exit.
-
-```bash
-pkill -2 -f "optimize_weights.py"
-```
+### 2. Standard Promotion
+The final weights are stored in the master repository:
+`agents/optimization/gold_standard.json`
 
 ---
 
-## ⚖️ Implementation Rules (The "Zero-Weight" Policy)
-
-- **New Metrics**: Any newly added variables in `SimulationWeights` MUST default to **0.0**.
-- **Independence**: A new metric should have no effect on win probability until the Autonomous Optimizer has discovered a non-zero peak through exhaustive testing.
-- **Process Stability**: Using individual processes per mode to prevent macOS kernel congestion.
-
----
-
-*Verified for the 2026 Tournament Cycle. V5 Marathon Architecture deployed March 24, 2026.*
+*Mission Accomplished for the 2026 Tournament Cycle. V5 Marathon Architecture concludes March 26, 2026.*
