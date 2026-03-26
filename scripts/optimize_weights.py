@@ -65,8 +65,11 @@ class StateManager:
             "timestamp": time.time()
         }
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        with open(self.path, "w") as f:
+        # Atomic Write (Phase 112: PID Isolation)
+        temp_path = self.path.with_suffix(f".tmp.{os.getpid()}")
+        with open(temp_path, "w") as f:
             json.dump(state, f, indent=2)
+        os.replace(temp_path, self.path)
 
     def load(self):
         if not self.path.exists():
@@ -199,6 +202,7 @@ def optimize_simulated_annealing(mode="balanced", jitter_scale=1.0, iterations=N
     gold_path = Path("agents/optimization/gold_standard.json")
     gold_weights = SimulationWeights()
     gold_fitness = -1e9
+    gold_res = None
     
     if gold_path.exists():
         try:
@@ -207,50 +211,56 @@ def optimize_simulated_annealing(mode="balanced", jitter_scale=1.0, iterations=N
                 ui_key = {"balanced": "max_balanced", "perfect": "max_perfect", "average": "max_avg"}.get(mode)
                 if ui_key in gold_data and "weights" in gold_data[ui_key]:
                     gold_weights = SimulationWeights(**gold_data[ui_key]["weights"])
-                    # OPTIMIZATION: Use recorded fitness if available to skip 45min re-validation
-                    gold_fitness = gold_data[ui_key].get("meta", {}).get("fitness", -1e9)
-                    
-                    if gold_fitness == -1e9:
-                        print(f"🔍 [{mode.upper()}] No recorded baseline. Validating Gold Standard...", flush=True)
-                        res = cross_validate_weights(gold_weights, mode=mode, samples=samples)
-                        gold_fitness = res["sa_fitness"]
-                    
+                    print(f"🔍 [{mode.upper()}] Validating Gold Standard baseline...", flush=True)
+                    gold_res = cross_validate_weights(gold_weights, mode=mode, samples=samples)
+                    gold_fitness = gold_res["sa_fitness"]
                     print(f"🏆 [{mode.upper()}] Gold Standard Baseline: {gold_fitness:.2f}", flush=True)
         except Exception as e:
-            logging.error(f"Gold load failed: {e}")
+            logging.error(f"Gold load/validation failed: {e}")
 
     # 2. CHECKPOINT HYDRATION (Last Session State)
     checkpoint = state_mgr.load() if (resume and not restart) else None
     chk_weights = None
     chk_fitness = -1e9
+    chk_res = None
     
     if checkpoint:
-        chk_weights = SimulationWeights(**checkpoint["best_weights"])
-        # We don't re-run CV here, we trust the checkpoint's recorded fitness
-        chk_fitness = checkpoint.get("best_fitness", -1e9)
-        print(f"🦾 [{mode.upper()}] Checkpoint Record: {chk_fitness:.2f}", flush=True)
+        try:
+            chk_weights = SimulationWeights(**checkpoint["best_weights"])
+            print(f"🔍 [{mode.upper()}] Validating Checkpoint session...", flush=True)
+            chk_res = cross_validate_weights(chk_weights, mode=mode, samples=samples)
+            chk_fitness = chk_res["sa_fitness"]
+            print(f"🦾 [{mode.upper()}] Checkpoint Record: {chk_fitness:.2f}", flush=True)
+        except Exception as e:
+            logging.error(f"Checkpoint validation failed: {e}")
 
     # 3. THE DOUBLE-HYDRATION CONTEST (Winner becomes Start State)
     if chk_weights and chk_fitness > gold_fitness:
         print(f"🔥 [{mode.upper()}] Checkpoint wins the contest. Resuming from Iter {checkpoint['total_iterations_run']}", flush=True)
         best_weights = chk_weights
         best_fitness = chk_fitness
-        best_avg = checkpoint.get("best_espn_avg", 0)
-        best_max = checkpoint.get("best_espn_max", 0)
-        best_acc = checkpoint.get("best_accuracy", 0)
+        best_avg = chk_res["espn_average"]
+        best_max = chk_res["espn_max"]
+        best_acc = chk_res["accuracy"]
         start_iter = checkpoint["total_iterations_run"]
         temp_sa = checkpoint["temperature"] * 1.25 # Thermal Re-heat
     else:
         winner_source = "Gold Standard" if gold_fitness > -1e9 else "Default"
-        print(f"⭐ [{mode.upper()}] {winner_source} wins (or is the only choice). Starting Fresh @ Peak.", flush=True)
+        print(f"⭐ [{mode.upper()}] {winner_source} wins the contest. Starting Fresh @ Peak.", flush=True)
         best_weights = gold_weights
-        best_fitness = gold_fitness if gold_fitness > -1e9 else 0
-        # Re-run result extraction for full metrics if Gold won
-        init_res = cross_validate_weights(best_weights, mode=mode, samples=samples)
-        best_avg = init_res["espn_average"]
-        best_max = init_res["espn_max"]
-        best_acc = init_res["accuracy"]
-        best_fitness = init_res["sa_fitness"]
+        best_fitness = gold_fitness
+        if gold_res:
+            best_avg = gold_res["espn_average"]
+            best_max = gold_res["espn_max"]
+            best_acc = gold_res["accuracy"]
+        else:
+            # Fallback for default weights
+            init_res = cross_validate_weights(best_weights, mode=mode, samples=samples)
+            best_avg = init_res["espn_average"]
+            best_max = init_res["espn_max"]
+            best_acc = init_res["accuracy"]
+            best_fitness = init_res["sa_fitness"]
+        
         start_iter = checkpoint["total_iterations_run"] if checkpoint else 0
         temp_sa = checkpoint["temperature"] * 1.25 if checkpoint else 1.0
 
@@ -410,25 +420,35 @@ def save_weights(weights, fitness, avg, acc, peak, mode="unknown"):
 
         # 2. Sync to Master Gold Standard (Phase 107: Auto-Sync)
         gold_path = Path("agents/optimization/gold_standard.json")
-        if gold_path.exists():
-            with open(gold_path, "r") as f:
-                gold_data = json.load(f)
-            
-            ui_key = {"balanced": "max_balanced", "perfect": "max_perfect", "average": "max_avg"}.get(mode)
-            if ui_key:
-                gold_data[ui_key] = {
-                    "weights": dataclasses.asdict(weights),
-                    "meta": {
-                        "mode": mode,
-                        "fitness": fitness,
-                        "avg_score": avg,
-                        "espn_max": peak,
-                        "timestamp": meta["timestamp"]
-                    }
-                }
-                with open(gold_path, "w") as f:
-                    json.dump(gold_data, f, indent=2)
-                # logging.info(f"✨ [{mode.upper()}] Master Gold Standard Synchronized.")
+        for attempt in range(5):
+            try:
+                if gold_path.exists():
+                    with open(gold_path, "r") as f:
+                        gold_data = json.load(f)
+                    
+                    ui_key = {"balanced": "max_balanced", "perfect": "max_perfect", "average": "max_avg"}.get(mode)
+                    if ui_key:
+                        gold_data[ui_key] = {
+                            "weights": dataclasses.asdict(weights),
+                            "meta": {
+                                "mode": mode,
+                                "fitness": fitness,
+                                "avg_score": avg,
+                                "espn_max": peak,
+                                "timestamp": meta["timestamp"]
+                            }
+                        }
+                        # Atomic Write (Phase 112: PID Isolation / Prevent JSON Corruption)
+                        temp_gold = gold_path.with_suffix(f".tmp.{os.getpid()}")
+                        with open(temp_gold, "w") as f:
+                            json.dump(gold_data, f, indent=2)
+                        os.replace(temp_gold, gold_path)
+                    break # Success!
+            except Exception as e:
+                if attempt < 4:
+                    time.sleep(0.1 * (attempt+1)) # Exponential backoff
+                    continue
+                logging.error(f"✨ [{mode.upper()}] Save to Gold Standard failed after 5 attempts: {e}")
 
     except Exception as e:
         logging.error(f"Save failed: {e}")
